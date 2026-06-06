@@ -1,0 +1,228 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dianShangPingTai
+  datasource:
+    url: jdbc:h2:mem:dianShangPingTai;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations:
+        - classpath:db/migration/V001__tenant_and_org.sql
+        - classpath:db/migration/V002__saas_subscription.sql
+        - classpath:db/migration/V003__platform_audit_support.sql
+        - classpath:db/migration/V004__billing_invoice_feature_toggle.sql
+        - classpath:db/migration/V005__store_and_channel_account.sql
+        - classpath:db/migration/V006__product_supplier_draft.sql
+        - classpath:db/migration/V007__mapping_inventory_replenishment.sql
+        - classpath:db/migration/V008__order_and_fulfillment.sql
+        - classpath:db/migration/V009__logistics_and_exception.sql
+        - classpath:db/migration/V010__servicecase_and_after_sale.sql
+        - classpath:db/migration/V011__conversation_and_faq.sql
+        - classpath:db/migration/V012__live_plan_session_script.sql
+        - classpath:db/migration/V013__live_product_item.sql
+        - classpath:db/migration/V014__automation_rule.sql
+        - classpath:db/migration/V015__approval_instance.sql
+        - classpath:db/migration/V016__notification_center.sql
+        - classpath:db/migration/V017__campaign_center.sql
+        - classpath:db/migration/V018__member_finance_dashboard.sql
+        - classpath:db/migration/V019__auth_center_and_rbac.sql
+        - classpath:db/migration/V020__openplatform.sql
+        - classpath:db/migration/V021__openplatform_security_and_logs.sql
+        - classpath:db/migration/V022__openplatform_credentials.sql
+        - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
+        - classpath:db/migration/V024__tenant_cleanup_task.sql
+
+app:
+  persistence:
+    mode: jdbc
+  redis:
+    verify-on-startup: false
+    tenant-key-prefix: dsp
+  auth:
+    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    require-explicit-secrets: false
+    bootstrap-admin-username: ${APP_AUTH_BOOTSTRAP_ADMIN_USERNAME:}
+    bootstrap-admin-password: ${APP_AUTH_BOOTSTRAP_ADMIN_PASSWORD:}
+    bootstrap-admin-display-name: ${APP_AUTH_BOOTSTRAP_ADMIN_DISPLAY_NAME:平台系统管理员}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    url: jdbc:mysql://192.168.112.101:3306/dian_shang_ping_tai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia%2FShanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  sql:
+    init:
+      mode: always
+      schema-locations:
+        - classpath:db/migration/V001__tenant_and_org.sql
+        - classpath:db/migration/V002__saas_subscription.sql
+        - classpath:db/migration/V003__platform_audit_support.sql
+        - classpath:db/migration/V004__billing_invoice_feature_toggle.sql
+        - classpath:db/migration/V005__store_and_channel_account.sql
+        - classpath:db/migration/V006__product_supplier_draft.sql
+        - classpath:db/migration/V007__mapping_inventory_replenishment.sql
+        - classpath:db/migration/V008__order_and_fulfillment.sql
+        - classpath:db/migration/V009__logistics_and_exception.sql
+        - classpath:db/migration/V010__servicecase_and_after_sale.sql
+        - classpath:db/migration/V011__conversation_and_faq.sql
+        - classpath:db/migration/V012__live_plan_session_script.sql
+        - classpath:db/migration/V013__live_product_item.sql
+        - classpath:db/migration/V014__automation_rule.sql
+        - classpath:db/migration/V015__approval_instance.sql
+        - classpath:db/migration/V016__notification_center.sql
+        - classpath:db/migration/V017__campaign_center.sql
+        - classpath:db/migration/V018__member_finance_dashboard.sql
+        - classpath:db/migration/V019__auth_center_and_rbac.sql
+        - classpath:db/migration/V020__openplatform.sql
+        - classpath:db/migration/V021__openplatform_security_and_logs.sql
+        - classpath:db/migration/V022__openplatform_credentials.sql
+        - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
+        - classpath:db/migration/V024__tenant_cleanup_task.sql
+  data:
+    redis:
+      host: 192.168.112.101
+      port: 6379
+      password: 123456
+      timeout: 2s
+      connect-timeout: 2s
+
+app:
+  persistence:
+    mode: jdbc
+  redis:
+    verify-on-startup: true
+    tenant-key-prefix: dsp
+  auth:
+    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    require-explicit-secrets: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: tunnel-local
+  datasource:
+    url: jdbc:mysql://127.0.0.1:13306/dian_shang_ping_tai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia%2FShanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  sql:
+    init:
+      mode: always
+      schema-locations:
+        - classpath:db/migration/V001__tenant_and_org.sql
+        - classpath:db/migration/V002__saas_subscription.sql
+        - classpath:db/migration/V003__platform_audit_support.sql
+        - classpath:db/migration/V004__billing_invoice_feature_toggle.sql
+        - classpath:db/migration/V005__store_and_channel_account.sql
+        - classpath:db/migration/V006__product_supplier_draft.sql
+        - classpath:db/migration/V007__mapping_inventory_replenishment.sql
+        - classpath:db/migration/V008__order_and_fulfillment.sql
+        - classpath:db/migration/V009__logistics_and_exception.sql
+        - classpath:db/migration/V010__servicecase_and_after_sale.sql
+        - classpath:db/migration/V011__conversation_and_faq.sql
+        - classpath:db/migration/V012__live_plan_session_script.sql
+        - classpath:db/migration/V013__live_product_item.sql
+        - classpath:db/migration/V014__automation_rule.sql
+        - classpath:db/migration/V015__approval_instance.sql
+        - classpath:db/migration/V016__notification_center.sql
+        - classpath:db/migration/V017__campaign_center.sql
+        - classpath:db/migration/V018__member_finance_dashboard.sql
+        - classpath:db/migration/V019__auth_center_and_rbac.sql
+        - classpath:db/migration/V020__openplatform.sql
+        - classpath:db/migration/V021__openplatform_security_and_logs.sql
+        - classpath:db/migration/V022__openplatform_credentials.sql
+        - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
+        - classpath:db/migration/V024__tenant_cleanup_task.sql
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 16379
+      password: 123456
+      timeout: 2s
+      connect-timeout: 2s
+
+app:
+  persistence:
+    mode: jdbc
+  redis:
+    verify-on-startup: true
+    tenant-key-prefix: dsp
+  auth:
+    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    require-explicit-secrets: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: server-local
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/dian_shang_ping_tai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia%2FShanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  sql:
+    init:
+      mode: always
+      schema-locations:
+        - classpath:db/migration/V001__tenant_and_org.sql
+        - classpath:db/migration/V002__saas_subscription.sql
+        - classpath:db/migration/V003__platform_audit_support.sql
+        - classpath:db/migration/V004__billing_invoice_feature_toggle.sql
+        - classpath:db/migration/V005__store_and_channel_account.sql
+        - classpath:db/migration/V006__product_supplier_draft.sql
+        - classpath:db/migration/V007__mapping_inventory_replenishment.sql
+        - classpath:db/migration/V008__order_and_fulfillment.sql
+        - classpath:db/migration/V009__logistics_and_exception.sql
+        - classpath:db/migration/V010__servicecase_and_after_sale.sql
+        - classpath:db/migration/V011__conversation_and_faq.sql
+        - classpath:db/migration/V012__live_plan_session_script.sql
+        - classpath:db/migration/V013__live_product_item.sql
+        - classpath:db/migration/V014__automation_rule.sql
+        - classpath:db/migration/V015__approval_instance.sql
+        - classpath:db/migration/V016__notification_center.sql
+        - classpath:db/migration/V017__campaign_center.sql
+        - classpath:db/migration/V018__member_finance_dashboard.sql
+        - classpath:db/migration/V019__auth_center_and_rbac.sql
+        - classpath:db/migration/V020__openplatform.sql
+        - classpath:db/migration/V021__openplatform_security_and_logs.sql
+        - classpath:db/migration/V022__openplatform_credentials.sql
+        - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
+        - classpath:db/migration/V024__tenant_cleanup_task.sql
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+      timeout: 2s
+      connect-timeout: 2s
+
+app:
+  persistence:
+    mode: jdbc
+  redis:
+    verify-on-startup: true
+    tenant-key-prefix: dsp
+  auth:
+    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    require-explicit-secrets: true

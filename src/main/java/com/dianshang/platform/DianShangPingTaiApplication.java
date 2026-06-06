@@ -1,0 +1,12 @@
+package com.dianshang.platform;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DianShangPingTaiApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DianShangPingTaiApplication.class, args);
+    }
+}

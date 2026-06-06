@@ -1,0 +1,33 @@
+CREATE TABLE IF NOT EXISTS openplatform_call_log (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id VARCHAR(64) NOT NULL,
+    organization_id VARCHAR(64) NOT NULL,
+    app_id VARCHAR(64) DEFAULT NULL,
+    subscription_id VARCHAR(64) DEFAULT NULL,
+    request_id VARCHAR(128) DEFAULT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    direction VARCHAR(32) NOT NULL,
+    source_module VARCHAR(64) NOT NULL,
+    result_status VARCHAR(64) NOT NULL,
+    signature_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    replayed BOOLEAN NOT NULL DEFAULT FALSE,
+    trace_id VARCHAR(128) DEFAULT NULL,
+    message VARCHAR(255) DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_openplatform_call_log_tenant_created
+    ON openplatform_call_log (tenant_id, created_at, id);
+
+CREATE INDEX IF NOT EXISTS idx_openplatform_call_log_subscription_request
+    ON openplatform_call_log (subscription_id, request_id, id);
+
+CREATE TABLE IF NOT EXISTS open_callback_replay (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    subscription_id BIGINT NOT NULL,
+    request_id VARCHAR(128) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_open_callback_replay_subscription_request
+    ON open_callback_replay (subscription_id, request_id);

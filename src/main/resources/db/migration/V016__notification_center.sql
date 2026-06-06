@@ -1,0 +1,31 @@
+CREATE TABLE IF NOT EXISTS notification_template (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    template_code VARCHAR(64) NOT NULL,
+    template_name VARCHAR(128) NOT NULL,
+    notify_type VARCHAR(32) NOT NULL,
+    title_template VARCHAR(255) NOT NULL,
+    content_template TEXT NOT NULL,
+    is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_notification_template_tenant_code
+    ON notification_template (tenant_id, template_code);
+
+CREATE TABLE IF NOT EXISTS notification_task (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL,
+    notify_type VARCHAR(32) NOT NULL,
+    template_code VARCHAR(64) NOT NULL,
+    target_receiver VARCHAR(256) NOT NULL,
+    send_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+    retry_count INT NOT NULL DEFAULT 0,
+    payload_json TEXT DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_task_tenant_status
+    ON notification_task (tenant_id, send_status, id);

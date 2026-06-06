@@ -1,0 +1,73 @@
+CREATE TABLE IF NOT EXISTS order_main (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    store_id BIGINT NOT NULL,
+    platform_order_id VARCHAR(64) NOT NULL,
+    order_status VARCHAR(32) NOT NULL DEFAULT 'new',
+    logistics_status VARCHAR(32) DEFAULT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    estimated_profit DECIMAL(10, 2) DEFAULT NULL,
+    buyer_name VARCHAR(128) DEFAULT NULL,
+    buyer_phone_mask VARCHAR(64) DEFAULT NULL,
+    shipping_address VARCHAR(1024) DEFAULT NULL,
+    timeout_at DATETIME DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_order_main_store_platform_order UNIQUE (store_id, platform_order_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_order_main_store_status_created
+    ON order_main (store_id, order_status, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_order_main_store_timeout
+    ON order_main (store_id, timeout_at);
+
+CREATE TABLE IF NOT EXISTS order_item (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT NOT NULL,
+    sku_id BIGINT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    unit_price DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_order_item_order_id
+    ON order_item (order_id);
+
+CREATE TABLE IF NOT EXISTS fulfillment_task (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    store_id BIGINT NOT NULL,
+    order_id BIGINT NOT NULL,
+    idempotency_key VARCHAR(128) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'pending_confirm',
+    retry_count INT NOT NULL DEFAULT 0,
+    due_at DATETIME DEFAULT NULL,
+    last_error_message VARCHAR(512) DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT uk_fulfillment_task_idempotency_key UNIQUE (idempotency_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_fulfillment_task_store_status_due
+    ON fulfillment_task (store_id, status, due_at);
+
+CREATE INDEX IF NOT EXISTS idx_fulfillment_task_order_status
+    ON fulfillment_task (order_id, status);
+
+CREATE TABLE IF NOT EXISTS logistics_record (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    fulfillment_task_id BIGINT NOT NULL,
+    tracking_number VARCHAR(64) NOT NULL,
+    logistics_company VARCHAR(128) DEFAULT NULL,
+    logistics_status VARCHAR(32) DEFAULT NULL,
+    synced_at DATETIME DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_logistics_record_fulfillment_task
+    ON logistics_record (fulfillment_task_id);
+
+CREATE INDEX IF NOT EXISTS idx_logistics_record_tracking_number
+    ON logistics_record (tracking_number);
