@@ -19,14 +19,17 @@ public class AuthSecurityConfigVerifier implements ApplicationRunner {
     private final String tokenSecret;
     private final String bootstrapPassword;
     private final boolean requireExplicitSecrets;
+    private final boolean legacyHeaderContextEnabled;
 
     public AuthSecurityConfigVerifier(
             @Value("${app.auth.token-secret:${APP_AUTH_TOKEN_SECRET:" + DEFAULT_TOKEN_SECRET + "}}") String tokenSecret,
             @Value("${app.auth.bootstrap-password:${APP_AUTH_BOOTSTRAP_PASSWORD:" + DEFAULT_BOOTSTRAP_PASSWORD + "}}") String bootstrapPassword,
-            @Value("${app.auth.require-explicit-secrets:false}") boolean requireExplicitSecrets) {
+            @Value("${app.auth.require-explicit-secrets:false}") boolean requireExplicitSecrets,
+            @Value("${app.auth.allow-legacy-header-context:${APP_AUTH_ALLOW_LEGACY_HEADER_CONTEXT:false}}") boolean legacyHeaderContextEnabled) {
         this.tokenSecret = tokenSecret;
         this.bootstrapPassword = bootstrapPassword;
         this.requireExplicitSecrets = requireExplicitSecrets;
+        this.legacyHeaderContextEnabled = legacyHeaderContextEnabled;
     }
 
     @Override
@@ -61,6 +64,10 @@ public class AuthSecurityConfigVerifier implements ApplicationRunner {
 
     public boolean requireExplicitSecrets() {
         return requireExplicitSecrets;
+    }
+
+    public boolean isLegacyHeaderContextEnabled() {
+        return legacyHeaderContextEnabled;
     }
 
     private void warnIfWeak() {

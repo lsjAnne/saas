@@ -129,6 +129,74 @@ public class OpenPlatformApplicationService {
     }
 
     @Transactional
+    public PluginApp disableApp(String tenantId, String appId) {
+        PluginApp current = requireOwnedApp(tenantId, appId);
+        if ("disabled".equals(current.status())) {
+            return current;
+        }
+        PluginApp updated = pluginAppRepository.save(new PluginApp(
+                current.appId(),
+                current.organizationId(),
+                current.appName(),
+                current.appType(),
+                current.permissionScope(),
+                current.accessKey(),
+                current.secretMasked(),
+                "disabled",
+                current.createdAt()
+        ));
+        auditLogService.recordForTenant(tenantId, "DISABLE_PLUGIN_APP", "plugin_app", appId);
+        recordCallLog(
+                tenantId,
+                current.organizationId(),
+                current.appId(),
+                null,
+                null,
+                "/api/open/apps/" + appId + "/disable",
+                "management",
+                "disabled",
+                true,
+                false,
+                "plugin app disabled"
+        );
+        return updated;
+    }
+
+    @Transactional
+    public PluginApp enableApp(String tenantId, String appId) {
+        PluginApp current = requireOwnedApp(tenantId, appId);
+        if ("active".equals(current.status())) {
+            return current;
+        }
+        PluginApp updated = pluginAppRepository.save(new PluginApp(
+                current.appId(),
+                current.organizationId(),
+                current.appName(),
+                current.appType(),
+                current.permissionScope(),
+                current.accessKey(),
+                current.secretMasked(),
+                "active",
+                current.createdAt()
+        ));
+        auditLogService.recordForTenant(tenantId, "ENABLE_PLUGIN_APP", "plugin_app", appId);
+        recordCallLog(
+                tenantId,
+                current.organizationId(),
+                current.appId(),
+                null,
+                null,
+                "/api/open/apps/" + appId + "/enable",
+                "management",
+                "enabled",
+                true,
+                false,
+                "plugin app enabled"
+        );
+        return updated;
+    }
+
+    @Transactional
     public IssuedIntegrationCredential refreshCredential(String tenantId, String appId) {
         PluginApp current = requireOwnedApp(tenantId, appId);
         GeneratedCredential generatedCredential = generateCredential();
@@ -178,6 +246,45 @@ public class OpenPlatformApplicationService {
                 generatedCredential.secretMasked(),
                 generatedCredential.expiresAt()
         );
+    }
+
+    public List<IntegrationCredentialView> listCredentials(String tenantId, String appId) {
+        requireOwnedApp(tenantId, appId);
+        return integrationCredentialRepository.findByPluginAppIdAndCredentialType(appId, DEFAULT_CREDENTIAL_TYPE)
+                .map(credential -> List.of(toCredentialView(credential)))
+                .orElseGet(List::of);
+    }
+
+    @Transactional
+    public IntegrationCredentialView revokeCredential(String tenantId, String appId) {
+        PluginApp current = requireOwnedApp(tenantId, appId);
+        IntegrationCredential credential = integrationCredentialRepository.findByPluginAppIdAndCredentialType(appId, DEFAULT_CREDENTIAL_TYPE)
+                .orElseThrow(() -> new BusinessException("1003", "object not found", HttpStatus.NOT_FOUND));
+        IntegrationCredential revoked = integrationCredentialRepository.save(new IntegrationCredential(
+                credential.credentialId(),
+                credential.pluginAppId(),
+                credential.credentialType(),
+                credential.accessKey(),
+                credential.secretDigest(),
+                credential.secretKeyMasked(),
+                OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(1),
+                credential.createdAt()
+        ));
+        auditLogService.recordForTenant(tenantId, "REVOKE_INTEGRATION_CREDENTIAL", "plugin_app", appId);
+        recordCallLog(
+                tenantId,
+                current.organizationId(),
+                current.appId(),
+                null,
+                null,
+                "/api/open/apps/" + appId + "/credentials/revoke",
+                "management",
+                "credential_revoked",
+                true,
+                false,
+                "integration credential revoked"
+        );
+        return toCredentialView(revoked);
     }
 
     public List<WebhookSubscription> listWebhooks(String tenantId) {
@@ -318,6 +425,105 @@ public class OpenPlatformApplicationService {
 
     public List<OpenPlatformCallLog> listCallLogs(String tenantId) {
         return openPlatformCallLogRepository.findByTenantId(tenantId);
+    }
+
+    public List<WebhookOrchestrationView> listWebhookOrchestrations(String tenantId) {
+        return listWebhooks(tenantId).stream()
+                .map(webhook -> {
+                    List<OpenPlatformCallLog> callbackLogs = listCallLogs(tenantId).stream()
+                            .filter(log -> webhook.subscriptionId().equals(log.subscriptionId()))
+                            .filter(log -> "callback_inbound".equals(log.direction()))
+                            .toList();
+                    OpenPlatformCallLog lastLog = callbackLogs.stream()
+                            .max(java.util.Comparator.comparing(OpenPlatformCallLog::createdAt))
+                            .orElse(null);
+                    return new WebhookOrchestrationView(
+                            webhook.subscriptionId(),
+                            webhook.organizationId(),
+                            webhook.eventCode(),
+                            webhook.callbackUrl(),
+                            webhook.status(),
+                            callbackLogs.size(),
+                            (int) callbackLogs.stream().filter(log -> "accepted".equals(log.resultStatus())).count(),
+                            (int) callbackLogs.stream().filter(log -> log.resultStatus() != null && log.resultStatus().startsWith("rejected")).count(),
+                            (int) callbackLogs.stream().filter(log -> "rejected_replay".equals(log.resultStatus())).count(),
+                            (int) callbackLogs.stream().filter(log -> "rejected_signature".equals(log.resultStatus())).count(),
+                            lastLog == null ? null : lastLog.resultStatus(),
+                            lastLog == null ? null : lastLog.traceId(),
+                            webhook.createdAt()
+                    );
+                })
+                .toList();
+    }
+
+    public IntegrationAuditOverviewView getIntegrationAudit(String tenantId) {
+        List<OpenPlatformCallLog> logs = listCallLogs(tenantId);
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        int revokedCredentialCount = 0;
+        int expiringCredentialCount = 0;
+        for (PluginApp app : listApps(tenantId)) {
+            IntegrationCredential credential = integrationCredentialRepository
+                    .findByPluginAppIdAndCredentialType(app.appId(), DEFAULT_CREDENTIAL_TYPE)
+                    .orElse(null);
+            if (credential == null) {
+                continue;
+            }
+            if (!isCredentialActive(credential, now)) {
+                revokedCredentialCount++;
+            } else if (credential.expiresAt() != null && !credential.expiresAt().isAfter(now.plusDays(7))) {
+                expiringCredentialCount++;
+            }
+        }
+        return new IntegrationAuditOverviewView(
+                logs.size(),
+                (int) logs.stream().filter(log -> "external_inbound".equals(log.direction()) && "authorized".equals(log.resultStatus())).count(),
+                (int) logs.stream().filter(log -> "callback_inbound".equals(log.direction()) && "accepted".equals(log.resultStatus())).count(),
+                (int) logs.stream().filter(log -> "callback_inbound".equals(log.direction()) && log.resultStatus().startsWith("rejected")).count(),
+                (int) logs.stream().filter(log -> "rejected_scope".equals(log.resultStatus())).count(),
+                (int) logs.stream().filter(log -> "rejected_replay".equals(log.resultStatus())).count(),
+                (int) logs.stream().filter(log -> "rejected_signature".equals(log.resultStatus())).count(),
+                (int) listApps(tenantId).stream().filter(app -> "disabled".equals(app.status())).count(),
+                revokedCredentialCount,
+                expiringCredentialCount
+        );
+    }
+
+    public OpenPlatformOverviewView getOverview(String tenantId) {
+        List<PluginApp> apps = listApps(tenantId);
+        List<WebhookSubscription> webhooks = listWebhooks(tenantId);
+        List<OpenPlatformCallLog> logs = listCallLogs(tenantId);
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        int activeCredentialCount = 0;
+        int revokedCredentialCount = 0;
+        int expiringCredentialCount = 0;
+        for (PluginApp app : apps) {
+            IntegrationCredential credential = integrationCredentialRepository
+                    .findByPluginAppIdAndCredentialType(app.appId(), DEFAULT_CREDENTIAL_TYPE)
+                    .orElse(null);
+            if (credential == null) {
+                continue;
+            }
+            if (isCredentialActive(credential, now)) {
+                activeCredentialCount++;
+                if (credential.expiresAt() != null && !credential.expiresAt().isAfter(now.plusDays(7))) {
+                    expiringCredentialCount++;
+                }
+            } else {
+                revokedCredentialCount++;
+            }
+        }
+        return new OpenPlatformOverviewView(
+                apps.size(),
+                (int) apps.stream().filter(app -> "active".equals(app.status())).count(),
+                (int) apps.stream().filter(app -> "disabled".equals(app.status())).count(),
+                webhooks.size(),
+                (int) webhooks.stream().filter(webhook -> "enabled".equals(webhook.status())).count(),
+                (int) webhooks.stream().filter(webhook -> "disabled".equals(webhook.status())).count(),
+                activeCredentialCount,
+                revokedCredentialCount,
+                expiringCredentialCount,
+                logs.size()
+        );
     }
 
     public ExternalAppProfile authenticateExternalProfile(String accessKey, String secret, String endpoint) {
@@ -617,6 +823,23 @@ public class OpenPlatformApplicationService {
         return normalized;
     }
 
+    private IntegrationCredentialView toCredentialView(IntegrationCredential credential) {
+        return new IntegrationCredentialView(
+                credential.credentialId(),
+                credential.pluginAppId(),
+                credential.credentialType(),
+                credential.accessKey(),
+                credential.secretKeyMasked(),
+                credential.createdAt(),
+                credential.expiresAt(),
+                isCredentialActive(credential, OffsetDateTime.now(ZoneOffset.UTC))
+        );
+    }
+
+    private boolean isCredentialActive(IntegrationCredential credential, OffsetDateTime now) {
+        return credential.expiresAt() == null || credential.expiresAt().isAfter(now);
+    }
+
     private void validateCallbackUrl(String callbackUrl) {
         String normalized = callbackUrl == null ? "" : callbackUrl.trim();
         if (!(normalized.startsWith("http://") || normalized.startsWith("https://"))) {
@@ -799,6 +1022,63 @@ public class OpenPlatformApplicationService {
             String secret,
             String secretMasked,
             OffsetDateTime expiresAt
+    ) {
+    }
+
+    public record IntegrationCredentialView(
+            String credentialId,
+            String appId,
+            String credentialType,
+            String accessKey,
+            String secretMasked,
+            OffsetDateTime issuedAt,
+            OffsetDateTime expiresAt,
+            boolean active
+    ) {
+    }
+
+    public record OpenPlatformOverviewView(
+            int appCount,
+            int activeAppCount,
+            int disabledAppCount,
+            int webhookCount,
+            int enabledWebhookCount,
+            int disabledWebhookCount,
+            int activeCredentialCount,
+            int revokedCredentialCount,
+            int expiringCredentialCount,
+            int totalCallLogCount
+    ) {
+    }
+
+    public record WebhookOrchestrationView(
+            String subscriptionId,
+            String organizationId,
+            String eventCode,
+            String callbackUrl,
+            String status,
+            int callbackAttemptCount,
+            int acceptedCallbackCount,
+            int rejectedCallbackCount,
+            int replayRejectedCount,
+            int signatureRejectedCount,
+            String lastResultStatus,
+            String lastTraceId,
+            OffsetDateTime createdAt
+    ) {
+    }
+
+    public record IntegrationAuditOverviewView(
+            int totalCallLogCount,
+            int externalAuthorizedCount,
+            int callbackAcceptedCount,
+            int callbackRejectedCount,
+            int scopeRejectedCount,
+            int replayRejectedCount,
+            int signatureRejectedCount,
+            int disabledAppCount,
+            int revokedCredentialCount,
+            int expiringCredentialCount
     ) {
     }
 

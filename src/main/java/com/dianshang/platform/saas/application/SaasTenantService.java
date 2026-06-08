@@ -46,6 +46,7 @@ import com.dianshang.platform.tenant.TenantContextHolder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -111,6 +112,10 @@ public class SaasTenantService {
     private final AuthUserProvisioningService authUserProvisioningService;
     private final AuthBootstrapService authBootstrapService;
     private final AuthSecurityConfigVerifier authSecurityConfigVerifier;
+    private final int releaseAutomationEvidenceSuiteCount;
+    private final String releaseAutomationEvidenceEnvironment;
+    private final String releaseAutomationEvidenceExecutedAt;
+    private final String releaseAutomationEvidenceSummary;
     private final ObjectMapper objectMapper;
     private final JdbcTemplate jdbcTemplate;
 
@@ -136,6 +141,10 @@ public class SaasTenantService {
                              AuthUserProvisioningService authUserProvisioningService,
                              AuthBootstrapService authBootstrapService,
                              AuthSecurityConfigVerifier authSecurityConfigVerifier,
+                             @Value("${app.release.automation-evidence.suite-count:0}") int releaseAutomationEvidenceSuiteCount,
+                             @Value("${app.release.automation-evidence.environment:}") String releaseAutomationEvidenceEnvironment,
+                             @Value("${app.release.automation-evidence.executed-at:}") String releaseAutomationEvidenceExecutedAt,
+                             @Value("${app.release.automation-evidence.summary:}") String releaseAutomationEvidenceSummary,
                              ObjectMapper objectMapper,
                              JdbcTemplate jdbcTemplate) {
         this.organizationService = organizationService;
@@ -160,6 +169,10 @@ public class SaasTenantService {
         this.authUserProvisioningService = authUserProvisioningService;
         this.authBootstrapService = authBootstrapService;
         this.authSecurityConfigVerifier = authSecurityConfigVerifier;
+        this.releaseAutomationEvidenceSuiteCount = releaseAutomationEvidenceSuiteCount;
+        this.releaseAutomationEvidenceEnvironment = releaseAutomationEvidenceEnvironment;
+        this.releaseAutomationEvidenceExecutedAt = releaseAutomationEvidenceExecutedAt;
+        this.releaseAutomationEvidenceSummary = releaseAutomationEvidenceSummary;
         this.objectMapper = objectMapper;
         this.jdbcTemplate = jdbcTemplate;
         seedSubscriptionPlans();
@@ -1443,6 +1456,7 @@ public class SaasTenantService {
 
     private ReleaseChecklistItemView buildConfigHardeningChecklistItem(List<String> blockingReasons) {
         List<String> reasons = new ArrayList<>();
+        int totalChecks = 4;
         if (!authSecurityConfigVerifier.isTokenSecretStrong()) {
             reasons.add("default auth secret is still enabled");
             blockingReasons.add("default auth secret is still enabled");
@@ -1451,18 +1465,26 @@ public class SaasTenantService {
             reasons.add("bootstrap password is still using insecure defaults");
             blockingReasons.add("bootstrap password is still using insecure defaults");
         }
+        if (!authSecurityConfigVerifier.requireExplicitSecrets()) {
+            reasons.add("explicit auth secret enforcement is disabled");
+            blockingReasons.add("explicit auth secret enforcement is disabled");
+        }
+        if (authSecurityConfigVerifier.isLegacyHeaderContextEnabled()) {
+            reasons.add("legacy header context fallback is still enabled");
+            blockingReasons.add("legacy header context fallback is still enabled");
+        }
         if (reasons.isEmpty()) {
             return new ReleaseChecklistItemView(
                     "config_hardening",
                     "passed",
-                    2,
-                    "auth secret and bootstrap password are production-ready"
+                    totalChecks,
+                    "auth secret, bootstrap password, explicit secret enforcement and header context governance are production-ready"
             );
         }
         return new ReleaseChecklistItemView(
                 "config_hardening",
                 "blocked",
-                Math.max(0, 2 - reasons.size()),
+                Math.max(0, totalChecks - reasons.size()),
                 String.join("; ", reasons)
         );
     }
@@ -1503,11 +1525,29 @@ public class SaasTenantService {
     }
 
     private ReleaseChecklistItemView buildAutomationRegressionChecklistItem() {
+        if (releaseAutomationEvidenceSuiteCount <= 0 || releaseAutomationEvidenceExecutedAt == null
+                || releaseAutomationEvidenceExecutedAt.isBlank()) {
+            return new ReleaseChecklistItemView(
+                    "automation_regression_evidence",
+                    "pending",
+                    0,
+                    "cross-environment automation regression evidence is not attached yet"
+            );
+        }
+        StringBuilder detail = new StringBuilder("automation regression evidence attached at ")
+                .append(releaseAutomationEvidenceExecutedAt);
+        if (releaseAutomationEvidenceEnvironment != null && !releaseAutomationEvidenceEnvironment.isBlank()) {
+            detail.append(" for ").append(releaseAutomationEvidenceEnvironment);
+        }
+        detail.append("; passed suites=").append(releaseAutomationEvidenceSuiteCount);
+        if (releaseAutomationEvidenceSummary != null && !releaseAutomationEvidenceSummary.isBlank()) {
+            detail.append("; ").append(releaseAutomationEvidenceSummary);
+        }
         return new ReleaseChecklistItemView(
                 "automation_regression_evidence",
-                "pending",
-                0,
-                "cross-environment automation regression evidence is not attached yet"
+                "passed",
+                releaseAutomationEvidenceSuiteCount,
+                detail.toString()
         );
     }
 

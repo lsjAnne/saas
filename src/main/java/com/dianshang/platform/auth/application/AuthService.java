@@ -42,7 +42,6 @@ public class AuthService {
     private final AuthTokenService authTokenService;
     private final AuthUserAccessService authUserAccessService;
     private final AuthSecurityConfigVerifier authSecurityConfigVerifier;
-    private final boolean allowLegacyHeaderContext;
     private final ConcurrentMap<String, OffsetDateTime> sensitiveOperationConfirmations = new ConcurrentHashMap<>();
 
     public AuthService(AuditLogService auditLogService,
@@ -50,16 +49,13 @@ public class AuthService {
                        PasswordHashService passwordHashService,
                        AuthTokenService authTokenService,
                        AuthUserAccessService authUserAccessService,
-                       AuthSecurityConfigVerifier authSecurityConfigVerifier,
-                       @org.springframework.beans.factory.annotation.Value("${app.auth.allow-legacy-header-context:${APP_AUTH_ALLOW_LEGACY_HEADER_CONTEXT:false}}")
-                       boolean allowLegacyHeaderContext) {
+                       AuthSecurityConfigVerifier authSecurityConfigVerifier) {
         this.auditLogService = auditLogService;
         this.authUserRepository = authUserRepository;
         this.passwordHashService = passwordHashService;
         this.authTokenService = authTokenService;
         this.authUserAccessService = authUserAccessService;
         this.authSecurityConfigVerifier = authSecurityConfigVerifier;
-        this.allowLegacyHeaderContext = allowLegacyHeaderContext;
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -133,7 +129,7 @@ public class AuthService {
                 authSecurityConfigVerifier.isTokenSecretStrong(),
                 authSecurityConfigVerifier.isBootstrapPasswordStrong(),
                 authSecurityConfigVerifier.requireExplicitSecrets(),
-                allowLegacyHeaderContext
+                authSecurityConfigVerifier.isLegacyHeaderContextEnabled()
         );
     }
 

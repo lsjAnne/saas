@@ -6,7 +6,11 @@ import com.dianshang.platform.common.trace.TraceIdHolder;
 import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService;
 import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.CreatePluginAppCommand;
 import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.CreateWebhookSubscriptionCommand;
+import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.IntegrationCredentialView;
+import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.IntegrationAuditOverviewView;
 import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.IssuedIntegrationCredential;
+import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.OpenPlatformOverviewView;
+import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.WebhookOrchestrationView;
 import com.dianshang.platform.openplatform.model.OpenPlatformCallLog;
 import com.dianshang.platform.openplatform.model.PluginApp;
 import com.dianshang.platform.openplatform.model.WebhookSubscription;
@@ -49,11 +53,44 @@ public class OpenPlatformController {
         );
     }
 
+    @PostMapping("/api/open/apps/{id}/disable")
+    public ApiResponse<PluginApp> disableApp(@PathVariable String id) {
+        return ApiResponse.success(
+                openPlatformApplicationService.disableApp(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/open/apps/{id}/enable")
+    public ApiResponse<PluginApp> enableApp(@PathVariable String id) {
+        return ApiResponse.success(
+                openPlatformApplicationService.enableApp(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
     @PostMapping("/api/open/apps/{id}/credentials/refresh")
     @RequireTenantPermission(value = AuthPermissionCodes.OPENPLATFORM_MANAGE, requireSecondaryConfirmation = true)
     public ApiResponse<IssuedIntegrationCredential> refreshCredential(@PathVariable String id) {
         return ApiResponse.success(
                 openPlatformApplicationService.refreshCredential(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/apps/{id}/credentials")
+    public ApiResponse<List<IntegrationCredentialView>> listCredentials(@PathVariable String id) {
+        return ApiResponse.success(
+                openPlatformApplicationService.listCredentials(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/open/apps/{id}/credentials/revoke")
+    @RequireTenantPermission(value = AuthPermissionCodes.OPENPLATFORM_MANAGE, requireSecondaryConfirmation = true)
+    public ApiResponse<IntegrationCredentialView> revokeCredential(@PathVariable String id) {
+        return ApiResponse.success(
+                openPlatformApplicationService.revokeCredential(TenantAccessSupport.requiredTenantId(), id),
                 TraceIdHolder.get()
         );
     }
@@ -103,6 +140,30 @@ public class OpenPlatformController {
     public ApiResponse<List<OpenPlatformCallLog>> listCallLogs() {
         return ApiResponse.success(
                 openPlatformApplicationService.listCallLogs(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/webhook-orchestrations")
+    public ApiResponse<List<WebhookOrchestrationView>> listWebhookOrchestrations() {
+        return ApiResponse.success(
+                openPlatformApplicationService.listWebhookOrchestrations(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/integration-audit")
+    public ApiResponse<IntegrationAuditOverviewView> getIntegrationAudit() {
+        return ApiResponse.success(
+                openPlatformApplicationService.getIntegrationAudit(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/overview")
+    public ApiResponse<OpenPlatformOverviewView> getOverview() {
+        return ApiResponse.success(
+                openPlatformApplicationService.getOverview(TenantAccessSupport.requiredTenantId()),
                 TraceIdHolder.get()
         );
     }

@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -189,12 +190,135 @@ class RuleControllerTest {
                 .andExpect(jsonPath("$.code").value("1009"));
     }
 
+    @Test
+    void shouldExposeRuleGovernanceOverviewAndOrchestrations() throws Exception {
+        RuleFixture fixture = prepareFixture();
+        createRule(fixture, "profit_threshold", "product_selection", "price", "minimum-profit", "profit >= 15", true);
+        createRule(fixture, "live_inventory_guard", "live", "fulfillment", "inventory-guard", "stock >= 5", true);
+        createRule(fixture, "fulfillment_retry_fallback", "fulfillment", "fulfillment", "delivery-fallback", "retry <= 2 then fallback manual review", true);
+        createRule(fixture, "qa_reply_fallback", "qa", "content", "reply-fallback", "fallback faq answer", false);
+
+        mockMvc.perform(get("/api/rules/governance-overview")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalRules").value(4))
+                .andExpect(jsonPath("$.data.enabledRules").value(3))
+                .andExpect(jsonPath("$.data.disabledRules").value(1))
+                .andExpect(jsonPath("$.data.fallbackRuleCount").value(2))
+                .andExpect(jsonPath("$.data.manualReviewRuleCount").value(1))
+                .andExpect(jsonPath("$.data.categoryStats.length()").value(4))
+                .andExpect(jsonPath("$.data.riskStats.length()").value(3));
+
+        mockMvc.perform(get("/api/rules/orchestrations")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$..executionStage", hasItems("pre_check", "runtime", "post_check")))
+                .andExpect(jsonPath("$..fallbackEnabled", hasItems(true)))
+                .andExpect(jsonPath("$..manualReviewRequired", hasItems(true)));
+    }
+
+    @Test
+    void shouldSimulateFallbackStrategyWithMatchedEnabledRules() throws Exception {
+        RuleFixture fixture = prepareFixture();
+        createRule(fixture, "fulfillment_retry_fallback", "fulfillment", "fulfillment", "delivery-fallback", "retry <= 2 then fallback manual review", true);
+        createRule(fixture, "live_inventory_guard", "live", "fulfillment", "inventory-guard", "stock >= 5", true);
+        createRule(fixture, "fulfillment_disabled_fallback", "fulfillment", "fulfillment", "disabled-fallback", "fallback manual review", false);
+
+        mockMvc.perform(post("/api/rules/fallback-simulations")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "scenarioCode": "fulfillment_timeout",
+                                  "failureSource": "fulfillment",
+                                  "requestedAction": "dispatch",
+                                  "signalValue": 92
+                                }
+                                """.formatted(fixture.storeId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.coverageStatus").value("covered"))
+                .andExpect(jsonPath("$.data.fallbackTriggered").value(true))
+                .andExpect(jsonPath("$.data.retrySuggested").value(true))
+                .andExpect(jsonPath("$.data.suggestedAction").value("manual_review"))
+                .andExpect(jsonPath("$.data.terminalAction").value("pause_and_escalate"))
+                .andExpect(jsonPath("$.data.matchedRules.length()").value(1))
+                .andExpect(jsonPath("$.data.matchedRules[0].ruleType").value("fulfillment_retry_fallback"));
+    }
+
+    @Test
+    void shouldReturnFallbackGapWhenNoEnabledRuleMatchesScenario() throws Exception {
+        RuleFixture fixture = prepareFixture();
+        createRule(fixture, "profit_threshold", "product_selection", "price", "minimum-profit", "profit >= 15", true);
+
+        mockMvc.perform(post("/api/rules/fallback-simulations")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "scenarioCode": "fulfillment_timeout",
+                                  "failureSource": "fulfillment",
+                                  "requestedAction": "dispatch",
+                                  "signalValue": 92
+                                }
+                                """.formatted(fixture.storeId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.coverageStatus").value("gap"))
+                .andExpect(jsonPath("$.data.fallbackTriggered").value(false))
+                .andExpect(jsonPath("$.data.retrySuggested").value(false))
+                .andExpect(jsonPath("$.data.suggestedAction").value("manual_review"))
+                .andExpect(jsonPath("$.data.matchedRules.length()").value(0));
+    }
+
     private RuleFixture prepareFixture() throws Exception {
         JsonNode tenantData = registerTenant("rule-test-center");
         String tenantId = tenantData.path("tenantId").asText();
         String organizationId = tenantData.path("defaultOrganizationId").asText();
         String storeId = connectStore(tenantId, organizationId, "shop-rule-" + organizationId);
         return new RuleFixture(tenantId, organizationId, storeId);
+    }
+
+    private void createRule(RuleFixture fixture,
+                            String ruleType,
+                            String ruleCategory,
+                            String riskCategory,
+                            String ruleName,
+                            String ruleExpression,
+                            boolean enabled) throws Exception {
+        mockMvc.perform(post("/api/rules")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "ruleType": "%s",
+                                  "ruleCategory": "%s",
+                                  "riskCategory": "%s",
+                                  "ruleName": "%s",
+                                  "ruleExpression": "%s",
+                                  "enabled": %s
+                                }
+                                """.formatted(
+                                fixture.storeId(),
+                                ruleType,
+                                ruleCategory,
+                                riskCategory,
+                                ruleName,
+                                ruleExpression,
+                                enabled)))
+                .andExpect(status().isOk());
     }
 
     private JsonNode registerTenant(String tenantName) throws Exception {

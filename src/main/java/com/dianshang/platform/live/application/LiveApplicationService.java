@@ -188,6 +188,134 @@ public class LiveApplicationService {
         );
     }
 
+    public List<LiveConcurrencyQueueView> listConcurrencyQueues(String tenantId) {
+        return buildConcurrencyQueueViews(tenantId);
+    }
+
+    public List<LiveRiskEventView> listLiveRiskEvents(String tenantId) {
+        return buildLiveRiskEvents(tenantId);
+    }
+
+    public LiveSpecialAnalysisView getLiveSpecialAnalysis(String tenantId) {
+        List<LiveAccountView> liveAccounts = listLiveAccounts(tenantId);
+        List<LiveConcurrencyQueueView> queueViews = buildConcurrencyQueueViews(tenantId);
+        List<LiveRiskEventView> riskEvents = buildLiveRiskEvents(tenantId);
+        List<LiveSession> sessions = listLiveSessions(tenantId);
+        return new LiveSpecialAnalysisView(
+                liveAccounts.size(),
+                (int) liveAccounts.stream().filter(LiveAccountView::occupied).count(),
+                queueViews.size(),
+                riskEvents.size(),
+                (int) sessions.stream().filter(session -> "manual".equals(defaultIfBlank(session.takeoverStatus(), "auto"))).count(),
+                (int) sessions.stream().filter(session -> "rejected".equals(defaultIfBlank(session.promiseAuditStatus(), "not_reviewed"))).count(),
+                (int) sessions.stream().filter(session -> !"standard".equals(defaultIfBlank(session.controlMode(), "standard"))).count(),
+                (int) sessions.stream().filter(session -> "failed".equals(session.sessionStatus())).count()
+        );
+    }
+
+    public List<LiveRiskRecoveryPlanView> listRiskRecoveryPlans(String tenantId) {
+        List<LiveConcurrencyQueueView> queueViews = buildConcurrencyQueueViews(tenantId);
+        List<LiveRiskRecoveryPlanView> recoveryPlans = new ArrayList<>();
+        for (LiveSession session : listLiveSessions(tenantId)) {
+            String riskCode = null;
+            String riskLevel = null;
+            String recoveryAction = null;
+            String blockingReason = null;
+            if ("failed".equals(session.sessionStatus())) {
+                riskCode = "live_session_failed";
+                riskLevel = "critical";
+                recoveryAction = "restart_live_plan";
+                blockingReason = defaultIfBlank(session.errorMessage(), "live session failed");
+            } else if ("rejected".equals(defaultIfBlank(session.promiseAuditStatus(), "not_reviewed"))) {
+                riskCode = "live_promise_audit_rejected";
+                riskLevel = "high";
+                recoveryAction = "manual_review_and_script_fix";
+                blockingReason = defaultIfBlank(session.promiseAuditRemark(), "promise audit rejected");
+            } else if ("manual".equals(defaultIfBlank(session.takeoverStatus(), "auto"))) {
+                riskCode = "manual_takeover_active";
+                riskLevel = "high";
+                recoveryAction = "operator_handover_followup";
+                blockingReason = defaultIfBlank(session.takeoverOperator(), "manual takeover active");
+            } else if (!"standard".equals(defaultIfBlank(session.controlMode(), "standard"))) {
+                riskCode = "live_strong_control_enabled";
+                riskLevel = "medium";
+                recoveryAction = "relax_control_after_review";
+                blockingReason = "control mode=" + session.controlMode();
+            }
+            if (riskCode != null) {
+                recoveryPlans.add(new LiveRiskRecoveryPlanView(
+                        "live_session",
+                        session.liveSessionId(),
+                        session.liveSessionId(),
+                        session.livePlanId(),
+                        riskCode,
+                        riskLevel,
+                        recoveryAction,
+                        List.of("high", "critical").contains(riskLevel),
+                        blockingReason
+                ));
+            }
+        }
+        for (LiveConcurrencyQueueView queueView : queueViews) {
+            recoveryPlans.add(new LiveRiskRecoveryPlanView(
+                    "queued_plan",
+                    queueView.livePlanId(),
+                    null,
+                    queueView.livePlanId(),
+                    queueView.blockedType(),
+                    "high",
+                    switch (queueView.blockedType()) {
+                        case "account_missing" -> "bind_live_account";
+                        case "account_auth_invalid" -> "refresh_live_account_auth";
+                        case "account_occupied" -> "reassign_or_wait_account";
+                        default -> "release_tenant_quota";
+                    },
+                    true,
+                    queueView.blockedReason()
+            ));
+        }
+        recoveryPlans.sort((left, right) -> {
+            int severityCompare = Integer.compare(riskRank(right.riskLevel()), riskRank(left.riskLevel()));
+            return severityCompare != 0 ? severityCompare : left.entityId().compareTo(right.entityId());
+        });
+        return recoveryPlans;
+    }
+
+    public LiveSpecialAnalysisDrilldownView getLiveSpecialAnalysisDrilldown(String tenantId) {
+        List<LiveSession> sessions = listLiveSessions(tenantId);
+        List<LiveRiskEventView> riskEvents = buildLiveRiskEvents(tenantId);
+        List<LiveConcurrencyQueueView> queueViews = buildConcurrencyQueueViews(tenantId);
+        List<String> highRiskSessionIds = riskEvents.stream()
+                .filter(event -> List.of("high", "critical").contains(event.severity()))
+                .map(LiveRiskEventView::liveSessionId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        List<String> queuedPlanIds = listLivePlans(tenantId).stream()
+                .filter(plan -> List.of("ready", "scheduled").contains(plan.planStatus()))
+                .map(LivePlan::livePlanId)
+                .distinct()
+                .toList();
+        return new LiveSpecialAnalysisDrilldownView(
+                highRiskSessionIds,
+                sessions.stream()
+                        .filter(session -> "failed".equals(session.sessionStatus()))
+                        .map(LiveSession::liveSessionId)
+                        .toList(),
+                sessions.stream()
+                        .filter(session -> "manual".equals(defaultIfBlank(session.takeoverStatus(), "auto")))
+                        .map(LiveSession::liveSessionId)
+                        .toList(),
+                sessions.stream()
+                        .filter(session -> "rejected".equals(defaultIfBlank(session.promiseAuditStatus(), "not_reviewed")))
+                        .map(LiveSession::liveSessionId)
+                        .toList(),
+                queuedPlanIds,
+                queueViews.stream().map(LiveConcurrencyQueueView::blockedType).distinct().toList(),
+                riskEvents.stream().map(LiveRiskEventView::eventCode).distinct().toList()
+        );
+    }
+
     public LivePlan createLivePlan(String tenantId, CreateLivePlanRequest request) {
         validateScheduleWindow(request.scheduledStartAt(), request.scheduledEndAt());
         requireOwnedStore(tenantId, request.storeId());
@@ -336,6 +464,38 @@ public class LiveApplicationService {
                             account.authStatus(),
                             runningSession != null,
                             runningSession == null ? null : runningSession.liveSessionId(),
+                            account.expiresAt()
+                    );
+                })
+                .toList();
+    }
+
+    public List<LiveAccountGovernanceView> listLiveAccountGovernance(String tenantId) {
+        List<LiveAccountView> liveAccounts = listLiveAccounts(tenantId);
+        Map<String, Long> runningSessionCountByAccount = listLiveSessions(tenantId).stream()
+                .filter(session -> "running".equals(session.sessionStatus()))
+                .collect(Collectors.groupingBy(LiveSession::liveAccountId, Collectors.counting()));
+        Map<String, Long> queuedPlanCountByAccount = buildConcurrencyQueueViews(tenantId).stream()
+                .filter(item -> item.liveAccountId() != null && !item.liveAccountId().isBlank())
+                .collect(Collectors.groupingBy(LiveConcurrencyQueueView::liveAccountId, Collectors.counting()));
+        OffsetDateTime now = OffsetDateTime.now();
+        return liveAccounts.stream()
+                .map(account -> {
+                    int runningSessionCount = runningSessionCountByAccount.getOrDefault(account.liveAccountId(), 0L).intValue();
+                    int queuedPlanCount = queuedPlanCountByAccount.getOrDefault(account.liveAccountId(), 0L).intValue();
+                    boolean expiringSoon = account.expiresAt() != null && !account.expiresAt().isAfter(now.plusDays(7));
+                    String governanceRiskLevel = resolveGovernanceRiskLevel(account, runningSessionCount, queuedPlanCount, expiringSoon);
+                    return new LiveAccountGovernanceView(
+                            account.liveAccountId(),
+                            account.organizationId(),
+                            account.accountName(),
+                            account.authStatus(),
+                            account.occupied(),
+                            account.occupiedSessionId(),
+                            runningSessionCount,
+                            queuedPlanCount,
+                            expiringSoon,
+                            governanceRiskLevel,
                             account.expiresAt()
                     );
                 })
@@ -764,6 +924,152 @@ public class LiveApplicationService {
                 null,
                 OffsetDateTime.now()
         ));
+    }
+
+    private List<LiveConcurrencyQueueView> buildConcurrencyQueueViews(String tenantId) {
+        List<LivePlan> candidatePlans = listLivePlans(tenantId).stream()
+                .filter(plan -> List.of("ready", "scheduled").contains(plan.planStatus()))
+                .toList();
+        List<LiveSession> runningSessions = listLiveSessions(tenantId).stream()
+                .filter(session -> "running".equals(session.sessionStatus()))
+                .toList();
+        int tenantQuotaLimit = usageQuotaRepository.findByTenantId(tenantId).stream()
+                .filter(quota -> "live_concurrency".equals(quota.quotaCode()))
+                .findFirst()
+                .map(UsageQuota::quotaLimit)
+                .orElse(0);
+        Map<String, ChannelAccount> ownedAccountMap = channelAccountRepository
+                .findByOrganizationIds(organizationRepository.findByTenantId(tenantId).stream().map(Organization::id).toList())
+                .stream()
+                .collect(Collectors.toMap(ChannelAccount::channelAccountId, Function.identity(), (left, right) -> left));
+        return candidatePlans.stream()
+                .map(plan -> buildQueueItem(plan, runningSessions, tenantQuotaLimit, ownedAccountMap))
+                .filter(Objects::nonNull)
+                .sorted((left, right) -> {
+                    OffsetDateTime leftTime = left.scheduledStartAt() == null ? OffsetDateTime.MAX : left.scheduledStartAt();
+                    OffsetDateTime rightTime = right.scheduledStartAt() == null ? OffsetDateTime.MAX : right.scheduledStartAt();
+                    return leftTime.compareTo(rightTime);
+                })
+                .toList();
+    }
+
+    private LiveConcurrencyQueueView buildQueueItem(LivePlan plan,
+                                                    List<LiveSession> runningSessions,
+                                                    int tenantQuotaLimit,
+                                                    Map<String, ChannelAccount> ownedAccountMap) {
+        String blockedType = null;
+        String blockedReason = null;
+        if (plan.liveAccountId() == null || plan.liveAccountId().isBlank() || !ownedAccountMap.containsKey(plan.liveAccountId())) {
+            blockedType = "account_missing";
+            blockedReason = "live account not configured";
+        } else if (!isLiveAccountReady(ownedAccountMap.get(plan.liveAccountId()))) {
+            blockedType = "account_auth_invalid";
+            blockedReason = "live account authorization invalid";
+        } else if (runningSessions.stream().anyMatch(session -> plan.liveAccountId().equals(session.liveAccountId()))) {
+            blockedType = "account_occupied";
+            blockedReason = "live account occupied";
+        } else if (runningSessions.size() >= tenantQuotaLimit) {
+            blockedType = "tenant_quota_exceeded";
+            blockedReason = "tenant live concurrency quota exceeded";
+        }
+        if (blockedType == null) {
+            return null;
+        }
+        return new LiveConcurrencyQueueView(
+                plan.livePlanId(),
+                plan.planName(),
+                plan.liveAccountId(),
+                blockedType,
+                blockedReason,
+                plan.scheduledStartAt()
+        );
+    }
+
+    private List<LiveRiskEventView> buildLiveRiskEvents(String tenantId) {
+        List<LiveRiskEventView> events = new ArrayList<>();
+        for (LiveSession session : listLiveSessions(tenantId)) {
+            OffsetDateTime occurredAt = session.actualEndAt() != null
+                    ? session.actualEndAt()
+                    : session.actualStartAt() != null ? session.actualStartAt() : session.createdAt();
+            if (!"standard".equals(defaultIfBlank(session.controlMode(), "standard"))) {
+                events.add(new LiveRiskEventView(
+                        "live_strong_control_enabled",
+                        "medium",
+                        session.liveSessionId(),
+                        session.livePlanId(),
+                        session.liveAccountId(),
+                        "control mode=" + session.controlMode(),
+                        occurredAt
+                ));
+            }
+            if ("manual".equals(defaultIfBlank(session.takeoverStatus(), "auto"))) {
+                events.add(new LiveRiskEventView(
+                        "manual_takeover_active",
+                        "high",
+                        session.liveSessionId(),
+                        session.livePlanId(),
+                        session.liveAccountId(),
+                        "takeover operator=" + defaultIfBlank(session.takeoverOperator(), "unknown"),
+                        occurredAt
+                ));
+            }
+            if ("rejected".equals(defaultIfBlank(session.promiseAuditStatus(), "not_reviewed"))) {
+                events.add(new LiveRiskEventView(
+                        "live_promise_audit_rejected",
+                        "high",
+                        session.liveSessionId(),
+                        session.livePlanId(),
+                        session.liveAccountId(),
+                        defaultIfBlank(session.promiseAuditRemark(), "promise audit rejected"),
+                        occurredAt
+                ));
+            }
+            if ("failed".equals(session.sessionStatus()) || (session.errorMessage() != null && !session.errorMessage().isBlank())) {
+                events.add(new LiveRiskEventView(
+                        "live_session_failed",
+                        "critical",
+                        session.liveSessionId(),
+                        session.livePlanId(),
+                        session.liveAccountId(),
+                        defaultIfBlank(session.errorMessage(), "live session failed"),
+                        occurredAt
+                ));
+            }
+        }
+        events.sort((left, right) -> right.occurredAt().compareTo(left.occurredAt()));
+        return events;
+    }
+
+    private boolean isLiveAccountReady(ChannelAccount account) {
+        String authStatus = defaultIfBlank(account.authStatus(), "unknown").toLowerCase(Locale.ROOT);
+        return List.of("connected", "authorized", "active").contains(authStatus);
+    }
+
+    private String resolveGovernanceRiskLevel(LiveAccountView account,
+                                              int runningSessionCount,
+                                              int queuedPlanCount,
+                                              boolean expiringSoon) {
+        if (!isLiveAccountHealthy(account.authStatus()) || queuedPlanCount > 0 || expiringSoon) {
+            return "high";
+        }
+        if (runningSessionCount > 0) {
+            return "medium";
+        }
+        return "low";
+    }
+
+    private boolean isLiveAccountHealthy(String authStatus) {
+        String normalized = defaultIfBlank(authStatus, "unknown").toLowerCase(Locale.ROOT);
+        return List.of("connected", "authorized", "active").contains(normalized);
+    }
+
+    private int riskRank(String riskLevel) {
+        return switch (defaultIfBlank(riskLevel, "low")) {
+            case "critical" -> 4;
+            case "high" -> 3;
+            case "medium" -> 2;
+            default -> 1;
+        };
     }
 
     public void clear() {

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [int]$LocalMySqlPort = 13306,
+    [int]$LocalPostgresPort = 15432,
 
     [int]$LocalRedisPort = 16379
 )
@@ -8,13 +8,13 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$mysqlPattern = "{0}:127.0.0.1:3306" -f $LocalMySqlPort
+$postgresPattern = "{0}:127.0.0.1:5432" -f $LocalPostgresPort
 $redisPattern = "{0}:127.0.0.1:6379" -f $LocalRedisPort
 
 $processes = Get-CimInstance Win32_Process |
     Where-Object {
         $_.Name -eq "ssh.exe" -and
-        $_.CommandLine -like "*$mysqlPattern*" -and
+        $_.CommandLine -like "*$postgresPattern*" -and
         $_.CommandLine -like "*$redisPattern*"
     }
 

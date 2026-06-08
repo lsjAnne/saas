@@ -351,6 +351,85 @@ class OpenPlatformControllerTest {
     }
 
     @Test
+    void shouldExposeWebhookOrchestrationsAndIntegrationAuditViews() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-audit-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createApp(fixture.organizationId(), ownerToken, "erp-audit-app");
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        JsonNode credentialData = objectMapper.readTree(mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/profile")
+                        .header("X-Trace-Id", "open-audit-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.appId").value(appId));
+
+        WebhookFixture webhookFixture = createWebhook(fixture.organizationId(), ownerToken, "order.shipped");
+        String payload = "{\"event\":\"order.shipped\",\"orderId\":\"order-7001\"}";
+        String requestId = "req-open-audit-001";
+        String timestamp = OffsetDateTime.now(ZoneOffset.UTC).toString();
+        String nonce = "nonce-open-audit-001";
+        String signature = signCallback(webhookFixture.secretToken(), webhookFixture.subscriptionId(), timestamp, nonce, payload);
+
+        mockMvc.perform(post("/api/open/callbacks/{id}", webhookFixture.subscriptionId())
+                        .header("X-Trace-Id", "callback-audit-trace-001")
+                        .header("X-Open-Request-Id", requestId)
+                        .header("X-Open-Timestamp", timestamp)
+                        .header("X-Open-Nonce", nonce)
+                        .header("X-Open-Signature", signature)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("accepted"));
+
+        mockMvc.perform(post("/api/open/callbacks/{id}", webhookFixture.subscriptionId())
+                        .header("X-Trace-Id", "callback-audit-trace-002")
+                        .header("X-Open-Request-Id", requestId)
+                        .header("X-Open-Timestamp", timestamp)
+                        .header("X-Open-Nonce", nonce)
+                        .header("X-Open-Signature", signature)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("1008"));
+
+        mockMvc.perform(get("/api/open/webhook-orchestrations")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].subscriptionId").value(webhookFixture.subscriptionId()))
+                .andExpect(jsonPath("$.data[0].eventCode").value("order.shipped"))
+                .andExpect(jsonPath("$.data[0].callbackAttemptCount").value(2))
+                .andExpect(jsonPath("$.data[0].acceptedCallbackCount").value(1))
+                .andExpect(jsonPath("$.data[0].rejectedCallbackCount").value(1))
+                .andExpect(jsonPath("$.data[0].replayRejectedCount").value(1))
+                .andExpect(jsonPath("$.data[0].lastResultStatus").value("rejected_replay"));
+
+        mockMvc.perform(get("/api/open/integration-audit")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalCallLogCount").value(6))
+                .andExpect(jsonPath("$.data.externalAuthorizedCount").value(1))
+                .andExpect(jsonPath("$.data.callbackAcceptedCount").value(1))
+                .andExpect(jsonPath("$.data.callbackRejectedCount").value(1))
+                .andExpect(jsonPath("$.data.scopeRejectedCount").value(0))
+                .andExpect(jsonPath("$.data.replayRejectedCount").value(1))
+                .andExpect(jsonPath("$.data.signatureRejectedCount").value(0))
+                .andExpect(jsonPath("$.data.disabledAppCount").value(0))
+                .andExpect(jsonPath("$.data.revokedCredentialCount").value(0));
+    }
+
+    @Test
     void shouldRejectExternalProfileWhenSecretInvalidAndRecordLogs() throws Exception {
         OpenPlatformFixture fixture = prepareFixture("open-platform-invalid-secret-center");
         String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
@@ -631,6 +710,93 @@ class OpenPlatformControllerTest {
                 .andExpect(jsonPath("$.data[2].traceId").value("open-erp-granular-trace-001"))
                 .andExpect(jsonPath("$.data[3].resultStatus").value("rejected_scope"))
                 .andExpect(jsonPath("$.data[3].traceId").value("open-erp-granular-trace-002"));
+    }
+
+    @Test
+    void shouldManagePluginCredentialLifecycleAndExposeOpenPlatformOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-lifecycle-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createApp(fixture.organizationId(), ownerToken, "lifecycle-app");
+        String appId = appData.path("appId").asText();
+        createWebhook(fixture.organizationId(), ownerToken, "inventory.synced");
+
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/apps/{id}/credentials", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].appId").value(appId))
+                .andExpect(jsonPath("$.data[0].credentialType").value("default"))
+                .andExpect(jsonPath("$.data[0].accessKey").value(accessKey))
+                .andExpect(jsonPath("$.data[0].active").value(true));
+
+        mockMvc.perform(post("/api/open/apps/{id}/disable", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("disabled"));
+
+        mockMvc.perform(get("/api/open/external/profile")
+                        .header("X-Trace-Id", "open-lifecycle-trace-disabled")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1008"))
+                .andExpect(jsonPath("$.message").value("plugin app disabled"));
+
+        mockMvc.perform(post("/api/open/apps/{id}/enable", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("active"));
+
+        mockMvc.perform(get("/api/open/external/profile")
+                        .header("X-Trace-Id", "open-lifecycle-trace-enabled")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.appId").value(appId));
+
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+        mockMvc.perform(post("/api/open/apps/{id}/credentials/revoke", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.appId").value(appId))
+                .andExpect(jsonPath("$.data.active").value(false));
+
+        mockMvc.perform(get("/api/open/apps/{id}/credentials", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].active").value(false));
+
+        mockMvc.perform(get("/api/open/external/profile")
+                        .header("X-Trace-Id", "open-lifecycle-trace-revoked")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1008"))
+                .andExpect(jsonPath("$.message").value("integration credential expired"));
+
+        mockMvc.perform(get("/api/open/overview")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.appCount").value(1))
+                .andExpect(jsonPath("$.data.activeAppCount").value(1))
+                .andExpect(jsonPath("$.data.disabledAppCount").value(0))
+                .andExpect(jsonPath("$.data.webhookCount").value(1))
+                .andExpect(jsonPath("$.data.enabledWebhookCount").value(1))
+                .andExpect(jsonPath("$.data.disabledWebhookCount").value(0))
+                .andExpect(jsonPath("$.data.activeCredentialCount").value(0))
+                .andExpect(jsonPath("$.data.revokedCredentialCount").value(1))
+                .andExpect(jsonPath("$.data.expiringCredentialCount").value(0))
+                .andExpect(jsonPath("$.data.totalCallLogCount").value(9));
     }
 
     private OpenPlatformFixture prepareFixture(String tenantName) throws Exception {

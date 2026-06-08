@@ -37,7 +37,7 @@ public class JdbcTenantProfileRepository implements TenantProfileRepository {
         int updated = jdbcTemplate.update(
                 """
                 UPDATE tenant
-                SET tenant_code = ?, tenant_name = ?, tenant_status = ?, trial_end_at = ?, owner_name = ?, mobile = ?, default_organization_id = ?, feature_flags = ?
+                SET tenant_code = ?, tenant_name = ?, tenant_status = ?, trial_end_at = ?, owner_name = ?, mobile = ?, default_organization_id = ?, feature_flags = CAST(? AS JSON)
                 WHERE id = ?
                 """,
                 profile.tenantCode(),
@@ -51,10 +51,10 @@ public class JdbcTenantProfileRepository implements TenantProfileRepository {
                 tenantDbId
         );
         if (updated == 0) {
-            jdbcTemplate.update(
+                jdbcTemplate.update(
                     """
                     INSERT INTO tenant (id, tenant_code, tenant_name, tenant_status, trial_end_at, owner_name, mobile, default_organization_id, feature_flags, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)
                     """,
                     tenantDbId,
                     profile.tenantCode(),

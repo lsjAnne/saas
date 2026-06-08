@@ -33,6 +33,12 @@ public class NotificationService {
         return notificationApplicationService.retryNotification(tenantId, notificationTaskId);
     }
 
+    public NotificationTask replayDeadLetterNotification(String tenantId,
+                                                         String notificationTaskId,
+                                                         ReplayDeadLetterNotificationRequest request) {
+        return notificationApplicationService.replayDeadLetterNotification(tenantId, notificationTaskId, request);
+    }
+
     public List<NotificationTask> runDueNotifications(String tenantId) {
         return notificationApplicationService.runDueNotifications(tenantId);
     }
@@ -91,6 +97,13 @@ public class NotificationService {
             String titleTemplate,
             String contentTemplate,
             Boolean enabled
+    ) {
+    }
+
+    public record ReplayDeadLetterNotificationRequest(
+            String targetReceiver,
+            String payloadJson,
+            OffsetDateTime scheduledAt
     ) {
     }
 

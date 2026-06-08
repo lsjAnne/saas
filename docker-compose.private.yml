@@ -1,0 +1,39 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dian-shang-ping-tai:private
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dian_shang_ping_tai_private
+      SPRING_DATASOURCE_USERNAME: private_user
+      SPRING_DATASOURCE_PASSWORD: private_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: private_redis_password
+      APP_AUTH_TOKEN_SECRET: private-token-secret-change-me
+      APP_AUTH_BOOTSTRAP_PASSWORD: private-bootstrap-password-change-me
+      APP_DEPLOYMENT_DEFAULT_MODE: private-deployment
+      APP_DEPLOYMENT_SUPPORTED_MODES: private-deployment
+      APP_NOTIFICATION_REQUIRE_CONFIGURED_GATEWAY: true
+    ports:
+      - "28080:8080"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: dian_shang_ping_tai_private
+      POSTGRES_USER: private_user
+      POSTGRES_PASSWORD: private_password
+    ports:
+      - "25432:5432"
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "private_redis_password"]
+    ports:
+      - "26379:6379"

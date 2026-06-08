@@ -29,7 +29,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "app.release.automation-evidence.suite-count=3",
+        "app.release.automation-evidence.environment=server-local",
+        "app.release.automation-evidence.executed-at=2026-06-08T09:59:30+08:00",
+        "app.release.automation-evidence.summary=auth/openplatform/compliance regression suites passed"
+})
 @AutoConfigureMockMvc
 class AdminTenantControllerTest {
 
@@ -261,14 +266,23 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.checklistItems.length()").value(4))
                 .andExpect(jsonPath("$.data.checklistItems[0].itemCode").value("config_hardening"))
                 .andExpect(jsonPath("$.data.checklistItems[0].status").value("blocked"))
+                .andExpect(jsonPath("$.data.checklistItems[0].detail").value(org.hamcrest.Matchers.containsString("explicit auth secret enforcement is disabled")))
+                .andExpect(jsonPath("$.data.checklistItems[0].detail").value(org.hamcrest.Matchers.containsString("legacy header context fallback is still enabled")))
                 .andExpect(jsonPath("$.data.checklistItems[1].itemCode").value("critical_state_evidence"))
                 .andExpect(jsonPath("$.data.checklistItems[1].status").value("passed"))
                 .andExpect(jsonPath("$.data.checklistItems[1].evidenceCount").value(4))
                 .andExpect(jsonPath("$.data.checklistItems[2].itemCode").value("audit_traceability"))
                 .andExpect(jsonPath("$.data.checklistItems[2].status").value("passed"))
                 .andExpect(jsonPath("$.data.checklistItems[3].itemCode").value("automation_regression_evidence"))
-                .andExpect(jsonPath("$.data.checklistItems[3].status").value("pending"))
+                .andExpect(jsonPath("$.data.checklistItems[3].status").value("passed"))
+                .andExpect(jsonPath("$.data.checklistItems[3].evidenceCount").value(3))
+                .andExpect(jsonPath("$.data.checklistItems[3].detail").value(org.hamcrest.Matchers.containsString("server-local")))
+                .andExpect(jsonPath("$.data.checklistItems[3].detail").value(org.hamcrest.Matchers.containsString("2026-06-08T09:59:30+08:00")))
+                .andExpect(jsonPath("$.data.checklistItems[3].detail").value(org.hamcrest.Matchers.containsString("auth/openplatform/compliance regression suites passed")))
                 .andExpect(jsonPath("$.data.blockingReasons[0]").value(org.hamcrest.Matchers.containsString("default auth secret")))
+                .andExpect(jsonPath("$.data.blockingReasons[1]").value(org.hamcrest.Matchers.containsString("bootstrap password")))
+                .andExpect(jsonPath("$.data.blockingReasons[2]").value(org.hamcrest.Matchers.containsString("explicit auth secret enforcement is disabled")))
+                .andExpect(jsonPath("$.data.blockingReasons[3]").value(org.hamcrest.Matchers.containsString("legacy header context fallback is still enabled")))
                 .andExpect(jsonPath("$.data.evidenceSummary.exportTaskCount").value(1))
                 .andExpect(jsonPath("$.data.evidenceSummary.cleanupTaskCount").value(1))
                 .andExpect(jsonPath("$.data.evidenceSummary.complianceAcceptanceCount").value(1))

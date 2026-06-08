@@ -994,6 +994,208 @@ class LiveControllerTest {
                 .andExpect(jsonPath("$.data[1].sessionStatus", Matchers.isOneOf("running", "failed")));
     }
 
+    @Test
+    void shouldExposeGovernanceViewsForLiveAccountsRiskEventsAndConcurrencyQueue() throws Exception {
+        LiveFixture fixture = prepareFixture(true);
+        String runningPlanId = createPlan(fixture.ownerToken(), fixture.storeId(), fixture.liveAccountId(), "live-plan-risk-running");
+        PublishedLiveProductFixture product = preparePublishedLiveProduct(fixture.ownerToken(), fixture.storeId(), "risk-governance-a", "in_pool");
+        bindLiveProduct(fixture.ownerToken(), runningPlanId, product.productId(), null, null, 10);
+        generateScript(fixture.ownerToken(), runningPlanId);
+        mockMvc.perform(post("/api/live-plans/{id}/publish", runningPlanId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.planStatus").value("ready"));
+        String liveSessionId = objectMapper.readTree(startLive(fixture.ownerToken(), runningPlanId, fixture.liveAccountId())
+                        .getResponse()
+                        .getContentAsString())
+                .path("data")
+                .path("liveSessionId")
+                .asText();
+
+        mockMvc.perform(post("/api/live-sessions/{id}/strong-control", liveSessionId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "controlMode": "strict_control",
+                                  "reason": "price commitment risk"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.controlMode").value("strict_control"));
+
+        mockMvc.perform(post("/api/live-sessions/{id}/manual-takeover", liveSessionId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "takeoverOperator": "risk-operator",
+                                  "reason": "human intervention required"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.takeoverStatus").value("manual"));
+
+        mockMvc.perform(post("/api/live-sessions/{id}/promise-audit", liveSessionId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "promiseText": "guaranteed lowest price",
+                                  "riskLevel": "high",
+                                  "decision": "rejected",
+                                  "remark": "need human review"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.promiseAuditStatus").value("rejected"));
+
+        String queuedPlanId = createPlan(fixture.ownerToken(), fixture.storeId(), fixture.liveAccountId(), "live-plan-queued");
+        bindLiveProduct(fixture.ownerToken(), queuedPlanId, product.productId(), null, null, 10);
+        generateScript(fixture.ownerToken(), queuedPlanId);
+        mockMvc.perform(post("/api/live-plans/{id}/publish", queuedPlanId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.planStatus").value("ready"));
+        schedulePlan(fixture.ownerToken(), queuedPlanId)
+                .andExpect(jsonPath("$.data.planStatus").value("scheduled"));
+
+        mockMvc.perform(get("/api/live-accounts/governance")
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].liveAccountId").value(fixture.liveAccountId()))
+                .andExpect(jsonPath("$.data[0].occupied").value(true))
+                .andExpect(jsonPath("$.data[0].runningSessionCount").value(1))
+                .andExpect(jsonPath("$.data[0].queuedPlanCount").value(1))
+                .andExpect(jsonPath("$.data[0].governanceRiskLevel").value("high"));
+
+        mockMvc.perform(get("/api/live-concurrency-queues")
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].livePlanId").value(queuedPlanId))
+                .andExpect(jsonPath("$.data[0].blockedType").value("account_occupied"))
+                .andExpect(jsonPath("$.data[0].blockedReason").value("live account occupied"));
+
+        simulateCallback(fixture.ownerToken(), liveSessionId, "interrupted", "platform disconnect")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.sessionStatus").value("failed"));
+
+        mockMvc.perform(get("/api/live-risk-events")
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$..eventCode", Matchers.hasItems(
+                        "live_strong_control_enabled",
+                        "manual_takeover_active",
+                        "live_promise_audit_rejected",
+                        "live_session_failed"
+                )));
+
+        mockMvc.perform(get("/api/live-special-analysis")
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.liveAccountCount").value(1))
+                .andExpect(jsonPath("$.data.occupiedAccountCount").value(0))
+                .andExpect(jsonPath("$.data.queuedPlanCount").value(0))
+                .andExpect(jsonPath("$.data.openRiskEventCount").value(4))
+                .andExpect(jsonPath("$.data.manualTakeoverSessionCount").value(1))
+                .andExpect(jsonPath("$.data.promiseRejectedSessionCount").value(1))
+                .andExpect(jsonPath("$.data.strongControlSessionCount").value(1))
+                .andExpect(jsonPath("$.data.failedSessionCount").value(1));
+    }
+
+    @Test
+    void shouldExposeRiskRecoveryPlansAndAnalysisDrilldown() throws Exception {
+        LiveFixture fixture = prepareFixture(true);
+        String runningPlanId = createPlan(fixture.ownerToken(), fixture.storeId(), fixture.liveAccountId(), "live-plan-recovery-running");
+        PublishedLiveProductFixture product = preparePublishedLiveProduct(fixture.ownerToken(), fixture.storeId(), "recovery-a", "in_pool");
+        bindLiveProduct(fixture.ownerToken(), runningPlanId, product.productId(), null, null, 10);
+        generateScript(fixture.ownerToken(), runningPlanId);
+        mockMvc.perform(post("/api/live-plans/{id}/publish", runningPlanId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk());
+        String liveSessionId = objectMapper.readTree(startLive(fixture.ownerToken(), runningPlanId, fixture.liveAccountId())
+                        .getResponse()
+                        .getContentAsString())
+                .path("data")
+                .path("liveSessionId")
+                .asText();
+
+        mockMvc.perform(post("/api/live-sessions/{id}/strong-control", liveSessionId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "controlMode": "strict_control",
+                                  "reason": "price commitment risk"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/live-sessions/{id}/manual-takeover", liveSessionId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "takeoverOperator": "risk-operator",
+                                  "reason": "human intervention required"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/live-sessions/{id}/promise-audit", liveSessionId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "promiseText": "guaranteed lowest price",
+                                  "riskLevel": "high",
+                                  "decision": "rejected",
+                                  "remark": "need manual review"
+                                }
+                                """))
+                .andExpect(status().isOk());
+
+        String queuedPlanId = createPlan(fixture.ownerToken(), fixture.storeId(), fixture.liveAccountId(), "live-plan-recovery-queued");
+        bindLiveProduct(fixture.ownerToken(), queuedPlanId, product.productId(), null, null, 10);
+        generateScript(fixture.ownerToken(), queuedPlanId);
+        mockMvc.perform(post("/api/live-plans/{id}/publish", queuedPlanId)
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk());
+        schedulePlan(fixture.ownerToken(), queuedPlanId)
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/live-risk-recovery-plans")
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$..entityType", Matchers.hasItems("live_session", "queued_plan")))
+                .andExpect(jsonPath("$..riskCode", Matchers.hasItems("live_promise_audit_rejected", "account_occupied")))
+                .andExpect(jsonPath("$..recoveryAction", Matchers.hasItems("manual_review_and_script_fix", "reassign_or_wait_account")))
+                .andExpect(jsonPath("$..requiresManualReview", Matchers.hasItems(true)));
+
+        simulateCallback(fixture.ownerToken(), liveSessionId, "interrupted", "platform disconnect")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.sessionStatus").value("failed"));
+
+        mockMvc.perform(get("/api/live-special-analysis/drilldown")
+                        .header("Authorization", "Bearer " + fixture.ownerToken()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.highRiskSessionIds[0]").value(liveSessionId))
+                .andExpect(jsonPath("$.data.failedSessionIds[0]").value(liveSessionId))
+                .andExpect(jsonPath("$.data.manualTakeoverSessionIds[0]").value(liveSessionId))
+                .andExpect(jsonPath("$.data.promiseRejectedSessionIds[0]").value(liveSessionId))
+                .andExpect(jsonPath("$.data.queuedPlanIds[0]").value(queuedPlanId))
+                .andExpect(jsonPath("$.data.riskEventCodes", Matchers.hasItems(
+                        "live_strong_control_enabled",
+                        "manual_takeover_active",
+                        "live_promise_audit_rejected",
+                        "live_session_failed"
+                )));
+    }
+
     private LiveFixture prepareFixture(boolean subscribeBasic) throws Exception {
         JsonNode tenantData = registerTenant("live-test-center");
         String tenantId = tenantData.path("tenantId").asText();

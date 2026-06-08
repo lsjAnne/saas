@@ -56,7 +56,7 @@ public class JdbcStoreRepository implements StoreRepository {
                             default_ship_config,
                             created_at
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)
                         """,
                         new String[]{"id"}
                 );
@@ -96,7 +96,7 @@ public class JdbcStoreRepository implements StoreRepository {
         jdbcTemplate.update(
                 """
                 UPDATE store
-                SET profit_threshold = ?, risk_threshold = ?, default_ship_config = ?
+                SET profit_threshold = ?, risk_threshold = ?, default_ship_config = CAST(? AS JSON)
                 WHERE id = ? AND tenant_id = ?
                 """,
                 store.profitThreshold(),

@@ -143,7 +143,7 @@ public class DashboardController {
     }
 
     @PostMapping("/api/bi/export-tasks")
-    @RequireTenantPermission(AuthPermissionCodes.TENANT_DATA_EXPORT_MANAGE)
+    @RequireTenantPermission(value = AuthPermissionCodes.TENANT_DATA_EXPORT_MANAGE, requireSecondaryConfirmation = true)
     public ApiResponse<BiExportTaskView> saveBiExportTask(@Valid @RequestBody SaveBiExportTaskRequest request) {
         return ApiResponse.success(
                 dashboardService.saveBiExportTask(

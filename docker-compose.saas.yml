@@ -1,0 +1,42 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dian-shang-ping-tai:saas
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dian_shang_ping_tai
+      SPRING_DATASOURCE_USERNAME: saas_user
+      SPRING_DATASOURCE_PASSWORD: saas_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: saas_redis_password
+      APP_AUTH_TOKEN_SECRET: saas-token-secret-change-me
+      APP_AUTH_BOOTSTRAP_PASSWORD: saas-bootstrap-password-change-me
+      APP_DEPLOYMENT_DEFAULT_MODE: standard-saas
+      APP_DEPLOYMENT_SUPPORTED_MODES: standard-saas,private-deployment
+      APP_NOTIFICATION_REQUIRE_CONFIGURED_GATEWAY: true
+      APP_NOTIFICATION_SMS_MOCK_MODE: false
+      APP_NOTIFICATION_EMAIL_MOCK_MODE: false
+      APP_NOTIFICATION_FEISHU_MOCK_MODE: false
+    ports:
+      - "18080:8080"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: dian_shang_ping_tai
+      POSTGRES_USER: saas_user
+      POSTGRES_PASSWORD: saas_password
+    ports:
+      - "15432:5432"
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "saas_redis_password"]
+    ports:
+      - "16379:6379"

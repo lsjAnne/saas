@@ -36,6 +36,26 @@ public class LiveService {
         return liveApplicationService.getConcurrencyOverview(tenantId);
     }
 
+    public List<LiveConcurrencyQueueView> listConcurrencyQueues(String tenantId) {
+        return liveApplicationService.listConcurrencyQueues(tenantId);
+    }
+
+    public List<LiveRiskEventView> listLiveRiskEvents(String tenantId) {
+        return liveApplicationService.listLiveRiskEvents(tenantId);
+    }
+
+    public LiveSpecialAnalysisView getLiveSpecialAnalysis(String tenantId) {
+        return liveApplicationService.getLiveSpecialAnalysis(tenantId);
+    }
+
+    public List<LiveRiskRecoveryPlanView> listRiskRecoveryPlans(String tenantId) {
+        return liveApplicationService.listRiskRecoveryPlans(tenantId);
+    }
+
+    public LiveSpecialAnalysisDrilldownView getLiveSpecialAnalysisDrilldown(String tenantId) {
+        return liveApplicationService.getLiveSpecialAnalysisDrilldown(tenantId);
+    }
+
     public LivePlan createLivePlan(String tenantId, CreateLivePlanRequest request) {
         return liveApplicationService.createLivePlan(tenantId, request);
     }
@@ -66,6 +86,10 @@ public class LiveService {
 
     public List<LiveAccountView> listLiveAccounts(String tenantId) {
         return liveApplicationService.listLiveAccounts(tenantId);
+    }
+
+    public List<LiveAccountGovernanceView> listLiveAccountGovernance(String tenantId) {
+        return liveApplicationService.listLiveAccountGovernance(tenantId);
     }
 
     public LiveScript generateScript(String tenantId, String livePlanId) {
@@ -184,6 +208,21 @@ public class LiveService {
     ) {
     }
 
+    public record LiveAccountGovernanceView(
+            String liveAccountId,
+            String organizationId,
+            String accountName,
+            String authStatus,
+            boolean occupied,
+            String occupiedSessionId,
+            int runningSessionCount,
+            int queuedPlanCount,
+            boolean expiringSoon,
+            String governanceRiskLevel,
+            OffsetDateTime expiresAt
+    ) {
+    }
+
     public record LiveConcurrencyCheckView(
             String livePlanId,
             boolean allowed,
@@ -257,6 +296,63 @@ public class LiveService {
             int remainingQuota,
             List<LiveRunningSessionView> runningSessions,
             List<LiveAccountOccupancyView> occupiedAccounts
+    ) {
+    }
+
+    public record LiveConcurrencyQueueView(
+            String livePlanId,
+            String planName,
+            String liveAccountId,
+            String blockedType,
+            String blockedReason,
+            OffsetDateTime scheduledStartAt
+    ) {
+    }
+
+    public record LiveRiskEventView(
+            String eventCode,
+            String severity,
+            String liveSessionId,
+            String livePlanId,
+            String liveAccountId,
+            String detail,
+            OffsetDateTime occurredAt
+    ) {
+    }
+
+    public record LiveSpecialAnalysisView(
+            int liveAccountCount,
+            int occupiedAccountCount,
+            int queuedPlanCount,
+            int openRiskEventCount,
+            int manualTakeoverSessionCount,
+            int promiseRejectedSessionCount,
+            int strongControlSessionCount,
+            int failedSessionCount
+    ) {
+    }
+
+    public record LiveRiskRecoveryPlanView(
+            String entityType,
+            String entityId,
+            String liveSessionId,
+            String livePlanId,
+            String riskCode,
+            String riskLevel,
+            String recoveryAction,
+            boolean requiresManualReview,
+            String blockingReason
+    ) {
+    }
+
+    public record LiveSpecialAnalysisDrilldownView(
+            List<String> highRiskSessionIds,
+            List<String> failedSessionIds,
+            List<String> manualTakeoverSessionIds,
+            List<String> promiseRejectedSessionIds,
+            List<String> queuedPlanIds,
+            List<String> blockedTypes,
+            List<String> riskEventCodes
     ) {
     }
 

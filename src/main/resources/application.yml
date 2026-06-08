@@ -5,7 +5,7 @@ spring:
   application:
     name: dianShangPingTai
   datasource:
-    url: jdbc:h2:mem:dianShangPingTai;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:dianShangPingTai;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -38,12 +38,34 @@ spring:
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 app:
   persistence:
     mode: jdbc
   redis:
     verify-on-startup: false
     tenant-key-prefix: dsp
+  release:
+    automation-evidence:
+      suite-count: ${APP_RELEASE_AUTOMATION_EVIDENCE_SUITE_COUNT:0}
+      environment: ${APP_RELEASE_AUTOMATION_EVIDENCE_ENVIRONMENT:}
+      executed-at: ${APP_RELEASE_AUTOMATION_EVIDENCE_EXECUTED_AT:}
+      summary: ${APP_RELEASE_AUTOMATION_EVIDENCE_SUMMARY:}
   auth:
     token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
     token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
@@ -52,15 +74,58 @@ app:
     bootstrap-admin-username: ${APP_AUTH_BOOTSTRAP_ADMIN_USERNAME:}
     bootstrap-admin-password: ${APP_AUTH_BOOTSTRAP_ADMIN_PASSWORD:}
     bootstrap-admin-display-name: ${APP_AUTH_BOOTSTRAP_ADMIN_DISPLAY_NAME:平台系统管理员}
+  deployment:
+    default-mode: ${APP_DEPLOYMENT_DEFAULT_MODE:standard-saas}
+    supported-modes: ${APP_DEPLOYMENT_SUPPORTED_MODES:standard-saas,private-deployment}
+  integrations:
+    notification:
+      require-configured-gateway: ${APP_NOTIFICATION_REQUIRE_CONFIGURED_GATEWAY:false}
+      channel-bindings:
+        site_message: site_message_inapp
+        sms: aliyun_sms
+        email: smtp_default
+        feishu_bot: feishu_default
+      providers:
+        site_message_inapp:
+          notify-type: site_message
+          enabled: true
+          mock-mode: true
+          receipt-supported: false
+          endpoint: internal://notification-center
+          description: in-app notification gateway
+        aliyun_sms:
+          notify-type: sms
+          enabled: true
+          mock-mode: ${APP_NOTIFICATION_SMS_MOCK_MODE:true}
+          receipt-supported: true
+          endpoint: ${APP_NOTIFICATION_SMS_ENDPOINT:https://dysmsapi.aliyuncs.com}
+          receipt-callback-path: /api/notifications/{id}/delivery-receipts
+          description: aliyun sms gateway
+        smtp_default:
+          notify-type: email
+          enabled: true
+          mock-mode: ${APP_NOTIFICATION_EMAIL_MOCK_MODE:true}
+          receipt-supported: true
+          endpoint: ${APP_NOTIFICATION_EMAIL_ENDPOINT:smtp://mail.example.com:25}
+          receipt-callback-path: /api/notifications/{id}/delivery-receipts
+          description: smtp mail gateway
+        feishu_default:
+          notify-type: feishu_bot
+          enabled: true
+          mock-mode: ${APP_NOTIFICATION_FEISHU_MOCK_MODE:true}
+          receipt-supported: true
+          endpoint: ${APP_NOTIFICATION_FEISHU_ENDPOINT:https://open.feishu.cn/open-apis/bot/v2/hook}
+          receipt-callback-path: /api/notifications/{id}/delivery-receipts
+          description: feishu bot gateway
 
 ---
 spring:
   config:
     activate:
-      on-profile: mysql
+      on-profile: postgres
   datasource:
-    url: jdbc:mysql://192.168.112.101:3306/dian_shang_ping_tai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia%2FShanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://192.168.112.101:5432/dian_shang_ping_tai
+    driver-class-name: org.postgresql.Driver
     username: root
     password: 123456
   sql:
@@ -117,8 +182,8 @@ spring:
     activate:
       on-profile: tunnel-local
   datasource:
-    url: jdbc:mysql://127.0.0.1:13306/dian_shang_ping_tai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia%2FShanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://127.0.0.1:15432/dian_shang_ping_tai
+    driver-class-name: org.postgresql.Driver
     username: root
     password: 123456
   sql:
@@ -175,10 +240,10 @@ spring:
     activate:
       on-profile: server-local
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/dian_shang_ping_tai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia%2FShanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 123456
+    url: jdbc:postgresql://127.0.0.1:5432/dian_shang_ping_tai
+    driver-class-name: org.postgresql.Driver
+    username: username
+    password: password
   sql:
     init:
       mode: always
@@ -211,7 +276,7 @@ spring:
     redis:
       host: 127.0.0.1
       port: 6379
-      password: 123456
+      password: mypassword
       timeout: 2s
       connect-timeout: 2s
 

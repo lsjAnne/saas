@@ -148,6 +148,14 @@ public class LiveController {
         );
     }
 
+    @GetMapping("/api/live-accounts/governance")
+    public ApiResponse<List<LiveAccountGovernanceView>> listLiveAccountGovernance() {
+        return ApiResponse.success(
+                liveApplicationService.listLiveAccountGovernance(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
     @PostMapping("/api/live-plans/{id}/validate-concurrency")
     public ApiResponse<LiveConcurrencyCheckView> validateConcurrency(@PathVariable String id) {
         return ApiResponse.success(
@@ -208,6 +216,46 @@ public class LiveController {
     public ApiResponse<LiveConcurrencyOverviewView> getConcurrencyOverview() {
         return ApiResponse.success(
                 liveApplicationService.getConcurrencyOverview(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/live-concurrency-queues")
+    public ApiResponse<List<LiveConcurrencyQueueView>> listConcurrencyQueues() {
+        return ApiResponse.success(
+                liveApplicationService.listConcurrencyQueues(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/live-risk-events")
+    public ApiResponse<List<LiveRiskEventView>> listLiveRiskEvents() {
+        return ApiResponse.success(
+                liveApplicationService.listLiveRiskEvents(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/live-special-analysis")
+    public ApiResponse<LiveSpecialAnalysisView> getLiveSpecialAnalysis() {
+        return ApiResponse.success(
+                liveApplicationService.getLiveSpecialAnalysis(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/live-risk-recovery-plans")
+    public ApiResponse<List<LiveRiskRecoveryPlanView>> listRiskRecoveryPlans() {
+        return ApiResponse.success(
+                liveApplicationService.listRiskRecoveryPlans(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/live-special-analysis/drilldown")
+    public ApiResponse<LiveSpecialAnalysisDrilldownView> getLiveSpecialAnalysisDrilldown() {
+        return ApiResponse.success(
+                liveApplicationService.getLiveSpecialAnalysisDrilldown(TenantAccessSupport.requiredTenantId()),
                 TraceIdHolder.get()
         );
     }

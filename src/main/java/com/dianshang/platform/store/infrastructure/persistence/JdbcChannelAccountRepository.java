@@ -53,7 +53,7 @@ public class JdbcChannelAccountRepository implements ChannelAccountRepository {
                             extra_config,
                             created_at
                         )
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, CAST(? AS JSON), ?)
                         """,
                         new String[]{"id"}
                 );
@@ -85,7 +85,7 @@ public class JdbcChannelAccountRepository implements ChannelAccountRepository {
         jdbcTemplate.update(
                 """
                 UPDATE channel_account
-                SET auth_status = ?, expires_at = ?, extra_config = ?
+                SET auth_status = ?, expires_at = ?, extra_config = CAST(? AS JSON)
                 WHERE id = ?
                 """,
                 channelAccount.authStatus(),

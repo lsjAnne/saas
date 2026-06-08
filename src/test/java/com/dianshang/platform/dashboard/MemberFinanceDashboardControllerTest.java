@@ -4,6 +4,7 @@ import com.dianshang.platform.approval.application.ApprovalService;
 import com.dianshang.platform.approval.domain.repository.ApprovalInstanceRepository;
 import com.dianshang.platform.approval.model.ApprovalInstance;
 import com.dianshang.platform.audit.AuditLogService;
+import com.dianshang.platform.auth.AuthPermissionCodes;
 import com.dianshang.platform.campaign.application.CampaignService;
 import com.dianshang.platform.campaign.domain.repository.CampaignActivityRepository;
 import com.dianshang.platform.campaign.domain.repository.CouponTemplateRepository;
@@ -1213,6 +1214,22 @@ class MemberFinanceDashboardControllerTest {
                                   "remark": "导出日报驾驶舱"
                                 }
                                 """.formatted(fixture.storeId())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1015"))
+                .andExpect(jsonPath("$.message").value("sensitive operation confirmation required"));
+
+        confirmSensitivePermission(fixture.token(), AuthPermissionCodes.TENANT_DATA_EXPORT_MANAGE);
+
+        mockMvc.perform(withBearerToken(post("/api/bi/export-tasks"), fixture.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "reportCode": "bi_cockpit_daily",
+                                  "storeId": "%s",
+                                  "exportFormat": "xlsx",
+                                  "remark": "导出日报驾驶舱"
+                                }
+                                """.formatted(fixture.storeId())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.reportCode").value("bi_cockpit_daily"))
                 .andExpect(jsonPath("$.data.exportStatus").value("pending"));
@@ -1544,6 +1561,20 @@ class MemberFinanceDashboardControllerTest {
                 .path("data")
                 .path("token")
                 .asText();
+    }
+
+    private void confirmSensitivePermission(String token, String permissionCode) throws Exception {
+        mockMvc.perform(withBearerToken(post("/api/auth/sensitive-operation-confirmations"), token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "currentPassword": "123456",
+                                  "permissionCode": "%s"
+                                }
+                                """.formatted(permissionCode)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.permissionCode").value(permissionCode))
+                .andExpect(jsonPath("$.data.confirmed").value(true));
     }
 
     private MockHttpServletRequestBuilder withBearerToken(MockHttpServletRequestBuilder requestBuilder, String token) {

@@ -371,6 +371,142 @@ class NotificationControllerTest {
     }
 
     @Test
+    void shouldReplayDeadLetterNotificationWithManualOverrides() throws Exception {
+        NotificationFixture fixture = prepareFixture();
+        OffsetDateTime scheduledAt = OffsetDateTime.now().plusSeconds(1);
+
+        MvcResult result = mockMvc.perform(post("/api/notifications/send")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "notifyType": "email",
+                                  "templateCode": "manual_notice_email",
+                                  "targetReceiver": "fail@example.com",
+                                  "payloadJson": "{\\\"forceFail\\\":true}",
+                                  "priority": "high",
+                                  "scheduledAt": "%s"
+                                }
+                                """.formatted(scheduledAt)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String notificationId = objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("data")
+                .path("notificationTaskId")
+                .asText();
+
+        Thread.sleep(1200L);
+
+        mockMvc.perform(post("/api/notifications/run-due")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/notifications/run-due")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/notifications/run-due")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].sendStatus").value("dead_letter"));
+
+        mockMvc.perform(post("/api/notifications/{id}/dead-letter-replay", notificationId)
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "targetReceiver": "ops@example.com",
+                                  "payloadJson": "{\\\"bizType\\\":\\\"manual-replay\\\"}"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.notificationTaskId").value(notificationId))
+                .andExpect(jsonPath("$.data.targetReceiver").value("ops@example.com"))
+                .andExpect(jsonPath("$.data.sendStatus").value("sent"))
+                .andExpect(jsonPath("$.data.retryCount").value(4))
+                .andExpect(jsonPath("$.data.deadLetterReason").isEmpty());
+    }
+
+    @Test
+    void shouldRecordDeliveryReceiptsAndExposeGatewayOverview() throws Exception {
+        NotificationFixture fixture = prepareFixture();
+
+        MvcResult sentResult = mockMvc.perform(post("/api/notifications/send")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "notifyType": "email",
+                                  "templateCode": "manual_notice_email",
+                                  "targetReceiver": "ops@example.com",
+                                  "payloadJson": "{\\\"bizType\\\":\\\"receipt\\\"}",
+                                  "priority": "urgent"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.sendStatus").value("sent"))
+                .andReturn();
+
+        String notificationId = objectMapper.readTree(sentResult.getResponse().getContentAsString())
+                .path("data")
+                .path("notificationTaskId")
+                .asText();
+
+        mockMvc.perform(post("/api/notifications/{id}/delivery-receipts", notificationId)
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "gatewayCode": "aliyun_sms",
+                                  "deliveryStatus": "delivered",
+                                  "providerMessageId": "msg-001",
+                                  "receiptTraceId": "trace-notify-001"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.notificationTaskId").value(notificationId))
+                .andExpect(jsonPath("$.data.sendStatus").value("delivered"))
+                .andExpect(jsonPath("$.data.deadLetterReason").isEmpty());
+
+        mockMvc.perform(get("/api/notifications/gateway-overview")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalTaskCount").value(1))
+                .andExpect(jsonPath("$.data.deliveredTaskCount").value(1))
+                .andExpect(jsonPath("$.data.failedTaskCount").value(0))
+                .andExpect(jsonPath("$.data.deadLetterTaskCount").value(0))
+                .andExpect(jsonPath("$.data.urgentTaskCount").value(1))
+                .andExpect(jsonPath("$.data.receiptPendingTaskCount").value(0))
+                .andExpect(jsonPath("$.data.configuredGatewayCount").value(4))
+                .andExpect(jsonPath("$.data.enabledGatewayCount").value(4))
+                .andExpect(jsonPath("$.data.mockGatewayCount").value(4))
+                .andExpect(jsonPath("$.data.providerStats.length()").value(4))
+                .andExpect(jsonPath("$.data.channelStats.length()").value(1))
+                .andExpect(jsonPath("$.data.channelStats[0].notifyType").value("email"))
+                .andExpect(jsonPath("$.data.channelStats[0].deliveredTaskCount").value(1))
+                .andExpect(jsonPath("$.data.providerStats[0].gatewayCode").value("aliyun_sms"))
+                .andExpect(jsonPath("$.data.providerStats[0].routedTaskCount").value(1))
+                .andExpect(jsonPath("$.data.providerStats[0].deliveredTaskCount").value(1));
+    }
+
+    @Test
     void shouldCreateNotificationsFromApprovalLifecycle() throws Exception {
         NotificationFixture fixture = prepareFixture();
         String replenishmentTaskId = createReplenishmentTask(fixture);

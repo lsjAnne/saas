@@ -35,7 +35,7 @@ public class TenantAuditLogController {
     }
 
     @GetMapping(value = "/export", produces = "text/csv;charset=UTF-8")
-    @RequireTenantPermission(AuthPermissionCodes.TENANT_AUDIT_EXPORT)
+    @RequireTenantPermission(value = AuthPermissionCodes.TENANT_AUDIT_EXPORT, requireSecondaryConfirmation = true)
     public ResponseEntity<String> export() {
         String tenantId = TenantAccessSupport.requiredTenantId();
         String csv = buildCsv(auditLogService.findByTenantId(tenantId));

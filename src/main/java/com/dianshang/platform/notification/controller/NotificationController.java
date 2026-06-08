@@ -4,7 +4,11 @@ import com.dianshang.platform.common.api.ApiResponse;
 import com.dianshang.platform.common.trace.TraceIdHolder;
 import com.dianshang.platform.auth.AuthPermissionCodes;
 import com.dianshang.platform.notification.application.NotificationApplicationService;
+import com.dianshang.platform.notification.application.NotificationApplicationService.DeliveryReceiptCommand;
+import com.dianshang.platform.notification.application.NotificationApplicationService.NotificationChannelGatewayStatView;
+import com.dianshang.platform.notification.application.NotificationApplicationService.NotificationGatewayOverviewView;
 import com.dianshang.platform.notification.application.NotificationService.BatchSendNotificationRequest;
+import com.dianshang.platform.notification.application.NotificationService.ReplayDeadLetterNotificationRequest;
 import com.dianshang.platform.notification.application.NotificationService.SendNotificationRequest;
 import com.dianshang.platform.notification.application.NotificationService.UpdateNotificationTemplateRequest;
 import com.dianshang.platform.notification.model.NotificationTask;
@@ -37,6 +41,14 @@ public class NotificationController {
         );
     }
 
+    @GetMapping("/api/notifications/gateway-overview")
+    public ApiResponse<NotificationGatewayOverviewView> getGatewayOverview() {
+        return ApiResponse.success(
+                notificationApplicationService.getGatewayOverview(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
     @PostMapping("/api/notifications/send")
     public ApiResponse<NotificationTask> sendNotification(@Valid @RequestBody SaveNotificationRequest request) {
         return ApiResponse.success(
@@ -57,6 +69,32 @@ public class NotificationController {
     public ApiResponse<NotificationTask> retryNotification(@PathVariable String id) {
         return ApiResponse.success(
                 notificationApplicationService.retryNotification(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/notifications/{id}/delivery-receipts")
+    public ApiResponse<NotificationTask> recordDeliveryReceipt(@PathVariable String id,
+                                                               @Valid @RequestBody SaveDeliveryReceiptRequest request) {
+        return ApiResponse.success(
+                notificationApplicationService.recordDeliveryReceipt(
+                        TenantAccessSupport.requiredTenantId(),
+                        id,
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/notifications/{id}/dead-letter-replay")
+    public ApiResponse<NotificationTask> replayDeadLetterNotification(@PathVariable String id,
+                                                                      @RequestBody ReplayNotificationTaskRequest request) {
+        return ApiResponse.success(
+                notificationApplicationService.replayDeadLetterNotification(
+                        TenantAccessSupport.requiredTenantId(),
+                        id,
+                        request == null ? null : request.toCommand()
+                ),
                 TraceIdHolder.get()
         );
     }
@@ -84,6 +122,30 @@ public class NotificationController {
                 notificationApplicationService.updateTemplate(TenantAccessSupport.requiredTenantId(), id, request.toCommand()),
                 TraceIdHolder.get()
         );
+    }
+}
+
+record ReplayNotificationTaskRequest(
+        String targetReceiver,
+        String payloadJson,
+        OffsetDateTime scheduledAt
+) {
+    ReplayDeadLetterNotificationRequest toCommand() {
+        return new ReplayDeadLetterNotificationRequest(targetReceiver, payloadJson, scheduledAt);
+    }
+}
+
+record SaveDeliveryReceiptRequest(
+        @NotBlank(message = "gatewayCode is required")
+        String gatewayCode,
+        @NotBlank(message = "deliveryStatus is required")
+        String deliveryStatus,
+        String providerMessageId,
+        String receiptTraceId,
+        String failureReason
+) {
+    DeliveryReceiptCommand toCommand() {
+        return new DeliveryReceiptCommand(gatewayCode, deliveryStatus, providerMessageId, receiptTraceId, failureReason);
     }
 }
 

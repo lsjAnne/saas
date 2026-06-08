@@ -9,13 +9,13 @@ param(
 
     [string]$JavaHome = "D:\jdk17",
 
-    [int]$LocalMySqlPort = 13306,
+    [int]$LocalPostgresPort = 15432,
 
     [int]$LocalRedisPort = 16379,
 
     [string]$RemoteHost = "127.0.0.1",
 
-    [int]$RemoteMySqlPort = 3306,
+    [int]$RemotePostgresPort = 5432,
 
     [int]$RemoteRedisPort = 6379,
 
@@ -82,7 +82,7 @@ function Start-SshTunnel {
     $arguments += @(
         "-N"
         "-L"
-        ("{0}:{1}:{2}" -f $LocalMySqlPort, $RemoteHost, $RemoteMySqlPort)
+        ("{0}:{1}:{2}" -f $LocalPostgresPort, $RemoteHost, $RemotePostgresPort)
         "-L"
         ("{0}:{1}:{2}" -f $LocalRedisPort, $RemoteHost, $RemoteRedisPort)
         $sshTarget
@@ -104,18 +104,18 @@ if ($SshKeyPath -and -not (Test-Path -LiteralPath $SshKeyPath)) {
     throw "SSH key does not exist: $SshKeyPath"
 }
 
-$mysqlReady = Test-LocalPort -Port $LocalMySqlPort
+$postgresReady = Test-LocalPort -Port $LocalPostgresPort
 $redisReady = Test-LocalPort -Port $LocalRedisPort
 
-if (-not ($mysqlReady -and $redisReady)) {
+if (-not ($postgresReady -and $redisReady)) {
     if ($ReuseExistingTunnel) {
         throw "ReuseExistingTunnel was set, but tunnel ports are not ready."
     }
 
     $tunnelProcess = Start-SshTunnel -User $SshUser -Host $SshHost
 
-    if (-not (Wait-PortReady -Port $LocalMySqlPort)) {
-        throw "SSH tunnel started, but local MySQL port $LocalMySqlPort is not ready."
+    if (-not (Wait-PortReady -Port $LocalPostgresPort)) {
+        throw "SSH tunnel started, but local PostgreSQL port $LocalPostgresPort is not ready."
     }
 
     if (-not (Wait-PortReady -Port $LocalRedisPort)) {

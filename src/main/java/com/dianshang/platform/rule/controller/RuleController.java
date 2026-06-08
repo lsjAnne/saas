@@ -4,12 +4,15 @@ import com.dianshang.platform.common.api.ApiResponse;
 import com.dianshang.platform.common.trace.TraceIdHolder;
 import com.dianshang.platform.auth.AuthPermissionCodes;
 import com.dianshang.platform.rule.application.RuleService;
+import com.dianshang.platform.rule.application.RuleService.FallbackSimulationRequest;
+import com.dianshang.platform.rule.application.RuleService.FallbackSimulationView;
+import com.dianshang.platform.rule.application.RuleService.RuleGovernanceOverviewView;
+import com.dianshang.platform.rule.application.RuleService.RuleOrchestrationView;
 import com.dianshang.platform.rule.application.RuleService.SaveRuleRequest;
 import com.dianshang.platform.rule.model.AutomationRule;
 import com.dianshang.platform.tenant.TenantAccessSupport;
 import com.dianshang.platform.tenant.security.RequireTenantPermission;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +31,22 @@ public class RuleController {
     public ApiResponse<List<AutomationRule>> listRules() {
         return ApiResponse.success(
                 ruleService.listRules(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/rules/governance-overview")
+    public ApiResponse<RuleGovernanceOverviewView> getGovernanceOverview() {
+        return ApiResponse.success(
+                ruleService.getGovernanceOverview(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/rules/orchestrations")
+    public ApiResponse<List<RuleOrchestrationView>> listOrchestrations() {
+        return ApiResponse.success(
+                ruleService.listOrchestrations(TenantAccessSupport.requiredTenantId()),
                 TraceIdHolder.get()
         );
     }
@@ -61,6 +80,14 @@ public class RuleController {
     public ApiResponse<AutomationRule> disableRule(@PathVariable String id) {
         return ApiResponse.success(
                 ruleService.disableRule(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/rules/fallback-simulations")
+    public ApiResponse<FallbackSimulationView> simulateFallback(@Valid @RequestBody FallbackSimulationRequest request) {
+        return ApiResponse.success(
+                ruleService.simulateFallback(TenantAccessSupport.requiredTenantId(), request),
                 TraceIdHolder.get()
         );
     }

@@ -8,16 +8,19 @@ CREATE TABLE IF NOT EXISTS auth_user (
     tenant_id VARCHAR(64) DEFAULT NULL,
     organization_id VARCHAR(64) DEFAULT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'active',
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    password_updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_login_at DATETIME DEFAULT NULL,
-    UNIQUE KEY uk_auth_user_username (username),
-    KEY idx_auth_user_tenant_role (tenant_id, role_code, status)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    password_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_login_at TIMESTAMP DEFAULT NULL,
+    CONSTRAINT uk_auth_user_username UNIQUE (username)
 );
+
+CREATE INDEX IF NOT EXISTS idx_auth_user_tenant_role
+    ON auth_user (tenant_id, role_code, status);
 
 CREATE TABLE IF NOT EXISTS auth_role_permission (
     role_code VARCHAR(32) NOT NULL,
     permission_code VARCHAR(64) NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (role_code, permission_code)
 );
+

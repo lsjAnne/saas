@@ -1,5 +1,6 @@
 package com.dianshang.platform.audit;
 
+import com.dianshang.platform.auth.AuthPermissionCodes;
 import com.dianshang.platform.auth.dto.LoginResponse;
 import com.dianshang.platform.common.api.ApiResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -85,6 +86,14 @@ class TenantAuditLogControllerTest {
 
         mockMvc.perform(get("/api/tenant/audit-logs/export")
                         .header("Authorization", "Bearer " + tenantAToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1015"))
+                .andExpect(jsonPath("$.message").value("sensitive operation confirmation required"));
+
+        confirmSensitivePermission(tenantAToken, AuthPermissionCodes.TENANT_AUDIT_EXPORT);
+
+        mockMvc.perform(get("/api/tenant/audit-logs/export")
+                        .header("Authorization", "Bearer " + tenantAToken))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"tenant-audit-" + tenantA + ".csv\""))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("CREATE_ORGANIZATION")))
@@ -139,5 +148,20 @@ class TenantAuditLogControllerTest {
                 }
         );
         return response.data().token();
+    }
+
+    private void confirmSensitivePermission(String token, String permissionCode) throws Exception {
+        mockMvc.perform(post("/api/auth/sensitive-operation-confirmations")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "currentPassword": "123456",
+                                  "permissionCode": "%s"
+                                }
+                                """.formatted(permissionCode)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.permissionCode").value(permissionCode))
+                .andExpect(jsonPath("$.data.confirmed").value(true));
     }
 }

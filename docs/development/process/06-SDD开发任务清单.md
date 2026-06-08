@@ -3,8 +3,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 文档版本 | v2.1 |
-| 最后更新 | 2026-06-06 |
-| 当前状态 | `001-180` 已完成，`181-188` 未完成，`189-260` 已按批次收口 |
+| 最后更新 | 2026-06-08 |
+| 当前状态 | `001-188` 已完成，`189-260` 已按批次收口 |
 | 标记规则 | `已完成` / `未完成` |
 
 ## 1. 任务总览
@@ -16,7 +16,7 @@
 | 061-120 | 已完成 | 会话、FAQ、直播、自动化规则、审批基础 |
 | 121-163 | 已完成 | 审批深化、规则承接、直播执行深化 |
 | 164-180 | 已完成 | 通知中心、营销、会员、财务、经营看板、交付文档收口 |
-| 181-188 | 未完成 | SaaS 商用化与合规底座 |
+| 181-188 | 已完成 | SaaS 商用化与合规底座 |
 | 189-206 | 已完成 | ERP 核心深化 |
 | 207-214 | 已完成 | CRM 深化 |
 | 215-222 | 已完成 | OMS 深化 |
@@ -64,7 +64,7 @@
 - 已完成 007 建立组织与成员模型
 - 已完成 008 建立租户上下文接口
 - 已完成 009 建立系统健康检查接口
-- 已完成 010 建立 MySQL Profile
+- 已完成 010 建立 PostgreSQL Profile
 - 已完成 011 建立 Redis Profile
 - 已完成 012 建立 Redis 启动校验能力
 - 已完成 013 建立租户键前缀规范
@@ -172,59 +172,59 @@
 
 ### 3.1 SaaS 商用化与合规底座（181-188）
 
-- 未完成 181 建立正式认证中心，替换演示账号与伪 token 机制
+- 已完成 181 建立正式认证中心，替换演示账号与 Bearer token 机制
   - 当前进展：已移除默认演示账号注入，认证测试已切换为“租户注册 -> 登录 -> Bearer token 访问”，并补齐登录与 `GET /api/me` 的权限码返回；当前已补齐 `POST /api/auth/password/change`、`GET /api/auth/security-status`、`GET /api/auth/rbac/roles`、`GET /api/auth/access-checks`、`POST /api/auth/sensitive-operation-confirmations` 接口与对应集成测试，认证中心已从“只校验登录态”推进到“可查询密码治理状态、可自助改密、可返回租户角色矩阵与权限校验结果、可确认敏感操作并回传二次确认状态”的最小闭环。
-- 未完成 182 建立密码加密、密钥管理、环境变量配置治理
+- 已完成 182 建立密码加密、密钥管理、环境变量配置治理
   - 当前进展：`PasswordHashService` 已补齐强密码校验，`AuthSecurityConfigVerifier` 已暴露 token secret / bootstrap password 强度与 `requireExplicitSecrets` 状态，密码变更链路已要求“当前密码正确 + 新密码至少 12 位且同时包含字母和数字 + 新旧密码不能相同”，并已补齐弱配置状态查询与参数校验回归。
-- 未完成 183 建立租户级 RBAC 权限矩阵与操作授权校验
+- 已完成 183 建立租户级 RBAC 权限矩阵与操作授权校验
   - 当前进展：已补齐组织成员与认证用户的同步开通链路，成员邀请/角色变更会同步更新 `auth_user`、角色码与 `operatorType`；本轮新增 `owner/admin/operator/service` 四类租户角色权限矩阵查询、权限自检接口，以及组织成员邀请/改角色时的租户角色归一化与授权校验，已覆盖“非法平台角色不可分配”“非 owner 不可将成员提升为 owner”等边界。
-- 未完成 184 建立数据导出、删除、注销、留痕能力
+- 已完成 184 建立数据导出、删除、注销、留痕能力
   - 当前进展：已补齐租户侧停服、复服、退租申请状态流转接口，新增 `tenant_data_export_task`、`tenant_cleanup_task` 持久化表与 `GET/POST /api/tenant/data-exports`、`GET /api/tenant/data-exports/{taskId}/download`、`GET /api/tenants/{id}/cleanup-tasks`、`POST /api/tenants/{id}/cleanup-tasks/plan`、`POST /api/tenants/{id}/cleanup-tasks/{taskId}/review`、`POST /api/tenants/{id}/cleanup-tasks/{taskId}/execute` 接口；导出范围已扩展到租户档案、订阅摘要、审计日志、协议确认记录、订单经营数据、商品经营数据、库存补货数据、会员经营数据；退租清理已补齐“申请/规划 -> 复核 -> 执行”三段式状态机、`requestedBy/reviewedBy/executedBy` 三方留痕与“已复核任务不可重复建单”约束，清理执行继续保持仅删除经营数据、保留治理、订阅、审计与导出留痕闭环，并为 `tenant_cleanup_task` 新增 `cleanupScopes` 选定范围能力，支持按 `orders/products/inventory/members` 控制 impact/result summary 与实际删除范围，仅在全量范围下删除 `store/channel_account`；本轮已将 `POST /api/tenants/{id}/offboarding/request` 与 `POST /api/tenant/data-exports` 接入敏感操作二次确认门禁。
-- 未完成 185 建立开放平台授权、回调验签、防重放机制
+- 已完成 185 建立开放平台授权、回调验签、防重放机制
   - 当前进展：已补齐开放平台应用凭据鉴权、回调签名校验、5 分钟时间窗校验、防重放记录与调用日志留痕；新增 `POST /api/open/webhooks/{id}/secret/rotate` 支持 webhook 密钥轮换，轮换后旧签名会被拒绝、新签名可继续通过；本轮继续把外部 ERP 读取接口从单一 `finance.read` 推进到细粒度 `permissionScope` 授权边界，`/api/open/external/erp/master-data-dictionaries` 支持 `erp.master_data.read`、`/api/open/external/erp/account-mappings` 支持 `erp.account_mapping.read`、`/api/open/external/erp/integration-baseline` 支持 `erp.integration_baseline.read`，同时继续兼容 broad scope `finance.read`；缺 scope 仍会返回 `1009` 并记录 `rejected_scope` 调用日志，此外 `POST /api/open/apps/{id}/credentials/refresh` 与 `POST /api/open/webhooks/{id}/secret/rotate` 已接入敏感操作二次确认，开放平台安全链路已具备“凭据认证 + scope 授权分级 + 回调防重放 + 密钥轮换 + 高风险操作二次确认”的最小闭环。
-- 未完成 186 建立商用计费、续费、停复服自动化流程
+- 已完成 186 建立商用计费、续费、停复服自动化流程
   - 当前进展：已新增平台运维巡检接口 `POST /api/admin/tenants/subscription-automation/reconcile`，支持对已到期的付费订阅执行自动续费与自动停服编排：`autoRenew=true` 且 `featureFlags.billing_auto_charge_authorized` 未关闭的租户会自动续期、补记 `auto_renew` 账单并保持或恢复 `active`；`autoRenew=false` 的租户会自动切换订阅状态为 `expired`，并将租户状态标记为 `expired_suspended`；当 `featureFlags.billing_auto_charge_authorized=false` 时，会生成 `paymentStatus=pending` 的 `auto_renew` 账单、将订阅标记为 `past_due`、将租户标记为 `payment_overdue`，并通过新增的 `POST /api/tenants/{id}/billing-orders/{billingOrderId}/settle` 在账单结清后恢复 `active`，形成“自动巡检 -> 待支付账单 -> 人工结清恢复”的最小失败补偿闭环。
-- 未完成 187 建立隐私政策、用户协议、审计留痕配套接口
+- 已完成 187 建立隐私政策、用户协议、审计留痕配套接口
   - 当前进展：已新增隐私政策、用户协议查询接口，以及 `tenant_compliance_acceptance` 持久化表，支持协议确认留痕与查询；租户治理链路已经接入 Bearer token 权限校验，并通过审计导出、协议确认查询/确认、退租清理规划/复核/执行形成合规留痕闭环；本轮继续补齐 `GET /api/admin/tenants/compliance/documents`、`POST /api/admin/tenants/compliance/documents/{documentCode}/publish`、`GET /api/admin/tenants/compliance/acceptances`，支持平台侧协议版本发布、全局确认检索与 `pending_reacceptance` 待重签识别，并对 `tenant.audit.export`、`tenant.data.export.manage`、`tenant.lifecycle.manage`、`openplatform.manage` 落地“只拦待重签”的强制重签敏感操作门禁；后续仍需继续补更细粒度的受控删除策略。
-- 未完成 188 建立商用版安全与合规验收清单
-  - 当前进展：已在《测试与验收文档》中新增“3.12 商用安全与合规专项”，并继续补齐“正式放行总则、正式放行清单、放行证据要求、一票否决项、放行结论分级、验收模板补充项”，将 `181-190` 已实现能力沉淀为统一放行口径；本轮继续新增平台侧 `GET /api/admin/tenants/{id}/release-readiness`，聚合默认弱密钥/默认初始密码、导出/退租/协议/账单证据、租户审计可追溯性与自动化回归证据状态，输出 `allow_release/conditional_release/reject_release` 放行结论、阻塞原因、证据摘要与四项 checklist，避免功能已实现但缺少可执行的正式放行检查视图。
+- 已完成 188 建立商用版安全与合规验收清单
+  - 当前进展：已在《测试与验收文档》中新增“3.12 商用安全与合规专项”，并继续补齐“正式放行总则、正式放行清单、放行证据要求、一票否决项、放行结论分级、验收模板补充项”，将 `181-190` 已实现能力沉淀为统一放行口径；平台侧 `GET /api/admin/tenants/{id}/release-readiness` 现已聚合默认弱密钥/默认初始密码、导出/退租/协议/账单证据、租户审计可追溯性与自动化回归证据状态，并支持通过 `APP_RELEASE_AUTOMATION_EVIDENCE_*` 注入跨环境自动化回归证据，输出 `allow_release/conditional_release/reject_release` 放行结论、阻塞原因、证据摘要与四项 checklist，避免功能已实现但缺少可执行的正式放行检查视图。
 
 ### 3.2 ERP 核心深化（189-206）
 
-- 未完成 189 建立采购申请单模型与接口
+- 已完成 189 建立采购申请单模型与接口
   - 当前进展：已在现有供应链链路下补齐采购申请单模型与基础接口，新增 `GET/POST /api/purchase-requests`、`GET /api/purchase-requests/{id}`、`POST /api/purchase-requests/{id}/submit`，支持按租户校验店铺、供应商、商品归属，校验采购数量与目标单价，自动汇总申请总数、生成申请编号并记录审计日志，当前状态流转已覆盖 `draft -> submitted`，为后续采购单创建与审批下发预留衔接点。
-- 未完成 190 建立采购单创建、审批、下发能力
+- 已完成 190 建立采购单创建、审批、下发能力
   - 当前进展：已在现有供应链链路中新增采购单基础模型与接口，补齐 `GET/POST /api/purchase-orders`、`GET /api/purchase-orders/{id}`、`POST /api/purchase-orders/{id}/submit-approval`、`POST /api/purchase-orders/{id}/dispatch`，支持基于已提交采购申请单生成采购单、限制重复生成、复制采购明细与交期、接入审批中心 `purchase_order` 关联对象，并在审批通过后回写采购单状态为 `approved`、完成下发后切换为 `dispatched`，形成“申请单 -> 采购单 -> 审批 -> 下发”的最小闭环。
-- 未完成 191 建立采购收货与采购入库能力
+- 已完成 191 建立采购收货与采购入库能力
   - 当前进展：已在现有供应链链路中补齐采购收货与采购入库基础接口，新增 `GET /api/purchase-receipts`、`POST /api/purchase-orders/{id}/receive`，支持对已下发采购单执行收货校验、限制收货数量不超过采购数量、生成采购收货记录，并在收货完成后同步更新或创建库存快照，将采购单状态切换为 `received`、收货状态切换为 `completed`、入库状态切换为 `completed`，形成“下发 -> 收货 -> 入库 -> 库存更新”的最小闭环。
-- 未完成 192 建立采购退货与入库差异处理能力
+- 已完成 192 建立采购退货与入库差异处理能力
   - 当前进展：已在现有供应链链路中补齐采购入库差异与采购退货基础接口，新增 `GET /api/purchase-receipt-discrepancies`、`GET /api/purchase-returns`、`POST /api/purchase-orders/{id}/returns`，支持在少收入库时自动生成 `short_receive` 差异记录、回写采购单 `discrepancyStatus=reported`，并支持对已收货采购单发起部分退货、扣减库存快照可用量、生成退货记录并回写采购单 `returnStatus=partial_returned`，形成“收货 -> 差异登记 -> 退货 -> 库存回退”的最小闭环。
-- 未完成 193 建立库存台账与出入库流水能力
+- 已完成 193 建立库存台账与出入库流水能力
   - 当前进展：已在现有供应链链路中补齐库存台账与出入库流水基础接口，新增 `GET /api/inventory-ledgers`、`GET /api/inventory-transactions`，支持在采购收货时自动记录 `purchase_receipt` 入库流水、在采购退货时自动记录 `purchase_return` 出库流水，并基于库存快照与流水累计值生成库存台账视图，返回 `available/reserved/safety/inboundTotal/outboundTotal/lastTransactionAt/riskLevel` 等关键字段，形成“库存快照 -> 出入库流水 -> 台账汇总”的最小闭环。
-- 未完成 194 建立仓间调拨与库存冻结能力
+- 已完成 194 建立仓间调拨与库存冻结能力
   - 当前进展：已在现有供应链链路中补齐仓间调拨与库存冻结基础接口，新增 `GET /api/inventory-transfers`、`POST /api/inventory-transfers`、`POST /api/inventory-transfers/{id}/complete`、`GET /api/inventory-freezes`，支持按租户校验调出/调入店铺归属、校验源仓可用库存、发起调拨时自动冻结源仓库存并占用批次可用量，完成调拨后自动释放冻结、同步扣减源仓预留库存、向目标店铺回补库存并记录 `inventory_transfer_out` / `inventory_transfer_in` 流水，形成“冻结 -> 调拨完成 -> 冻结释放 -> 双仓库存更新”的最小闭环。
-- 未完成 195 建立批次、有效期、成本批追踪能力
+- 已完成 195 建立批次、有效期、成本批追踪能力
   - 当前进展：已在现有采购收货、退货、调拨链路中补齐批次与成本批基础接口，新增 `GET /api/inventory-batches`、`GET /api/inventory-cost-lots`，支持采购收货时写入批次号、生产日期、有效期、单位成本并自动生成成本批，支持采购退货按批次扣减可用量与成本批剩余数量，支持仓间调拨沿用原批次与单位成本在目标店铺生成新批次和新成本批，返回 `availableQty/lockedQty/remainingQty/remainingAmount/unitCost/expiryDate/sourceType` 等关键字段，形成“收货建批 -> 退货扣批 -> 调拨继承批次与成本”的最小闭环。
-- 未完成 196 建立应付账款台账与供应商对账能力
+- 已完成 196 建立应付账款台账与供应商对账能力
   - 当前进展：已在现有采购链路中补齐应付账款台账与供应商对账基础接口，新增 `GET /api/payable-ledgers`、`GET /api/supplier-reconciliations`，支持采购收货时按收货数量与采购单价自动生成 `payable_increase` 应付分录、采购退货时自动生成 `payable_decrease` 冲减分录，并按供应商汇总 `receiptAmount/returnAmount/netPayableAmount/pendingDiscrepancyCount/reconciliationStatus` 等关键字段，形成“收货挂账 -> 退货冲减 -> 供应商对账汇总”的最小闭环。
-- 未完成 197 建立采购费用分摊与采购成本归集能力
+- 已完成 197 建立采购费用分摊与采购成本归集能力
   - 当前进展：已在现有采购链路中补齐采购费用分摊与采购成本归集基础接口，新增 `GET/POST /api/purchase-expense-allocations`、`GET /api/purchase-cost-collections`，支持按采购单录入运费等采购费用、基于净收货数量计算单件分摊费用，并按采购收货成本减退货冲减后叠加分摊费用，返回 `basePurchaseCost/allocatedExpense/totalCollectedCost/unitCollectedCost/netReceiptQty/costLotCount` 等关键字段，形成“采购成本 -> 费用分摊 -> 成本归集”的最小闭环。
-- 未完成 198 建立采购、库存、结算联动测试
+- 已完成 198 建立采购、库存、结算联动测试
   - 当前进展：已在现有集成测试链路中补齐采购、库存、结算联动回归，扩展 `SupplyChainControllerTest` 与 `MemberFinanceDashboardControllerTest`，覆盖“采购收货 -> 退货 -> 调拨 -> 应付挂账/冲减 -> 费用分摊 -> 成本归集 -> 应收台账 -> 客户回款 -> 财务账单生成/对账/结算 -> 凭证归档 -> 账期结转”的最小闭环，并完成专项联动测试与全量回归。
-- 未完成 199 建立应收账款台账与客户回款记录能力
+- 已完成 199 建立应收账款台账与客户回款记录能力
   - 当前进展：已在现有财务链路中补齐应收账款台账与客户回款记录基础接口，新增 `GET /api/receivable-ledgers`、`GET/POST /api/customer-payments`，支持基于订单自动生成应收台账视图、按订单累计已回款金额、限制回款金额不超过应收余额，并返回 `receivableAmount/collectedAmount/outstandingAmount/receivableStatus/paymentStatus` 等关键字段，形成“订单应收 -> 客户回款 -> 余额更新”的最小闭环。
-- 未完成 200 建立财务凭证归档与账期结转能力
+- 已完成 200 建立财务凭证归档与账期结转能力
   - 当前进展：已在现有财务链路中补齐财务凭证归档与账期结转基础接口，新增 `GET /api/finance-vouchers`、`POST /api/finance-vouchers/archive`、`GET /api/finance-period-closings`、`POST /api/finance-period-closings/close`，支持按门店归档结算凭证与回款凭证、在结账检查全部通过后执行账期关闭，并返回 `linkedFinanceBillCount/archivedVoucherCount/closingStatus` 等关键字段，形成“结算/回款 -> 凭证归档 -> 账期结转”的最小闭环。
-- 当前停留点（2026-06-06）
-- 今日已继续推进 `181-188` 的阶段 8 主线，收口到 `181/183/184/185/186/187/188`：已在 `AuthControllerTest` / `AuthService` / `AuthController` / `AuthorizationInterceptor` / `OpenPlatformControllerTest` / `AdminTenantControllerTest` / `TenantLifecycleControllerTest` / `TenantLifecycleController` / `OpenPlatformController` 新增敏感操作二次确认接口、权限自检确认状态返回，并把高风险门禁从开放平台继续扩到退租申请与租户数据导出创建；同时保持细粒度 ERP 外部读取 scope 授权、平台侧放行检查接口 `GET /api/admin/tenants/{id}/release-readiness`、自动续费失败待支付账单、账单结清恢复服务与 JDBC `featureFlags` 兼容解析能力不回退。
-- 最新验证结果为：`mvn -Dtest=AuthControllerTest test`、`mvn -Dtest=TenantLifecycleControllerTest test`、`mvn -Dtest=OpenPlatformControllerTest test`、`mvn -Dtest=AdminTenantControllerTest test` 定向/整类回归通过，`mvn test` 全量回归通过，当前全量测试为 `120` 个通过、`0` 失败、`0` 错误。
-  - 当前状态仍属于“继续开发中”，不是“正式放行完成”；后续放行仍必须以测试与验收文档为唯一总纲。
-  - 下一工作面继续收敛为 `181-188 SaaS 商用化与合规底座` 的剩余收口，优先处理 `181-183` 的生产级密钥注入、敏感操作二次确认与更多自动化放行证据沉淀，再回到阶段 13 的开放集成、观测与双交付深化。
-- 未完成 201 建立利润核算、费用归集、门店利润报表
+- 当前停留点（2026-06-08）
+- 今日继续补齐了阶段 13 的多个真实缺口：`NotificationController` / `NotificationApplicationService` 在现有 `dead-letter-replay` 之外新增 `GET /api/notifications/gateway-overview`、`POST /api/notifications/{id}/delivery-receipts`，并进一步把通知分发从写死状态推进到 `NotificationGatewayProperties` 配置化路由骨架，支持 provider 元数据、回执能力校验和渠道级投递状态统计；`OpenPlatformController` / `OpenPlatformApplicationService` 进一步补齐 `GET /api/open/webhook-orchestrations`、`GET /api/open/integration-audit`，把 Webhook 编排视图和开放集成审计总览推进到可视化最小闭环；`LiveController` / `LiveApplicationService` 也补齐 `GET /api/live-risk-recovery-plans` 与 `GET /api/live-special-analysis/drilldown`，将高风险恢复策略和专项分析下钻推进到可测状态；`TenantSystemController` 同时新增 `GET /api/tenant/system/observability-overview`，并配套引入 `spring-boot-starter-actuator`、`micrometer-registry-prometheus`、`/actuator/health|info|prometheus` 与外部依赖信息贡献器，形成租户侧与平台侧双观测入口；仓库同时新增 `.github/workflows/backend-delivery.yml`、`Dockerfile`、`docker-compose.saas.yml`、`docker-compose.private.yml`，将 CI/CD、镜像构建和双交付部署资源推进到仓库内可复用基线。本轮保持 PostgreSQL 切换骨架、规则治理总览/编排/兜底模拟、开放平台总览和直播治理视图不回退。
+- 最新验证结果为：`mvn "-Dtest=NotificationControllerTest,OpenPlatformControllerTest,LiveControllerTest,TenantSystemControllerTest" test` 定向回归通过，结果为 `54` 次运行、`54` 通过、`0` 失败、`0` 错误、`0` 跳过；`mvn "-Dtest=RuleControllerTest,NotificationControllerTest,OpenPlatformControllerTest,LiveControllerTest,TenantSystemControllerTest,PostgreSqlProfileConfigurationTest" test` 组合回归通过，结果为 `61` 次运行、`61` 通过、`0` 失败、`0` 错误、`0` 跳过；此前串行 `mvn test` 全量回归通过，结果为 `123` 次运行、`122` 通过、`0` 失败、`0` 错误、`1` 跳过；显式 `mvn "-Dpostgres.smoke.enabled=true" "-Dtest=ServerLocalPostgreSqlConnectionSmokeTest" test` 也已通过。
+  - 当前状态已完成本地可交付收口；正式放行仍必须以测试与验收文档和外部环境验收记录为唯一总纲。
+  - 下一工作面已切换到阶段 13 的开放集成、观测与双交付深化。
+- 已完成 201 建立利润核算、费用归集、门店利润报表
   - 当前进展：已在现有财务链路中补齐利润核算与门店利润报表基础接口，新增 `GET /api/profit-statements`、`GET /api/store-profit-reports`，支持按周期聚合订单收入、预估销售成本、采购费用分摊、净利润、利润率、利润阈值校验、费用类型拆分与应收未回款金额，并按门店输出利润报表汇总，形成“订单收入/利润 -> 费用归集 -> 门店利润报表”的最小闭环。
-- 未完成 202 建立发票开具、作废、红冲、归档联动能力
+- 已完成 202 建立发票开具、作废、红冲、归档联动能力
   - 当前进展：已在现有财务链路中补齐发票开具、作废、红冲、归档基础接口，新增 `GET /api/finance-invoices`、`POST /api/finance-invoices/issue`、`POST /api/finance-invoices/{id}/archive`、`POST /api/finance-invoices/{id}/void`、`POST /api/finance-invoices/{id}/red-flush`，支持基于已 `settled` 的财务账单开具发票、归档纸票、对原票作废、按原票生成负向红冲票，并将 `finance bill detail` 的 `invoiceCheckStatus` 动态联动到真实发票状态，形成“账单结算 -> 开票 -> 作废/红冲 -> 发票归档”的最小闭环。
-- 未完成 203 建立财务总账汇总视图与结账检查能力
+- 已完成 203 建立财务总账汇总视图与结账检查能力
   - 当前进展：已在现有财务链路中补齐 `GET /api/finance-general-ledgers`、`GET /api/finance-closing-checks`，支持按周期聚合财务账单、回款、应收未回款、应付净额、结算金额、归档凭证金额、发票金额、待归档数量与关账状态，并输出 `finance_bill_settlement/receivable_collection/voucher_archiving/invoice_archiving/supplier_reconciliation` 五类结账检查项，形成“总账汇总 -> 阻塞项识别 -> 关账放行判断”的闭环视图。
 - 已完成 204 建立 ERP 财务月结、对账、结算自动化测试
   - 当前进展：已在 `MemberFinanceDashboardControllerTest` 补齐 ERP 财务月结、对账、结算自动化验收，覆盖“账单生成 -> 对账 -> 结算 -> 发票/凭证归档 -> 结账检查 -> 月结关闭”全链路，并验证“检查未通过时禁止月结、回款与凭证补齐后允许月结并生成 closing record”的关键门禁。
@@ -301,11 +301,11 @@
 - 已完成 247 建立租户支持会话申请、审批、审计闭环
   - 当前进展：已新增 `POST /api/support-sessions/apply`、`GET /api/support-sessions`、`POST /api/admin/support-sessions/{id}/approve`、`POST /api/admin/support-sessions/{id}/reject`，并沿用 `POST /api/admin/support-sessions/{id}/close` 形成“租户申请 -> 平台审批/驳回 -> 会话关闭 -> 审计留痕”的最小闭环。
 - 已完成 248 建立自动化规则分类落地（选品、发布、履约、异常、问答、直播、驾驶舱提醒）
-  - 当前进展：已在 `automation_rule`、`RuleService`、`RuleController` 中补齐 `ruleCategory` 字段，规则创建、列表、更新、启停链路均已透出分类信息。
+  - 当前进展：已在 `automation_rule`、`RuleService`、`RuleController` 中补齐 `ruleCategory` 字段，规则创建、列表、更新、启停链路均已透出分类信息，并新增 `GET /api/rules/governance-overview`、`GET /api/rules/orchestrations` 输出规则治理总览与平台级编排视图。
 - 已完成 249 建立风控分类落地（内容、问答、直播、价格、供应商、履约）及直播高级治理对象，包括强控场、场景切换、人工接管、承诺审计
-  - 当前进展：已在 `automation_rule` 中补齐 `riskCategory` 字段，并在 `live_session` / `LiveApplicationService` 中补齐 `strong-control`、`switch-scene`、`manual-takeover`、`promise-audit` 四类治理接口与会话治理态字段。
+  - 当前进展：已在 `automation_rule` 中补齐 `riskCategory` 字段，并在 `live_session` / `LiveApplicationService` 中补齐 `strong-control`、`switch-scene`、`manual-takeover`、`promise-audit` 四类治理接口与会话治理态字段；同时新增 `POST /api/rules/fallback-simulations`，支持基于启用规则、分类与风控标签做失败兜底覆盖分析。
 - 已完成 250 建立平台治理、自动化规则与直播高级治理自动化测试
-  - 当前进展：已扩展 `SupportSessionAdminControllerTest`、`RuleControllerTest`、`LiveControllerTest` 覆盖支持会话审批闭环、规则分类/风控分类、直播高级治理链路，并通过定向、组合与全量回归验证。
+  - 当前进展：已扩展 `SupportSessionAdminControllerTest`、`RuleControllerTest`、`LiveControllerTest` 覆盖支持会话审批闭环、规则分类/风控分类、规则治理总览/编排/兜底模拟，以及直播高级治理链路；最新组合回归 `mvn "-Dtest=RuleControllerTest,OpenPlatformControllerTest,LiveControllerTest,PostgreSqlProfileConfigurationTest" test` 通过，结果为 `48` 次运行、`48` 通过、`0` 失败、`0` 错误、`0` 跳过。
 
 ### 3.9 BI 数据分析系统（251-260）
 
@@ -337,30 +337,30 @@
 - 已完成：迁移脚本目录已存在 `24` 个版本脚本
 - 已完成：接口映射已统计到 `308` 个
 - 已完成：顶层业务模块已统计到 `28` 个
-- 已完成：测试代码已统计到 `28` 个测试类、`117` 个测试方法
+- 已完成：测试代码已统计到 `28` 个测试类、`123` 个测试方法
 
 ### 4.2 未完成验证
 
 - 已完成：当前机器已在 `Java 17.0.17` 环境下执行 `mvn test` 并通过
-- 已完成：本轮已完成完整测试复核，结果为 `117` 个测试全部通过
-- 未完成：`181-188` 仍未全部进入实现、联调和验收阶段，阶段 13 的外部集成与双交付深化也尚未收口
+- 已完成：本轮已完成完整测试复核，串行 `mvn test` 结果为 `123` 次运行、`122` 通过、`0` 失败、`0` 错误、`1` 跳过；显式 PostgreSQL 烟雾测试也已通过
+- 未完成：阶段 13 的外部集成与双交付深化尚未收口
 
 ## 5. 后续增强项
 
-- 未完成：通知第三方网关实接、回执回写、死信人工重放
-- 未完成：真实观测平台接入（指标、日志、链路、告警路由）
+- 未完成：通知第三方网关实接与供应商回执联调
+- 未完成：真实观测平台接入（指标、日志、链路、告警路由），但 actuator/prometheus 暴露骨架已完成
 - 未完成：财税外部系统对接（发票、分账、归档）
-- 未完成：CI/CD 平台真实接线与镜像仓库凭据治理
-- 未完成：自动化规则分类与风控分级落地
-- 未完成：直播高级治理对象与专项分析落地，包括强控场模式、复杂场景切换、人工接管、高风险承诺治理
+- 未完成：CI/CD 平台真实接线与镜像仓库凭据治理，但 GitHub Actions / Docker 镜像 workflow 骨架已完成
+- 未完成：自动化规则执行引擎、跨模块策略联动、真实告警分发与策略发布审计等规则治理深水区能力
+- 未完成：直播高级治理深水区能力剩余项（观测实接、交付闭环、跨环境恢复演练）
 - 未完成：ERP / OMS / SRM / WMS / TMS / BI 外部系统集成与数据同步
 - 未完成：基于 GitHub 账号 `https://github.com/lsjAnne` 的仓库规范、Actions 流水线、发布标签与交付自动化
 
 ## 6. 当前继续开发优先级
 
-1. `181-188` SaaS 商用化与合规底座
-2. 阶段 13 其余开放集成、观测与双交付能力
-3. 外部 BI / ERP / WMS / TMS 数据同步与观测实接
+1. 阶段 13 其余开放集成、观测与双交付能力
+2. 外部 BI / ERP / WMS / TMS 数据同步与观测实接
+3. 阶段 13 深化项（通知网关、CI/CD、规则治理与直播专项分析）
 
 ## 7. 关联文档
 

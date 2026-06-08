@@ -7,14 +7,14 @@ CREATE TABLE IF NOT EXISTS tenant_data_export_task (
     status VARCHAR(32) NOT NULL,
     file_name VARCHAR(128) NOT NULL,
     content_type VARCHAR(64) NOT NULL,
-    export_content LONGTEXT NOT NULL,
+    export_content TEXT NOT NULL,
     masking_strategy VARCHAR(64) DEFAULT NULL,
-    time_range_start DATETIME DEFAULT NULL,
-    time_range_end DATETIME DEFAULT NULL,
-    download_expires_at DATETIME NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    completed_at DATETIME DEFAULT NULL,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    time_range_start TIMESTAMP DEFAULT NULL,
+    time_range_end TIMESTAMP DEFAULT NULL,
+    download_expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP DEFAULT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenant_data_export_task_tenant_created
@@ -27,9 +27,10 @@ CREATE TABLE IF NOT EXISTS tenant_compliance_acceptance (
     document_version VARCHAR(32) NOT NULL,
     accepted_by VARCHAR(64) NOT NULL,
     accepted_source VARCHAR(32) NOT NULL,
-    accepted_at DATETIME NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    accepted_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenant_compliance_acceptance_lookup
     ON tenant_compliance_acceptance (tenant_id, document_code, accepted_at, acceptance_id);
+

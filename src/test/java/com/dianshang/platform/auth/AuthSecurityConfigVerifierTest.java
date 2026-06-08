@@ -12,7 +12,8 @@ class AuthSecurityConfigVerifierTest {
         AuthSecurityConfigVerifier verifier = new AuthSecurityConfigVerifier(
                 AuthSecurityConfigVerifier.DEFAULT_TOKEN_SECRET,
                 AuthSecurityConfigVerifier.DEFAULT_BOOTSTRAP_PASSWORD,
-                false
+                false,
+                true
         );
 
         assertThatCode(() -> verifier.run(null)).doesNotThrowAnyException();
@@ -23,7 +24,8 @@ class AuthSecurityConfigVerifierTest {
         AuthSecurityConfigVerifier verifier = new AuthSecurityConfigVerifier(
                 AuthSecurityConfigVerifier.DEFAULT_TOKEN_SECRET,
                 "StrongBootstrapPassword123",
-                true
+                true,
+                false
         );
 
         assertThatThrownBy(verifier::verifyOrThrow)
@@ -36,7 +38,8 @@ class AuthSecurityConfigVerifierTest {
         AuthSecurityConfigVerifier verifier = new AuthSecurityConfigVerifier(
                 "strong-token-secret-value-for-prod-123456",
                 "short123",
-                true
+                true,
+                false
         );
 
         assertThatThrownBy(verifier::verifyOrThrow)
@@ -49,9 +52,22 @@ class AuthSecurityConfigVerifierTest {
         AuthSecurityConfigVerifier verifier = new AuthSecurityConfigVerifier(
                 "strong-token-secret-value-for-prod-123456",
                 "StrongBootstrapPassword123",
-                true
+                true,
+                false
         );
 
         assertThatCode(verifier::verifyOrThrow).doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldExposeLegacyHeaderContextFlag() {
+        AuthSecurityConfigVerifier verifier = new AuthSecurityConfigVerifier(
+                "strong-token-secret-value-for-prod-123456",
+                "StrongBootstrapPassword123",
+                true,
+                true
+        );
+
+        org.assertj.core.api.Assertions.assertThat(verifier.isLegacyHeaderContextEnabled()).isTrue();
     }
 }
