@@ -7,6 +7,7 @@ import com.dianshang.platform.live.application.LiveApplicationService;
 import com.dianshang.platform.notification.application.NotificationApplicationService;
 import com.dianshang.platform.notification.application.NotificationGatewayProperties;
 import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService;
+import com.dianshang.platform.saas.application.SaasTenantService;
 import com.dianshang.platform.fulfillment.application.ExternalRoutingAdapter;
 import com.dianshang.platform.system.dto.HealthInfo;
 import com.dianshang.platform.tenant.TenantContext;
@@ -31,6 +32,7 @@ public class TenantSystemController {
     private final OpenPlatformApplicationService openPlatformApplicationService;
     private final LiveApplicationService liveApplicationService;
     private final ExternalRoutingAdapter externalRoutingAdapter;
+    private final SaasTenantService saasTenantService;
     private final Environment environment;
 
     public TenantSystemController(AuditLogService auditLogService,
@@ -39,6 +41,7 @@ public class TenantSystemController {
                                   OpenPlatformApplicationService openPlatformApplicationService,
                                   LiveApplicationService liveApplicationService,
                                   ExternalRoutingAdapter externalRoutingAdapter,
+                                  SaasTenantService saasTenantService,
                                   Environment environment) {
         this.auditLogService = auditLogService;
         this.notificationApplicationService = notificationApplicationService;
@@ -46,6 +49,7 @@ public class TenantSystemController {
         this.openPlatformApplicationService = openPlatformApplicationService;
         this.liveApplicationService = liveApplicationService;
         this.externalRoutingAdapter = externalRoutingAdapter;
+        this.saasTenantService = saasTenantService;
         this.environment = environment;
     }
 
@@ -77,6 +81,8 @@ public class TenantSystemController {
                 .filter(log -> log.resultStatus() != null && log.resultStatus().startsWith("rejected"))
                 .count();
         int liveRiskEventCount = liveApplicationService.listLiveRiskEvents(tenantId).size();
+        SaasTenantService.ExternalIntegrationConnectivitySnapshot externalIntegrationConnectivity =
+                saasTenantService.getExternalIntegrationConnectivitySnapshot();
         return ApiResponse.success(
                 new ObservabilityOverview(
                         tenantId,
@@ -100,6 +106,7 @@ public class TenantSystemController {
                         isDualDeliveryAcceptanceReady(),
                         resolveDeliveryRepository(),
                         buildObservabilityStack(),
+                        externalIntegrationConnectivity,
                         buildExternalErpPlatformView(),
                         buildExternalWmsPlatformView(),
                         buildExternalMessagingPlatformView(),
@@ -350,6 +357,7 @@ record ObservabilityOverview(
         boolean dualDeliveryAcceptanceReady,
         String deliveryRepository,
         ObservabilityStackView observabilityStack,
+        SaasTenantService.ExternalIntegrationConnectivitySnapshot externalIntegrationConnectivity,
         ExternalErpPlatformView externalErpPlatform,
         ExternalWmsPlatformView externalWmsPlatform,
         ExternalMessagingPlatformView externalMessagingPlatform,

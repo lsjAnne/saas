@@ -1052,6 +1052,10 @@ public class SaasTenantService {
         );
     }
 
+    public ExternalIntegrationConnectivitySnapshot getExternalIntegrationConnectivitySnapshot() {
+        return buildExternalIntegrationConnectivitySnapshot();
+    }
+
     public void clear() {
         tenantCleanupTaskRepository.deleteAll();
         tenantDataExportTaskRepository.deleteAll();

@@ -1,14 +1,26 @@
 package com.dianshang.platform.system;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import com.dianshang.platform.audit.AuditLogService;
 import com.dianshang.platform.notification.application.NotificationApplicationService;
 import com.dianshang.platform.notification.application.NotificationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -74,6 +86,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class TenantSystemControllerTest {
 
+    private static final HttpServer EXTERNAL_HTTP_SERVER = createExternalHttpServer();
+    private static final int HTTP_PORT = EXTERNAL_HTTP_SERVER.getAddress().getPort();
+    private static final TcpProbeServer RABBITMQ_TCP_SERVER = createRabbitMqProbeServer();
+
+    @DynamicPropertySource
+    static void registerExternalProbeProperties(DynamicPropertyRegistry registry) {
+        String httpBase = "http://127.0.0.1:" + HTTP_PORT;
+        String messagingEndpoint = "amqp://127.0.0.1:" + RABBITMQ_TCP_SERVER.port() + "/tenant-hub";
+        registry.add("app.integrations.external.systems.erp.endpoint", () -> httpBase + "/ofbiz/webtools/control");
+        registry.add("app.integrations.external.systems.wms.endpoint", () -> httpBase + "/openboxes/api");
+        registry.add("app.integrations.external.systems.messaging.endpoint", () -> messagingEndpoint);
+        registry.add("app.integrations.external.systems.bi.endpoint", () -> httpBase + "/superset/api/v1");
+        registry.add("app.integrations.external.systems.routing.endpoint", () -> httpBase + "/osrm");
+        registry.add("app.integrations.external.erp.endpoint", () -> httpBase + "/ofbiz/webtools/control");
+        registry.add("app.integrations.external.wms.endpoint", () -> httpBase + "/openboxes/api");
+        registry.add("app.integrations.external.messaging.endpoint", () -> messagingEndpoint);
+        registry.add("app.integrations.external.bi.endpoint", () -> httpBase + "/superset/api/v1");
+        registry.add("app.integrations.external.routing.endpoint", () -> httpBase + "/osrm");
+        registry.add("app.integrations.external.probe-timeout-millis", () -> "1000");
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -82,6 +115,12 @@ class TenantSystemControllerTest {
 
     @Autowired
     private NotificationApplicationService notificationApplicationService;
+
+    @AfterAll
+    static void shutdownProbeServers() {
+        EXTERNAL_HTTP_SERVER.stop(0);
+        RABBITMQ_TCP_SERVER.close();
+    }
 
     @Test
     void shouldReturnTenantHealth() throws Exception {
@@ -131,30 +170,35 @@ class TenantSystemControllerTest {
                 .andExpect(jsonPath("$.data.supportedDeploymentModes[0]").value("standard-saas"))
                 .andExpect(jsonPath("$.data.requiredExternalSystemCount").value(6))
                 .andExpect(jsonPath("$.data.readyExternalSystemCount").value(6))
+                .andExpect(jsonPath("$.data.externalIntegrationConnectivity.ready").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrationConnectivity.configuredCount").value(5))
+                .andExpect(jsonPath("$.data.externalIntegrationConnectivity.reachableCount").value(5))
+                .andExpect(jsonPath("$.data.externalIntegrationConnectivity.erp.detail").value("http 200"))
+                .andExpect(jsonPath("$.data.externalIntegrationConnectivity.messaging.detail").value("tcp connected"))
                 .andExpect(jsonPath("$.data.observabilityStackReady").value(true))
                 .andExpect(jsonPath("$.data.deliveryPipelineReady").value(true))
                 .andExpect(jsonPath("$.data.dualDeliveryAcceptanceReady").value(true))
                 .andExpect(jsonPath("$.data.deliveryRepository").value("lsjAnne/saas"))
                 .andExpect(jsonPath("$.data.externalErpPlatform.provider").value("ofbiz"))
                 .andExpect(jsonPath("$.data.externalErpPlatform.configured").value(true))
-                .andExpect(jsonPath("$.data.externalErpPlatform.host").value("ofbiz.example.com"))
-                .andExpect(jsonPath("$.data.externalErpPlatform.maskedEndpoint").value("https://ofbiz.example.com/***"))
+                .andExpect(jsonPath("$.data.externalErpPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.externalErpPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.externalErpPlatform.partySyncEnabled").value(true))
                 .andExpect(jsonPath("$.data.externalErpPlatform.orderSyncMode").value("near_real_time"))
                 .andExpect(jsonPath("$.data.externalErpPlatform.ledgerMappingCount").value(8))
                 .andExpect(jsonPath("$.data.externalErpPlatform.catalogExportEnabled").value(true))
                 .andExpect(jsonPath("$.data.externalWmsPlatform.provider").value("openboxes"))
                 .andExpect(jsonPath("$.data.externalWmsPlatform.configured").value(true))
-                .andExpect(jsonPath("$.data.externalWmsPlatform.host").value("openboxes.example.com"))
-                .andExpect(jsonPath("$.data.externalWmsPlatform.maskedEndpoint").value("https://openboxes.example.com/***"))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.externalWmsPlatform.facilityCount").value(5))
                 .andExpect(jsonPath("$.data.externalWmsPlatform.stockSyncMode").value("two_way"))
                 .andExpect(jsonPath("$.data.externalWmsPlatform.outboundFlow").value("wave_and_pick"))
                 .andExpect(jsonPath("$.data.externalWmsPlatform.batchTrackingEnabled").value(true))
                 .andExpect(jsonPath("$.data.externalMessagingPlatform.provider").value("rabbitmq"))
                 .andExpect(jsonPath("$.data.externalMessagingPlatform.configured").value(true))
-                .andExpect(jsonPath("$.data.externalMessagingPlatform.host").value("rabbitmq.example.com"))
-                .andExpect(jsonPath("$.data.externalMessagingPlatform.maskedEndpoint").value("amqps://rabbitmq.example.com:5671/***"))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.externalMessagingPlatform.virtualHost").value("tenant-hub"))
                 .andExpect(jsonPath("$.data.externalMessagingPlatform.exchange").value("tenant.events"))
                 .andExpect(jsonPath("$.data.externalMessagingPlatform.queueCount").value(4))
@@ -162,16 +206,16 @@ class TenantSystemControllerTest {
                 .andExpect(jsonPath("$.data.externalMessagingPlatform.deadLetterEnabled").value(true))
                 .andExpect(jsonPath("$.data.externalBiPlatform.provider").value("superset"))
                 .andExpect(jsonPath("$.data.externalBiPlatform.configured").value(true))
-                .andExpect(jsonPath("$.data.externalBiPlatform.host").value("bi.example.com"))
-                .andExpect(jsonPath("$.data.externalBiPlatform.maskedEndpoint").value("https://bi.example.com/***"))
+                .andExpect(jsonPath("$.data.externalBiPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.externalBiPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.externalBiPlatform.dashboardCount").value(12))
                 .andExpect(jsonPath("$.data.externalBiPlatform.datasetCount").value(36))
                 .andExpect(jsonPath("$.data.externalBiPlatform.embedEnabled").value(true))
                 .andExpect(jsonPath("$.data.externalRouting.provider").value("osrm"))
                 .andExpect(jsonPath("$.data.externalRouting.configured").value(true))
                 .andExpect(jsonPath("$.data.externalRouting.fallbackEnabled").value(true))
-                .andExpect(jsonPath("$.data.externalRouting.host").value("router.example.com"))
-                .andExpect(jsonPath("$.data.externalRouting.maskedEndpoint").value("https://router.example.com/***"))
+                .andExpect(jsonPath("$.data.externalRouting.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.externalRouting.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.observabilityStack.logAggregation.configured").value(true))
                 .andExpect(jsonPath("$.data.observabilityStack.logAggregation.host").value("logs.example.com"))
                 .andExpect(jsonPath("$.data.observabilityStack.logAggregation.maskedEndpoint").value("https://logs.example.com/***"))
@@ -192,11 +236,13 @@ class TenantSystemControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value("DOWN"))
                 .andExpect(jsonPath("$.components.externalDependencies.status").value("UP"))
-                .andExpect(jsonPath("$.components.externalDependencies.details.externalErpPlatform.host").value("ofbiz.example.com"))
-                .andExpect(jsonPath("$.components.externalDependencies.details.externalWmsPlatform.host").value("openboxes.example.com"))
-                .andExpect(jsonPath("$.components.externalDependencies.details.externalMessagingPlatform.host").value("rabbitmq.example.com"))
-                .andExpect(jsonPath("$.components.externalDependencies.details.externalBiPlatform.host").value("bi.example.com"))
-                .andExpect(jsonPath("$.components.externalDependencies.details.externalRouting.host").value("router.example.com"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalErpPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalWmsPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalMessagingPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalBiPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalRouting.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalIntegrationConnectivity.ready").value(true))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalIntegrationConnectivity.reachableCount").value(5))
                 .andExpect(jsonPath("$.components.externalDependencies.details.observabilityStack.logAggregation.configured").value(true))
                 .andExpect(jsonPath("$.components.externalDependencies.details.observabilityStack.logAggregation.host").value("logs.example.com"))
                 .andExpect(jsonPath("$.components.externalDependencies.details.observabilityStack.trace.host").value("trace.example.com"))
@@ -211,31 +257,34 @@ class TenantSystemControllerTest {
                 .andExpect(jsonPath("$.externalDependencies.supportedDeploymentModes[0]").value("standard-saas"))
                 .andExpect(jsonPath("$.externalDependencies.requiredExternalIntegrationCount").value(6))
                 .andExpect(jsonPath("$.externalDependencies.readyExternalIntegrationCount").value(6))
+                .andExpect(jsonPath("$.externalDependencies.externalIntegrationConnectivity.ready").value(true))
+                .andExpect(jsonPath("$.externalDependencies.externalIntegrationConnectivity.erp.detail").value("http 200"))
+                .andExpect(jsonPath("$.externalDependencies.externalIntegrationConnectivity.messaging.detail").value("tcp connected"))
                 .andExpect(jsonPath("$.externalDependencies.observabilityStackReady").value(true))
                 .andExpect(jsonPath("$.externalDependencies.deliveryPipelineReady").value(true))
                 .andExpect(jsonPath("$.externalDependencies.dualDeliveryAcceptanceReady").value(true))
                 .andExpect(jsonPath("$.externalDependencies.deliveryRepository").value("lsjAnne/saas"))
                 .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.provider").value("ofbiz"))
-                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.host").value("ofbiz.example.com"))
-                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.maskedEndpoint").value("https://ofbiz.example.com/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.ledgerMappingCount").value(8))
                 .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.provider").value("openboxes"))
-                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.host").value("openboxes.example.com"))
-                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.maskedEndpoint").value("https://openboxes.example.com/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.facilityCount").value(5))
                 .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.provider").value("rabbitmq"))
-                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.host").value("rabbitmq.example.com"))
-                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.maskedEndpoint").value("amqps://rabbitmq.example.com:5671/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.queueCount").value(4))
                 .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.provider").value("superset"))
-                .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.host").value("bi.example.com"))
-                .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.maskedEndpoint").value("https://bi.example.com/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.dashboardCount").value(12))
                 .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.datasetCount").value(36))
                 .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.embedEnabled").value(true))
                 .andExpect(jsonPath("$.externalDependencies.externalRouting.provider").value("osrm"))
-                .andExpect(jsonPath("$.externalDependencies.externalRouting.host").value("router.example.com"))
-                .andExpect(jsonPath("$.externalDependencies.externalRouting.maskedEndpoint").value("https://router.example.com/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalRouting.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.externalDependencies.externalRouting.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.externalDependencies.observabilityStack.logAggregation.configured").value(true))
                 .andExpect(jsonPath("$.externalDependencies.observabilityStack.logAggregation.host").value("logs.example.com"))
                 .andExpect(jsonPath("$.externalDependencies.observabilityStack.logAggregation.maskedEndpoint").value("https://logs.example.com/***"))
@@ -249,5 +298,64 @@ class TenantSystemControllerTest {
         mockMvc.perform(get("/actuator/prometheus"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("# HELP")));
+    }
+
+    private static HttpServer createExternalHttpServer() {
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext("/ofbiz/webtools/control", TenantSystemControllerTest::writeOk);
+            server.createContext("/openboxes/api", TenantSystemControllerTest::writeOk);
+            server.createContext("/superset/api/v1", TenantSystemControllerTest::writeOk);
+            server.createContext("/osrm", TenantSystemControllerTest::writeOk);
+            server.setExecutor(Executors.newCachedThreadPool());
+            server.start();
+            return server;
+        } catch (IOException exception) {
+            throw new IllegalStateException("failed to start external http probe server", exception);
+        }
+    }
+
+    private static void writeOk(HttpExchange exchange) throws IOException {
+        byte[] body = "{\"status\":\"ok\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, body.length);
+        exchange.getResponseBody().write(body);
+        exchange.close();
+    }
+
+    private static TcpProbeServer createRabbitMqProbeServer() {
+        try {
+            ServerSocket serverSocket = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                while (!serverSocket.isClosed()) {
+                    try (Socket socket = serverSocket.accept()) {
+                        socket.getOutputStream().write(0);
+                        socket.getOutputStream().flush();
+                    } catch (IOException exception) {
+                        if (!serverSocket.isClosed()) {
+                            throw new IllegalStateException("rabbitmq probe accept failed", exception);
+                        }
+                    }
+                }
+            });
+            return new TcpProbeServer(serverSocket, executor);
+        } catch (IOException exception) {
+            throw new IllegalStateException("failed to start rabbitmq probe server", exception);
+        }
+    }
+
+    private record TcpProbeServer(ServerSocket serverSocket, ExecutorService executor) {
+        private int port() {
+            return serverSocket.getLocalPort();
+        }
+
+        private void close() {
+            try {
+                serverSocket.close();
+            } catch (IOException ignored) {
+            }
+            executor.shutdownNow();
+        }
     }
 }

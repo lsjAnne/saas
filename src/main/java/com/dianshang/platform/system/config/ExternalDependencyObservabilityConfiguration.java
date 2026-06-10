@@ -2,6 +2,7 @@ package com.dianshang.platform.system.config;
 
 import com.dianshang.platform.notification.application.NotificationGatewayProperties;
 import com.dianshang.platform.fulfillment.application.ExternalRoutingAdapter;
+import com.dianshang.platform.saas.application.SaasTenantService;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.info.InfoContributor;
@@ -21,6 +22,7 @@ public class ExternalDependencyObservabilityConfiguration {
     @Bean
     public InfoContributor externalDependencyInfoContributor(NotificationGatewayProperties notificationGatewayProperties,
                                                              ExternalRoutingAdapter externalRoutingAdapter,
+                                                             SaasTenantService saasTenantService,
                                                              Environment environment) {
         return builder -> builder.withDetail("externalDependencies", Map.ofEntries(
                 Map.entry("notificationGatewayCount", notificationGatewayProperties.listProviders().size()),
@@ -36,6 +38,7 @@ public class ExternalDependencyObservabilityConfiguration {
                 Map.entry("dualDeliveryAcceptanceReady", isDualDeliveryAcceptanceReady(environment)),
                 Map.entry("deliveryRepository", resolveDeliveryRepository(environment)),
                 Map.entry("observabilityStack", buildObservabilityStack(environment)),
+                Map.entry("externalIntegrationConnectivity", saasTenantService.getExternalIntegrationConnectivitySnapshot()),
                 Map.entry("externalErpPlatform", buildExternalErpPlatformSummary(environment)),
                 Map.entry("externalWmsPlatform", buildExternalWmsPlatformSummary(environment)),
                 Map.entry("externalMessagingPlatform", buildExternalMessagingPlatformSummary(environment)),
@@ -47,6 +50,7 @@ public class ExternalDependencyObservabilityConfiguration {
     @Bean
     public HealthIndicator externalDependenciesHealthIndicator(NotificationGatewayProperties notificationGatewayProperties,
                                                                ExternalRoutingAdapter externalRoutingAdapter,
+                                                               SaasTenantService saasTenantService,
                                                                Environment environment) {
         return () -> Health.up()
                 .withDetail("notificationGatewayCount", notificationGatewayProperties.listProviders().size())
@@ -61,6 +65,7 @@ public class ExternalDependencyObservabilityConfiguration {
                 .withDetail("dualDeliveryAcceptanceReady", isDualDeliveryAcceptanceReady(environment))
                 .withDetail("deliveryRepository", resolveDeliveryRepository(environment))
                 .withDetail("observabilityStack", buildObservabilityStack(environment))
+                .withDetail("externalIntegrationConnectivity", saasTenantService.getExternalIntegrationConnectivitySnapshot())
                 .withDetail("externalErpPlatform", buildExternalErpPlatformSummary(environment))
                 .withDetail("externalWmsPlatform", buildExternalWmsPlatformSummary(environment))
                 .withDetail("externalMessagingPlatform", buildExternalMessagingPlatformSummary(environment))
