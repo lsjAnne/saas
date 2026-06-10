@@ -68,6 +68,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class SaasTenantService {
@@ -1624,16 +1625,19 @@ public class SaasTenantService {
                 readyCount++;
                 continue;
             }
-            String detail = systemCode + " integration is missing " + String.join(", ", readiness.missingParts());
+            String detail = buildExternalSystemDisplayName(systemCode) + " integration is missing " + String.join(", ", readiness.missingParts());
             missing.add(detail);
             blockingReasons.add(detail);
         }
+        String readyDetail = requiredSystems.stream()
+                .map(this::buildExternalSystemDisplayName)
+                .collect(Collectors.joining(", "));
         return new ReleaseChecklistItemView(
                 "external_integration_readiness",
                 missing.isEmpty() ? "passed" : "blocked",
                 readyCount,
                 missing.isEmpty()
-                        ? "erp/wms/tax/messaging/bi integrations expose endpoint, credentials and callback readiness"
+                        ? readyDetail + " integrations expose endpoint, credentials and callback readiness"
                         : String.join("; ", missing)
         );
     }
@@ -1852,6 +1856,25 @@ public class SaasTenantService {
             missingParts.add("callback url");
         }
         return new ExternalSystemReadiness(systemCode, missingParts.isEmpty(), missingParts);
+    }
+
+    private String buildExternalSystemDisplayName(String systemCode) {
+        String providerKey = switch (systemCode) {
+            case "erp" -> "app.integrations.external.erp.provider";
+            case "wms" -> "app.integrations.external.wms.provider";
+            case "messaging" -> "app.integrations.external.messaging.provider";
+            case "bi" -> "app.integrations.external.bi.provider";
+            case "routing" -> "app.integrations.external.routing.provider";
+            default -> "";
+        };
+        if (providerKey.isBlank()) {
+            return systemCode;
+        }
+        String provider = environment.getProperty(providerKey, "");
+        if (provider == null || provider.isBlank()) {
+            return systemCode;
+        }
+        return systemCode + "(" + provider.trim() + ")";
     }
 
     private boolean isConfigured(String key) {

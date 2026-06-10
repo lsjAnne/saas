@@ -36,7 +36,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@org.springframework.test.context.TestPropertySource(properties = "app.auth.allow-legacy-header-context=false")
+@org.springframework.test.context.TestPropertySource(properties = {
+        "app.auth.allow-legacy-header-context=false",
+        "app.integrations.external.erp.provider=ofbiz",
+        "app.integrations.external.erp.endpoint=https://ofbiz.example.com/webtools/control",
+        "app.integrations.external.erp.party-sync-enabled=true",
+        "app.integrations.external.erp.order-sync-mode=near_real_time",
+        "app.integrations.external.erp.ledger-mapping-count=8",
+        "app.integrations.external.erp.catalog-export-enabled=true",
+        "app.integrations.external.wms.provider=openboxes",
+        "app.integrations.external.wms.endpoint=https://openboxes.example.com/openboxes/api",
+        "app.integrations.external.wms.facility-count=3",
+        "app.integrations.external.wms.stock-sync-mode=two_way",
+        "app.integrations.external.wms.outbound-flow=wave_and_pick",
+        "app.integrations.external.wms.batch-tracking-enabled=true",
+        "app.integrations.external.messaging.provider=rabbitmq",
+        "app.integrations.external.messaging.endpoint=amqps://rabbitmq.example.com:5671",
+        "app.integrations.external.messaging.virtual-host=tenant-hub",
+        "app.integrations.external.messaging.exchange=tenant.events",
+        "app.integrations.external.messaging.queue-count=4",
+        "app.integrations.external.messaging.callback-bridge-enabled=true",
+        "app.integrations.external.messaging.dead-letter-enabled=true"
+})
 class OpenPlatformControllerTest {
 
     private static final String OWNER_MOBILE = "13800000000";
@@ -710,6 +731,126 @@ class OpenPlatformControllerTest {
                 .andExpect(jsonPath("$.data[2].traceId").value("open-erp-granular-trace-001"))
                 .andExpect(jsonPath("$.data[3].resultStatus").value("rejected_scope"))
                 .andExpect(jsonPath("$.data[3].traceId").value("open-erp-granular-trace-002"));
+    }
+
+    @Test
+    void shouldExposeExternalOfbizOpenboxesAndRabbitMqBaselines() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-external-baseline-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "external-baseline-app",
+                "erp.ofbiz_baseline.read",
+                "wms.openboxes_baseline.read",
+                "messaging.rabbitmq_baseline.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/erp/ofbiz-baseline")
+                        .header("X-Trace-Id", "open-ofbiz-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("ofbiz"))
+                .andExpect(jsonPath("$.data.configured").value(true))
+                .andExpect(jsonPath("$.data.host").value("ofbiz.example.com"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value("https://ofbiz.example.com/***"))
+                .andExpect(jsonPath("$.data.partySyncEnabled").value(true))
+                .andExpect(jsonPath("$.data.orderSyncMode").value("near_real_time"))
+                .andExpect(jsonPath("$.data.ledgerMappingCount").value(8))
+                .andExpect(jsonPath("$.data.catalogExportEnabled").value(true));
+
+        mockMvc.perform(get("/api/open/external/wms/openboxes-baseline")
+                        .header("X-Trace-Id", "open-openboxes-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("openboxes"))
+                .andExpect(jsonPath("$.data.configured").value(true))
+                .andExpect(jsonPath("$.data.host").value("openboxes.example.com"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value("https://openboxes.example.com/***"))
+                .andExpect(jsonPath("$.data.facilityCount").value(3))
+                .andExpect(jsonPath("$.data.stockSyncMode").value("two_way"))
+                .andExpect(jsonPath("$.data.outboundFlow").value("wave_and_pick"))
+                .andExpect(jsonPath("$.data.batchTrackingEnabled").value(true));
+
+        mockMvc.perform(get("/api/open/external/messaging/rabbitmq-baseline")
+                        .header("X-Trace-Id", "open-rabbitmq-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("rabbitmq"))
+                .andExpect(jsonPath("$.data.configured").value(true))
+                .andExpect(jsonPath("$.data.host").value("rabbitmq.example.com"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value("amqps://rabbitmq.example.com:5671/***"))
+                .andExpect(jsonPath("$.data.virtualHost").value("tenant-hub"))
+                .andExpect(jsonPath("$.data.exchange").value("tenant.events"))
+                .andExpect(jsonPath("$.data.queueCount").value(4))
+                .andExpect(jsonPath("$.data.callbackBridgeEnabled").value(true))
+                .andExpect(jsonPath("$.data.deadLetterEnabled").value(true));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(5))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[2].traceId").value("open-ofbiz-trace-001"))
+                .andExpect(jsonPath("$.data[3].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[3].traceId").value("open-openboxes-trace-001"))
+                .andExpect(jsonPath("$.data[4].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[4].traceId").value("open-rabbitmq-trace-001"));
+    }
+
+    @Test
+    void shouldRejectRabbitMqBaselineAccessWhenScopeMissing() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-rabbitmq-scope-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "rabbitmq-scope-missing-app",
+                "wms.openboxes_baseline.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/messaging/rabbitmq-baseline")
+                        .header("X-Trace-Id", "open-rabbitmq-scope-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1009"))
+                .andExpect(jsonPath("$.message").value("integration permission scope denied"));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("rejected_scope"))
+                .andExpect(jsonPath("$.data[2].appId").value(appId))
+                .andExpect(jsonPath("$.data[2].traceId").value("open-rabbitmq-scope-trace-001"));
     }
 
     @Test

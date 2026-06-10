@@ -100,6 +100,9 @@ public class TenantSystemController {
                         isDualDeliveryAcceptanceReady(),
                         resolveDeliveryRepository(),
                         buildObservabilityStack(),
+                        buildExternalErpPlatformView(),
+                        buildExternalWmsPlatformView(),
+                        buildExternalMessagingPlatformView(),
                         buildExternalBiPlatformView(),
                         buildExternalRoutingView()
                 ),
@@ -190,6 +193,49 @@ public class TenantSystemController {
                 buildEndpointView("app.observability.trace-endpoint"),
                 buildEndpointView("app.observability.alert-router-endpoint"),
                 buildEndpointView("app.observability.dashboard-url")
+        );
+    }
+
+    private ExternalErpPlatformView buildExternalErpPlatformView() {
+        String endpoint = environment.getProperty("app.integrations.external.erp.endpoint", "");
+        return new ExternalErpPlatformView(
+                normalizedProperty("app.integrations.external.erp.provider", "ofbiz"),
+                endpoint != null && !endpoint.isBlank(),
+                extractHost(endpoint),
+                maskEndpoint(endpoint),
+                environment.getProperty("app.integrations.external.erp.party-sync-enabled", Boolean.class, false),
+                normalizedProperty("app.integrations.external.erp.order-sync-mode", "manual"),
+                environment.getProperty("app.integrations.external.erp.ledger-mapping-count", Integer.class, 0),
+                environment.getProperty("app.integrations.external.erp.catalog-export-enabled", Boolean.class, false)
+        );
+    }
+
+    private ExternalWmsPlatformView buildExternalWmsPlatformView() {
+        String endpoint = environment.getProperty("app.integrations.external.wms.endpoint", "");
+        return new ExternalWmsPlatformView(
+                normalizedProperty("app.integrations.external.wms.provider", "openboxes"),
+                endpoint != null && !endpoint.isBlank(),
+                extractHost(endpoint),
+                maskEndpoint(endpoint),
+                environment.getProperty("app.integrations.external.wms.facility-count", Integer.class, 0),
+                normalizedProperty("app.integrations.external.wms.stock-sync-mode", "manual"),
+                normalizedProperty("app.integrations.external.wms.outbound-flow", "manual"),
+                environment.getProperty("app.integrations.external.wms.batch-tracking-enabled", Boolean.class, false)
+        );
+    }
+
+    private ExternalMessagingPlatformView buildExternalMessagingPlatformView() {
+        String endpoint = environment.getProperty("app.integrations.external.messaging.endpoint", "");
+        return new ExternalMessagingPlatformView(
+                normalizedProperty("app.integrations.external.messaging.provider", "rabbitmq"),
+                endpoint != null && !endpoint.isBlank(),
+                extractHost(endpoint),
+                maskEndpoint(endpoint),
+                normalizedProperty("app.integrations.external.messaging.virtual-host", ""),
+                normalizedProperty("app.integrations.external.messaging.exchange", ""),
+                environment.getProperty("app.integrations.external.messaging.queue-count", Integer.class, 0),
+                environment.getProperty("app.integrations.external.messaging.callback-bridge-enabled", Boolean.class, false),
+                environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false)
         );
     }
 
@@ -304,6 +350,9 @@ record ObservabilityOverview(
         boolean dualDeliveryAcceptanceReady,
         String deliveryRepository,
         ObservabilityStackView observabilityStack,
+        ExternalErpPlatformView externalErpPlatform,
+        ExternalWmsPlatformView externalWmsPlatform,
+        ExternalMessagingPlatformView externalMessagingPlatform,
         ExternalBiPlatformView externalBiPlatform,
         ExternalRoutingView externalRouting
 ) {
@@ -321,6 +370,43 @@ record ObservabilityEndpointView(
         boolean configured,
         String host,
         String maskedEndpoint
+) {
+}
+
+record ExternalErpPlatformView(
+        String provider,
+        boolean configured,
+        String host,
+        String maskedEndpoint,
+        boolean partySyncEnabled,
+        String orderSyncMode,
+        int ledgerMappingCount,
+        boolean catalogExportEnabled
+) {
+}
+
+record ExternalWmsPlatformView(
+        String provider,
+        boolean configured,
+        String host,
+        String maskedEndpoint,
+        int facilityCount,
+        String stockSyncMode,
+        String outboundFlow,
+        boolean batchTrackingEnabled
+) {
+}
+
+record ExternalMessagingPlatformView(
+        String provider,
+        boolean configured,
+        String host,
+        String maskedEndpoint,
+        String virtualHost,
+        String exchange,
+        int queueCount,
+        boolean callbackBridgeEnabled,
+        boolean deadLetterEnabled
 ) {
 }
 

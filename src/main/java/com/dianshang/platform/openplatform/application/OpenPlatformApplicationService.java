@@ -16,12 +16,14 @@ import com.dianshang.platform.openplatform.model.PluginApp;
 import com.dianshang.platform.openplatform.model.WebhookSubscription;
 import com.dianshang.platform.organization.domain.repository.OrganizationRepository;
 import com.dianshang.platform.organization.model.Organization;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -46,8 +48,11 @@ public class OpenPlatformApplicationService {
     private static final String ERP_MASTER_DATA_READ_SCOPE = "erp.master_data.read";
     private static final String ERP_ACCOUNT_MAPPING_READ_SCOPE = "erp.account_mapping.read";
     private static final String ERP_INTEGRATION_BASELINE_READ_SCOPE = "erp.integration_baseline.read";
+    private static final String ERP_OFBIZ_BASELINE_READ_SCOPE = "erp.ofbiz_baseline.read";
     private static final String WMS_LINKAGE_READ_SCOPE = "wms.linkage.read";
+    private static final String WMS_OPENBOXES_BASELINE_READ_SCOPE = "wms.openboxes_baseline.read";
     private static final String TMS_CONTROL_TOWER_READ_SCOPE = "tms.control_tower.read";
+    private static final String MESSAGING_RABBITMQ_BASELINE_READ_SCOPE = "messaging.rabbitmq_baseline.read";
     private static final String SOURCE_MODULE = "openplatform";
 
     private final AuditLogService auditLogService;
@@ -57,6 +62,7 @@ public class OpenPlatformApplicationService {
     private final WebhookSubscriptionRepository webhookSubscriptionRepository;
     private final OpenPlatformCallLogRepository openPlatformCallLogRepository;
     private final OpenCallbackReplayRepository openCallbackReplayRepository;
+    private final Environment environment;
 
     public OpenPlatformApplicationService(AuditLogService auditLogService,
                                           OrganizationRepository organizationRepository,
@@ -64,7 +70,8 @@ public class OpenPlatformApplicationService {
                                           IntegrationCredentialRepository integrationCredentialRepository,
                                           WebhookSubscriptionRepository webhookSubscriptionRepository,
                                           OpenPlatformCallLogRepository openPlatformCallLogRepository,
-                                          OpenCallbackReplayRepository openCallbackReplayRepository) {
+                                          OpenCallbackReplayRepository openCallbackReplayRepository,
+                                          Environment environment) {
         this.auditLogService = auditLogService;
         this.organizationRepository = organizationRepository;
         this.pluginAppRepository = pluginAppRepository;
@@ -72,6 +79,7 @@ public class OpenPlatformApplicationService {
         this.webhookSubscriptionRepository = webhookSubscriptionRepository;
         this.openPlatformCallLogRepository = openPlatformCallLogRepository;
         this.openCallbackReplayRepository = openCallbackReplayRepository;
+        this.environment = environment;
     }
 
     public List<PluginApp> listApps(String tenantId) {
@@ -571,6 +579,69 @@ public class OpenPlatformApplicationService {
         ));
     }
 
+    public ExternalAppProfile authorizeExternalErpOfbizBaselineRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, List.of(
+                ERP_OFBIZ_BASELINE_READ_SCOPE,
+                ERP_INTEGRATION_BASELINE_READ_SCOPE,
+                ERP_FINANCE_READ_SCOPE
+        ));
+    }
+
+    public ExternalAppProfile authorizeExternalWmsOpenboxesBaselineRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, List.of(
+                WMS_OPENBOXES_BASELINE_READ_SCOPE,
+                WMS_LINKAGE_READ_SCOPE,
+                "inventory.write"
+        ));
+    }
+
+    public ExternalAppProfile authorizeExternalMessagingRabbitMqBaselineRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, MESSAGING_RABBITMQ_BASELINE_READ_SCOPE);
+    }
+
+    public ExternalErpBaselineView getExternalErpOfbizBaseline() {
+        String endpoint = environment.getProperty("app.integrations.external.erp.endpoint", "");
+        return new ExternalErpBaselineView(
+                normalizedProperty("app.integrations.external.erp.provider", "ofbiz"),
+                endpoint != null && !endpoint.isBlank(),
+                extractHost(endpoint),
+                maskEndpoint(endpoint),
+                environment.getProperty("app.integrations.external.erp.party-sync-enabled", Boolean.class, false),
+                normalizedProperty("app.integrations.external.erp.order-sync-mode", "manual"),
+                environment.getProperty("app.integrations.external.erp.ledger-mapping-count", Integer.class, 0),
+                environment.getProperty("app.integrations.external.erp.catalog-export-enabled", Boolean.class, false)
+        );
+    }
+
+    public ExternalWmsBaselineView getExternalWmsOpenboxesBaseline() {
+        String endpoint = environment.getProperty("app.integrations.external.wms.endpoint", "");
+        return new ExternalWmsBaselineView(
+                normalizedProperty("app.integrations.external.wms.provider", "openboxes"),
+                endpoint != null && !endpoint.isBlank(),
+                extractHost(endpoint),
+                maskEndpoint(endpoint),
+                environment.getProperty("app.integrations.external.wms.facility-count", Integer.class, 0),
+                normalizedProperty("app.integrations.external.wms.stock-sync-mode", "manual"),
+                normalizedProperty("app.integrations.external.wms.outbound-flow", "manual"),
+                environment.getProperty("app.integrations.external.wms.batch-tracking-enabled", Boolean.class, false)
+        );
+    }
+
+    public ExternalMessagingBaselineView getExternalMessagingRabbitMqBaseline() {
+        String endpoint = environment.getProperty("app.integrations.external.messaging.endpoint", "");
+        return new ExternalMessagingBaselineView(
+                normalizedProperty("app.integrations.external.messaging.provider", "rabbitmq"),
+                endpoint != null && !endpoint.isBlank(),
+                extractHost(endpoint),
+                maskEndpoint(endpoint),
+                normalizedProperty("app.integrations.external.messaging.virtual-host", ""),
+                normalizedProperty("app.integrations.external.messaging.exchange", ""),
+                environment.getProperty("app.integrations.external.messaging.queue-count", Integer.class, 0),
+                environment.getProperty("app.integrations.external.messaging.callback-bridge-enabled", Boolean.class, false),
+                environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false)
+        );
+    }
+
     private ExternalAppProfile authenticateExternalProfile(String accessKey,
                                                            String secret,
                                                            String endpoint,
@@ -968,6 +1039,47 @@ public class OpenPlatformApplicationService {
         return diff == 0;
     }
 
+    private String normalizedProperty(String key, String defaultValue) {
+        String value = environment.getProperty(key, defaultValue);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return value.trim();
+    }
+
+    private String extractHost(String rawEndpoint) {
+        if (rawEndpoint == null || rawEndpoint.isBlank()) {
+            return "";
+        }
+        try {
+            URI uri = URI.create(rawEndpoint);
+            return uri.getHost() == null ? "" : uri.getHost();
+        } catch (IllegalArgumentException exception) {
+            return "";
+        }
+    }
+
+    private String maskEndpoint(String rawEndpoint) {
+        if (rawEndpoint == null || rawEndpoint.isBlank()) {
+            return "";
+        }
+        try {
+            URI uri = URI.create(rawEndpoint);
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme();
+            String host = uri.getHost() == null ? "" : uri.getHost();
+            String authority = host;
+            if (uri.getPort() >= 0) {
+                authority = authority + ":" + uri.getPort();
+            }
+            if (scheme.isBlank() || authority.isBlank()) {
+                return "***";
+            }
+            return scheme + "://" + authority + "/***";
+        } catch (IllegalArgumentException exception) {
+            return "***";
+        }
+    }
+
     private String generateToken(String prefix, int length) {
         StringBuilder builder = new StringBuilder(prefix).append('_');
         while (builder.length() < prefix.length() + 1 + length) {
@@ -1108,6 +1220,43 @@ public class OpenPlatformApplicationService {
             List<String> permissionScope,
             String credentialType,
             OffsetDateTime expiresAt
+    ) {
+    }
+
+    public record ExternalErpBaselineView(
+            String provider,
+            boolean configured,
+            String host,
+            String maskedEndpoint,
+            boolean partySyncEnabled,
+            String orderSyncMode,
+            int ledgerMappingCount,
+            boolean catalogExportEnabled
+    ) {
+    }
+
+    public record ExternalWmsBaselineView(
+            String provider,
+            boolean configured,
+            String host,
+            String maskedEndpoint,
+            int facilityCount,
+            String stockSyncMode,
+            String outboundFlow,
+            boolean batchTrackingEnabled
+    ) {
+    }
+
+    public record ExternalMessagingBaselineView(
+            String provider,
+            boolean configured,
+            String host,
+            String maskedEndpoint,
+            String virtualHost,
+            String exchange,
+            int queueCount,
+            boolean callbackBridgeEnabled,
+            boolean deadLetterEnabled
     ) {
     }
 

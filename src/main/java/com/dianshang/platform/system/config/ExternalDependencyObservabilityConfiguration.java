@@ -36,6 +36,9 @@ public class ExternalDependencyObservabilityConfiguration {
                 Map.entry("dualDeliveryAcceptanceReady", isDualDeliveryAcceptanceReady(environment)),
                 Map.entry("deliveryRepository", resolveDeliveryRepository(environment)),
                 Map.entry("observabilityStack", buildObservabilityStack(environment)),
+                Map.entry("externalErpPlatform", buildExternalErpPlatformSummary(environment)),
+                Map.entry("externalWmsPlatform", buildExternalWmsPlatformSummary(environment)),
+                Map.entry("externalMessagingPlatform", buildExternalMessagingPlatformSummary(environment)),
                 Map.entry("externalBiPlatform", buildExternalBiPlatformSummary(environment)),
                 Map.entry("externalRouting", buildRoutingSummary(externalRoutingAdapter))
         ));
@@ -58,6 +61,9 @@ public class ExternalDependencyObservabilityConfiguration {
                 .withDetail("dualDeliveryAcceptanceReady", isDualDeliveryAcceptanceReady(environment))
                 .withDetail("deliveryRepository", resolveDeliveryRepository(environment))
                 .withDetail("observabilityStack", buildObservabilityStack(environment))
+                .withDetail("externalErpPlatform", buildExternalErpPlatformSummary(environment))
+                .withDetail("externalWmsPlatform", buildExternalWmsPlatformSummary(environment))
+                .withDetail("externalMessagingPlatform", buildExternalMessagingPlatformSummary(environment))
                 .withDetail("externalBiPlatform", buildExternalBiPlatformSummary(environment))
                 .withDetail("externalRouting", buildRoutingSummary(externalRoutingAdapter))
                 .build();
@@ -139,6 +145,49 @@ public class ExternalDependencyObservabilityConfiguration {
                 "trace", buildEndpointSummary(environment, "app.observability.trace-endpoint"),
                 "alertRouter", buildEndpointSummary(environment, "app.observability.alert-router-endpoint"),
                 "dashboard", buildEndpointSummary(environment, "app.observability.dashboard-url")
+        );
+    }
+
+    private Map<String, Object> buildExternalErpPlatformSummary(Environment environment) {
+        String endpoint = environment.getProperty("app.integrations.external.erp.endpoint", "");
+        return Map.of(
+                "provider", normalizedProperty(environment, "app.integrations.external.erp.provider", "ofbiz"),
+                "configured", endpoint != null && !endpoint.isBlank(),
+                "host", extractHost(endpoint),
+                "maskedEndpoint", maskEndpoint(endpoint),
+                "partySyncEnabled", environment.getProperty("app.integrations.external.erp.party-sync-enabled", Boolean.class, false),
+                "orderSyncMode", normalizedProperty(environment, "app.integrations.external.erp.order-sync-mode", "manual"),
+                "ledgerMappingCount", environment.getProperty("app.integrations.external.erp.ledger-mapping-count", Integer.class, 0),
+                "catalogExportEnabled", environment.getProperty("app.integrations.external.erp.catalog-export-enabled", Boolean.class, false)
+        );
+    }
+
+    private Map<String, Object> buildExternalWmsPlatformSummary(Environment environment) {
+        String endpoint = environment.getProperty("app.integrations.external.wms.endpoint", "");
+        return Map.of(
+                "provider", normalizedProperty(environment, "app.integrations.external.wms.provider", "openboxes"),
+                "configured", endpoint != null && !endpoint.isBlank(),
+                "host", extractHost(endpoint),
+                "maskedEndpoint", maskEndpoint(endpoint),
+                "facilityCount", environment.getProperty("app.integrations.external.wms.facility-count", Integer.class, 0),
+                "stockSyncMode", normalizedProperty(environment, "app.integrations.external.wms.stock-sync-mode", "manual"),
+                "outboundFlow", normalizedProperty(environment, "app.integrations.external.wms.outbound-flow", "manual"),
+                "batchTrackingEnabled", environment.getProperty("app.integrations.external.wms.batch-tracking-enabled", Boolean.class, false)
+        );
+    }
+
+    private Map<String, Object> buildExternalMessagingPlatformSummary(Environment environment) {
+        String endpoint = environment.getProperty("app.integrations.external.messaging.endpoint", "");
+        return Map.of(
+                "provider", normalizedProperty(environment, "app.integrations.external.messaging.provider", "rabbitmq"),
+                "configured", endpoint != null && !endpoint.isBlank(),
+                "host", extractHost(endpoint),
+                "maskedEndpoint", maskEndpoint(endpoint),
+                "virtualHost", normalizedProperty(environment, "app.integrations.external.messaging.virtual-host", ""),
+                "exchange", normalizedProperty(environment, "app.integrations.external.messaging.exchange", ""),
+                "queueCount", environment.getProperty("app.integrations.external.messaging.queue-count", Integer.class, 0),
+                "callbackBridgeEnabled", environment.getProperty("app.integrations.external.messaging.callback-bridge-enabled", Boolean.class, false),
+                "deadLetterEnabled", environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false)
         );
     }
 

@@ -41,6 +41,10 @@
   - `POST /api/tms/external-distance-matrix`
 - `Superset` 只读骨架已落地：
   - `GET /api/bi/external-platform-overview`
+- `OFBiz / OpenBoxes / RabbitMQ` 只读基线已落地：
+  - `GET /api/open/external/erp/ofbiz-baseline`
+  - `GET /api/open/external/wms/openboxes-baseline`
+  - `GET /api/open/external/messaging/rabbitmq-baseline`
 
 ### 3.3 观测与交付骨架已落地
 
@@ -65,30 +69,30 @@
 
 | 编号 | 事项 | 状态 | 说明 |
 | --- | --- | --- | --- |
-| T13-05 | `OFBiz` 字段口径与接线骨架 | 未完成 | 作为 ERP 外接增强继续推进 |
-| T13-06 | `OpenBoxes` 字段口径与接线骨架 | 未完成 | 作为 WMS 外接增强继续推进 |
-| T13-07 | `RabbitMQ` 接线骨架 | 未完成 | 作为消息网关增强继续推进 |
+| T13-05 | `OFBiz` 字段口径与接线骨架 | 已完成 | 已落地开放接口只读基线、观测暴露与 release-readiness provider 文案 |
+| T13-06 | `OpenBoxes` 字段口径与接线骨架 | 已完成 | 已落地开放接口只读基线、观测暴露与 release-readiness provider 文案 |
+| T13-07 | `RabbitMQ` 接线骨架 | 已完成 | 已落地开放接口只读基线、观测暴露与 release-readiness provider 文案 |
 
 ## 5. 最近验证
 
 ### 5.1 本轮直接通过
 
 ```bash
-mvn "-Dtest=MemberFinanceDashboardControllerTest,TenantSystemControllerTest" test
+mvn "-Dtest=OpenPlatformControllerTest,TenantSystemControllerTest,AdminTenantControllerTest" test
 ```
 
 结果：
 
-- `10` 运行
-- `10` 通过
+- `26` 运行
+- `26` 通过
 - `0` 失败
 - `0` 错误
 
 覆盖内容：
 
-- BI `Superset` 只读骨架
-- 租户系统观测视图
-- actuator 观测摘要
+- `OFBiz / OpenBoxes / RabbitMQ` 只读基线开放接口
+- 租户系统观测视图与 actuator 外部平台摘要
+- `release-readiness` 外部集成 provider 文案
 
 ### 5.2 之前已通过且仍有效
 
@@ -104,10 +108,7 @@ mvn "-Dtest=MemberFinanceDashboardControllerTest,TenantSystemControllerTest" tes
 1. 内部业务模块不要再大面积扩写。
 2. 当前应继续做阶段 13 的真实接线。
 3. `Superset` 只读骨架已经完成，不再把它当“下一步待做”。
-4. 外部系统下一优先级切到：
-   - `OFBiz`
-   - `OpenBoxes`
-   - `RabbitMQ`
+4. `OFBiz / OpenBoxes / RabbitMQ` 骨架已完成，下一步不再补骨架，直接转真实 endpoint / 凭据 / 回调联通。
 
 ## 7. 下次继续开发时怎么做
 

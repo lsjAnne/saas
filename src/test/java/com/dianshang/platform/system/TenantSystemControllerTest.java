@@ -28,6 +28,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.integrations.external.systems.messaging.callback-url=https://callback.example.com/messages",
         "app.integrations.external.systems.bi.endpoint=https://bi.example.com/api",
         "app.integrations.external.systems.bi.credential-configured=true",
+        "app.integrations.external.erp.provider=ofbiz",
+        "app.integrations.external.erp.endpoint=https://ofbiz.example.com/webtools/control",
+        "app.integrations.external.erp.party-sync-enabled=true",
+        "app.integrations.external.erp.order-sync-mode=near_real_time",
+        "app.integrations.external.erp.ledger-mapping-count=8",
+        "app.integrations.external.erp.catalog-export-enabled=true",
+        "app.integrations.external.wms.provider=openboxes",
+        "app.integrations.external.wms.endpoint=https://openboxes.example.com/openboxes/api",
+        "app.integrations.external.wms.facility-count=5",
+        "app.integrations.external.wms.stock-sync-mode=two_way",
+        "app.integrations.external.wms.outbound-flow=wave_and_pick",
+        "app.integrations.external.wms.batch-tracking-enabled=true",
+        "app.integrations.external.messaging.provider=rabbitmq",
+        "app.integrations.external.messaging.endpoint=amqps://rabbitmq.example.com:5671",
+        "app.integrations.external.messaging.virtual-host=tenant-hub",
+        "app.integrations.external.messaging.exchange=tenant.events",
+        "app.integrations.external.messaging.queue-count=4",
+        "app.integrations.external.messaging.callback-bridge-enabled=true",
+        "app.integrations.external.messaging.dead-letter-enabled=true",
         "app.integrations.external.bi.provider=superset",
         "app.integrations.external.bi.endpoint=https://bi.example.com/api",
         "app.integrations.external.bi.dashboard-count=12",
@@ -116,6 +135,31 @@ class TenantSystemControllerTest {
                 .andExpect(jsonPath("$.data.deliveryPipelineReady").value(true))
                 .andExpect(jsonPath("$.data.dualDeliveryAcceptanceReady").value(true))
                 .andExpect(jsonPath("$.data.deliveryRepository").value("lsjAnne/saas"))
+                .andExpect(jsonPath("$.data.externalErpPlatform.provider").value("ofbiz"))
+                .andExpect(jsonPath("$.data.externalErpPlatform.configured").value(true))
+                .andExpect(jsonPath("$.data.externalErpPlatform.host").value("ofbiz.example.com"))
+                .andExpect(jsonPath("$.data.externalErpPlatform.maskedEndpoint").value("https://ofbiz.example.com/***"))
+                .andExpect(jsonPath("$.data.externalErpPlatform.partySyncEnabled").value(true))
+                .andExpect(jsonPath("$.data.externalErpPlatform.orderSyncMode").value("near_real_time"))
+                .andExpect(jsonPath("$.data.externalErpPlatform.ledgerMappingCount").value(8))
+                .andExpect(jsonPath("$.data.externalErpPlatform.catalogExportEnabled").value(true))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.provider").value("openboxes"))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.configured").value(true))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.host").value("openboxes.example.com"))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.maskedEndpoint").value("https://openboxes.example.com/***"))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.facilityCount").value(5))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.stockSyncMode").value("two_way"))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.outboundFlow").value("wave_and_pick"))
+                .andExpect(jsonPath("$.data.externalWmsPlatform.batchTrackingEnabled").value(true))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.provider").value("rabbitmq"))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.configured").value(true))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.host").value("rabbitmq.example.com"))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.maskedEndpoint").value("amqps://rabbitmq.example.com:5671/***"))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.virtualHost").value("tenant-hub"))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.exchange").value("tenant.events"))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.queueCount").value(4))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.callbackBridgeEnabled").value(true))
+                .andExpect(jsonPath("$.data.externalMessagingPlatform.deadLetterEnabled").value(true))
                 .andExpect(jsonPath("$.data.externalBiPlatform.provider").value("superset"))
                 .andExpect(jsonPath("$.data.externalBiPlatform.configured").value(true))
                 .andExpect(jsonPath("$.data.externalBiPlatform.host").value("bi.example.com"))
@@ -148,6 +192,9 @@ class TenantSystemControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.status").value("DOWN"))
                 .andExpect(jsonPath("$.components.externalDependencies.status").value("UP"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalErpPlatform.host").value("ofbiz.example.com"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalWmsPlatform.host").value("openboxes.example.com"))
+                .andExpect(jsonPath("$.components.externalDependencies.details.externalMessagingPlatform.host").value("rabbitmq.example.com"))
                 .andExpect(jsonPath("$.components.externalDependencies.details.externalBiPlatform.host").value("bi.example.com"))
                 .andExpect(jsonPath("$.components.externalDependencies.details.externalRouting.host").value("router.example.com"))
                 .andExpect(jsonPath("$.components.externalDependencies.details.observabilityStack.logAggregation.configured").value(true))
@@ -168,6 +215,18 @@ class TenantSystemControllerTest {
                 .andExpect(jsonPath("$.externalDependencies.deliveryPipelineReady").value(true))
                 .andExpect(jsonPath("$.externalDependencies.dualDeliveryAcceptanceReady").value(true))
                 .andExpect(jsonPath("$.externalDependencies.deliveryRepository").value("lsjAnne/saas"))
+                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.provider").value("ofbiz"))
+                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.host").value("ofbiz.example.com"))
+                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.maskedEndpoint").value("https://ofbiz.example.com/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalErpPlatform.ledgerMappingCount").value(8))
+                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.provider").value("openboxes"))
+                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.host").value("openboxes.example.com"))
+                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.maskedEndpoint").value("https://openboxes.example.com/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalWmsPlatform.facilityCount").value(5))
+                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.provider").value("rabbitmq"))
+                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.host").value("rabbitmq.example.com"))
+                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.maskedEndpoint").value("amqps://rabbitmq.example.com:5671/***"))
+                .andExpect(jsonPath("$.externalDependencies.externalMessagingPlatform.queueCount").value(4))
                 .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.provider").value("superset"))
                 .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.host").value("bi.example.com"))
                 .andExpect(jsonPath("$.externalDependencies.externalBiPlatform.maskedEndpoint").value("https://bi.example.com/***"))

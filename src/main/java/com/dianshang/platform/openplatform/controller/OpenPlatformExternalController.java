@@ -118,4 +118,46 @@ public class OpenPlatformExternalController {
                 TraceIdHolder.get()
         );
     }
+
+    @GetMapping("/api/open/external/erp/ofbiz-baseline")
+    public ApiResponse<OpenPlatformApplicationService.ExternalErpBaselineView> getExternalErpOfbizBaseline(@RequestHeader("X-Open-App-Key") String accessKey,
+                                                                                                            @RequestHeader("X-Open-App-Secret") String secret) {
+        openPlatformApplicationService.authorizeExternalErpOfbizBaselineRead(
+                accessKey,
+                secret,
+                "/api/open/external/erp/ofbiz-baseline"
+        );
+        return ApiResponse.success(
+                openPlatformApplicationService.getExternalErpOfbizBaseline(),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/external/wms/openboxes-baseline")
+    public ApiResponse<OpenPlatformApplicationService.ExternalWmsBaselineView> getExternalWmsOpenboxesBaseline(@RequestHeader("X-Open-App-Key") String accessKey,
+                                                                                                                @RequestHeader("X-Open-App-Secret") String secret) {
+        openPlatformApplicationService.authorizeExternalWmsOpenboxesBaselineRead(
+                accessKey,
+                secret,
+                "/api/open/external/wms/openboxes-baseline"
+        );
+        return ApiResponse.success(
+                openPlatformApplicationService.getExternalWmsOpenboxesBaseline(),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/external/messaging/rabbitmq-baseline")
+    public ApiResponse<OpenPlatformApplicationService.ExternalMessagingBaselineView> getExternalMessagingRabbitMqBaseline(@RequestHeader("X-Open-App-Key") String accessKey,
+                                                                                                                          @RequestHeader("X-Open-App-Secret") String secret) {
+        openPlatformApplicationService.authorizeExternalMessagingRabbitMqBaselineRead(
+                accessKey,
+                secret,
+                "/api/open/external/messaging/rabbitmq-baseline"
+        );
+        return ApiResponse.success(
+                openPlatformApplicationService.getExternalMessagingRabbitMqBaseline(),
+                TraceIdHolder.get()
+        );
+    }
 }

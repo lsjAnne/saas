@@ -115,6 +115,28 @@ app:
         profile: ${APP_EXTERNAL_ROUTING_PROFILE:driving}
         fallback-enabled: ${APP_EXTERNAL_ROUTING_FALLBACK_ENABLED:true}
         timeout-millis: ${APP_EXTERNAL_ROUTING_TIMEOUT_MILLIS:2000}
+      erp:
+        provider: ${APP_EXTERNAL_ERP_PROVIDER:ofbiz}
+        endpoint: ${APP_EXTERNAL_ERP_ENDPOINT:}
+        party-sync-enabled: ${APP_EXTERNAL_ERP_PARTY_SYNC_ENABLED:false}
+        order-sync-mode: ${APP_EXTERNAL_ERP_ORDER_SYNC_MODE:manual}
+        ledger-mapping-count: ${APP_EXTERNAL_ERP_LEDGER_MAPPING_COUNT:0}
+        catalog-export-enabled: ${APP_EXTERNAL_ERP_CATALOG_EXPORT_ENABLED:false}
+      wms:
+        provider: ${APP_EXTERNAL_WMS_PROVIDER:openboxes}
+        endpoint: ${APP_EXTERNAL_WMS_ENDPOINT:}
+        facility-count: ${APP_EXTERNAL_WMS_FACILITY_COUNT:0}
+        stock-sync-mode: ${APP_EXTERNAL_WMS_STOCK_SYNC_MODE:manual}
+        outbound-flow: ${APP_EXTERNAL_WMS_OUTBOUND_FLOW:manual}
+        batch-tracking-enabled: ${APP_EXTERNAL_WMS_BATCH_TRACKING_ENABLED:false}
+      messaging:
+        provider: ${APP_EXTERNAL_MESSAGING_PROVIDER:rabbitmq}
+        endpoint: ${APP_EXTERNAL_MESSAGING_ENDPOINT:}
+        virtual-host: ${APP_EXTERNAL_MESSAGING_VIRTUAL_HOST:}
+        exchange: ${APP_EXTERNAL_MESSAGING_EXCHANGE:}
+        queue-count: ${APP_EXTERNAL_MESSAGING_QUEUE_COUNT:0}
+        callback-bridge-enabled: ${APP_EXTERNAL_MESSAGING_CALLBACK_BRIDGE_ENABLED:false}
+        dead-letter-enabled: ${APP_EXTERNAL_MESSAGING_DEAD_LETTER_ENABLED:false}
       systems:
         erp:
           endpoint: ${APP_EXTERNAL_ERP_ENDPOINT:}

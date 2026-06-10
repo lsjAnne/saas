@@ -45,6 +45,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.integrations.external.systems.messaging.callback-url=https://callback.example.com/messages",
         "app.integrations.external.systems.bi.endpoint=https://bi.example.com/api",
         "app.integrations.external.systems.bi.credential-configured=true",
+        "app.integrations.external.erp.provider=ofbiz",
+        "app.integrations.external.erp.endpoint=https://ofbiz.example.com/webtools/control",
+        "app.integrations.external.erp.party-sync-enabled=true",
+        "app.integrations.external.erp.order-sync-mode=near_real_time",
+        "app.integrations.external.erp.ledger-mapping-count=8",
+        "app.integrations.external.erp.catalog-export-enabled=true",
+        "app.integrations.external.wms.provider=openboxes",
+        "app.integrations.external.wms.endpoint=https://openboxes.example.com/openboxes/api",
+        "app.integrations.external.wms.facility-count=5",
+        "app.integrations.external.wms.stock-sync-mode=two_way",
+        "app.integrations.external.wms.outbound-flow=wave_and_pick",
+        "app.integrations.external.wms.batch-tracking-enabled=true",
+        "app.integrations.external.messaging.provider=rabbitmq",
+        "app.integrations.external.messaging.endpoint=amqps://rabbitmq.example.com:5671",
+        "app.integrations.external.messaging.virtual-host=tenant-hub",
+        "app.integrations.external.messaging.exchange=tenant.events",
+        "app.integrations.external.messaging.queue-count=4",
+        "app.integrations.external.messaging.callback-bridge-enabled=true",
+        "app.integrations.external.messaging.dead-letter-enabled=true",
         "app.integrations.external.systems.routing.endpoint=https://router.example.com",
         "app.integrations.external.systems.routing.credential-configured=true",
         "app.integrations.external.routing.endpoint=https://router.example.com",
@@ -310,6 +329,9 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.checklistItems[4].itemCode").value("external_integration_readiness"))
                 .andExpect(jsonPath("$.data.checklistItems[4].status").value("passed"))
                 .andExpect(jsonPath("$.data.checklistItems[4].evidenceCount").value(6))
+                .andExpect(jsonPath("$.data.checklistItems[4].detail").value(org.hamcrest.Matchers.containsString("erp(ofbiz)")))
+                .andExpect(jsonPath("$.data.checklistItems[4].detail").value(org.hamcrest.Matchers.containsString("wms(openboxes)")))
+                .andExpect(jsonPath("$.data.checklistItems[4].detail").value(org.hamcrest.Matchers.containsString("messaging(rabbitmq)")))
                 .andExpect(jsonPath("$.data.checklistItems[5].itemCode").value("observability_stack_readiness"))
                 .andExpect(jsonPath("$.data.checklistItems[5].status").value("passed"))
                 .andExpect(jsonPath("$.data.checklistItems[6].itemCode").value("delivery_pipeline_readiness"))
