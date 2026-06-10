@@ -3,40 +3,80 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: dian-shang-ping-tai:saas
+    image: ${APP_IMAGE_NAME:-dian-shang-ping-tai:saas}
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: postgres
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dian_shang_ping_tai
-      SPRING_DATASOURCE_USERNAME: saas_user
-      SPRING_DATASOURCE_PASSWORD: saas_password
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/dian_shang_ping_tai}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-saas_user}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-saas_password}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      SPRING_DATA_REDIS_PASSWORD: saas_redis_password
-      APP_AUTH_TOKEN_SECRET: saas-token-secret-change-me
-      APP_AUTH_BOOTSTRAP_PASSWORD: saas-bootstrap-password-change-me
+      SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD:-saas_redis_password}
+      APP_AUTH_TOKEN_SECRET: ${APP_AUTH_TOKEN_SECRET:-saas-token-secret-change-me}
+      APP_AUTH_BOOTSTRAP_PASSWORD: ${APP_AUTH_BOOTSTRAP_PASSWORD:-saas-bootstrap-password-change-me}
+      APP_AUTH_REQUIRE_EXPLICIT_SECRETS: ${APP_AUTH_REQUIRE_EXPLICIT_SECRETS:-true}
+      APP_AUTH_ALLOW_LEGACY_HEADER_CONTEXT: ${APP_AUTH_ALLOW_LEGACY_HEADER_CONTEXT:-false}
       APP_DEPLOYMENT_DEFAULT_MODE: standard-saas
       APP_DEPLOYMENT_SUPPORTED_MODES: standard-saas,private-deployment
       APP_NOTIFICATION_REQUIRE_CONFIGURED_GATEWAY: true
       APP_NOTIFICATION_SMS_MOCK_MODE: false
       APP_NOTIFICATION_EMAIL_MOCK_MODE: false
       APP_NOTIFICATION_FEISHU_MOCK_MODE: false
+      APP_EXTERNAL_ERP_ENDPOINT: ${APP_EXTERNAL_ERP_ENDPOINT:-}
+      APP_EXTERNAL_ERP_CREDENTIAL_CONFIGURED: ${APP_EXTERNAL_ERP_CREDENTIAL_CONFIGURED:-false}
+      APP_EXTERNAL_WMS_ENDPOINT: ${APP_EXTERNAL_WMS_ENDPOINT:-}
+      APP_EXTERNAL_WMS_CREDENTIAL_CONFIGURED: ${APP_EXTERNAL_WMS_CREDENTIAL_CONFIGURED:-false}
+      APP_EXTERNAL_TAX_ENDPOINT: ${APP_EXTERNAL_TAX_ENDPOINT:-}
+      APP_EXTERNAL_TAX_CREDENTIAL_CONFIGURED: ${APP_EXTERNAL_TAX_CREDENTIAL_CONFIGURED:-false}
+      APP_EXTERNAL_MESSAGING_ENDPOINT: ${APP_EXTERNAL_MESSAGING_ENDPOINT:-}
+      APP_EXTERNAL_MESSAGING_CREDENTIAL_CONFIGURED: ${APP_EXTERNAL_MESSAGING_CREDENTIAL_CONFIGURED:-false}
+      APP_EXTERNAL_MESSAGING_CALLBACK_URL: ${APP_EXTERNAL_MESSAGING_CALLBACK_URL:-}
+      APP_EXTERNAL_BI_ENDPOINT: ${APP_EXTERNAL_BI_ENDPOINT:-}
+      APP_EXTERNAL_BI_CREDENTIAL_CONFIGURED: ${APP_EXTERNAL_BI_CREDENTIAL_CONFIGURED:-false}
+      APP_OBSERVABILITY_LOG_ENDPOINT: ${APP_OBSERVABILITY_LOG_ENDPOINT:-}
+      APP_OBSERVABILITY_TRACE_ENDPOINT: ${APP_OBSERVABILITY_TRACE_ENDPOINT:-}
+      APP_OBSERVABILITY_ALERT_ENDPOINT: ${APP_OBSERVABILITY_ALERT_ENDPOINT:-}
+      APP_OBSERVABILITY_DASHBOARD_URL: ${APP_OBSERVABILITY_DASHBOARD_URL:-}
+      APP_DELIVERY_GITHUB_OWNER: ${APP_DELIVERY_GITHUB_OWNER:-lsjAnne}
+      APP_DELIVERY_GITHUB_REPOSITORY: ${APP_DELIVERY_GITHUB_REPOSITORY:-saas}
+      APP_DELIVERY_REGISTRY: ${APP_DELIVERY_REGISTRY:-ghcr.io}
+      APP_DELIVERY_IMAGE_REPOSITORY: ${APP_DELIVERY_IMAGE_REPOSITORY:-lsjAnne/dian-shang-ping-tai}
+      APP_DELIVERY_RELEASE_KEY_CONFIGURED: ${APP_DELIVERY_RELEASE_KEY_CONFIGURED:-false}
+      APP_DELIVERY_CANARY_ENABLED: ${APP_DELIVERY_CANARY_ENABLED:-false}
+      APP_DELIVERY_STANDARD_SAAS_BASE_URL: ${APP_DELIVERY_STANDARD_SAAS_BASE_URL:-}
+      APP_DELIVERY_STANDARD_SAAS_VERIFIED_AT: ${APP_DELIVERY_STANDARD_SAAS_VERIFIED_AT:-}
+      APP_DELIVERY_PRIVATE_BASE_URL: ${APP_DELIVERY_PRIVATE_BASE_URL:-}
+      APP_DELIVERY_PRIVATE_VERIFIED_AT: ${APP_DELIVERY_PRIVATE_VERIFIED_AT:-}
     ports:
       - "18080:8080"
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: dian_shang_ping_tai
-      POSTGRES_USER: saas_user
-      POSTGRES_PASSWORD: saas_password
+      POSTGRES_DB: ${POSTGRES_DB:-dian_shang_ping_tai}
+      POSTGRES_USER: ${POSTGRES_USER:-saas_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-saas_password}
     ports:
       - "15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saas_user} -d ${POSTGRES_DB:-dian_shang_ping_tai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
 
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--requirepass", "saas_redis_password"]
+    command: ["redis-server", "--requirepass", "${SPRING_DATA_REDIS_PASSWORD:-saas_redis_password}"]
     ports:
       - "16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${SPRING_DATA_REDIS_PASSWORD:-saas_redis_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6

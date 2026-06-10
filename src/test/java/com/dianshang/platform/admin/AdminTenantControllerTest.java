@@ -33,7 +33,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.release.automation-evidence.suite-count=3",
         "app.release.automation-evidence.environment=server-local",
         "app.release.automation-evidence.executed-at=2026-06-08T09:59:30+08:00",
-        "app.release.automation-evidence.summary=auth/openplatform/compliance regression suites passed"
+        "app.release.automation-evidence.summary=auth/openplatform/compliance regression suites passed",
+        "app.integrations.external.systems.erp.endpoint=https://erp.example.com/api",
+        "app.integrations.external.systems.erp.credential-configured=true",
+        "app.integrations.external.systems.wms.endpoint=https://wms.example.com/api",
+        "app.integrations.external.systems.wms.credential-configured=true",
+        "app.integrations.external.systems.tax.endpoint=https://tax.example.com/api",
+        "app.integrations.external.systems.tax.credential-configured=true",
+        "app.integrations.external.systems.messaging.endpoint=https://message.example.com/api",
+        "app.integrations.external.systems.messaging.credential-configured=true",
+        "app.integrations.external.systems.messaging.callback-url=https://callback.example.com/messages",
+        "app.integrations.external.systems.bi.endpoint=https://bi.example.com/api",
+        "app.integrations.external.systems.bi.credential-configured=true",
+        "app.integrations.external.systems.routing.endpoint=https://router.example.com",
+        "app.integrations.external.systems.routing.credential-configured=true",
+        "app.integrations.external.routing.endpoint=https://router.example.com",
+        "app.observability.log-aggregation-endpoint=https://logs.example.com",
+        "app.observability.trace-endpoint=https://trace.example.com",
+        "app.observability.alert-router-endpoint=https://alerts.example.com",
+        "app.observability.dashboard-url=https://grafana.example.com",
+        "app.delivery.github-owner=lsjAnne",
+        "app.delivery.github-repository=saas",
+        "app.delivery.registry=ghcr.io",
+        "app.delivery.image-repository=lsjAnne/dian-shang-ping-tai",
+        "app.delivery.release-key-configured=true",
+        "app.delivery.canary-enabled=true",
+        "app.delivery.standard-saas-base-url=https://saas.example.com",
+        "app.delivery.standard-saas-verified-at=2026-06-10T15:10:00+08:00",
+        "app.delivery.private-base-url=https://private.example.com",
+        "app.delivery.private-verified-at=2026-06-10T15:25:00+08:00"
 })
 @AutoConfigureMockMvc
 class AdminTenantControllerTest {
@@ -263,7 +291,7 @@ class AdminTenantControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.tenantId").value(tenantId))
                 .andExpect(jsonPath("$.data.conclusion").value("reject_release"))
-                .andExpect(jsonPath("$.data.checklistItems.length()").value(4))
+                .andExpect(jsonPath("$.data.checklistItems.length()").value(8))
                 .andExpect(jsonPath("$.data.checklistItems[0].itemCode").value("config_hardening"))
                 .andExpect(jsonPath("$.data.checklistItems[0].status").value("blocked"))
                 .andExpect(jsonPath("$.data.checklistItems[0].detail").value(org.hamcrest.Matchers.containsString("explicit auth secret enforcement is disabled")))
@@ -279,6 +307,15 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.checklistItems[3].detail").value(org.hamcrest.Matchers.containsString("server-local")))
                 .andExpect(jsonPath("$.data.checklistItems[3].detail").value(org.hamcrest.Matchers.containsString("2026-06-08T09:59:30+08:00")))
                 .andExpect(jsonPath("$.data.checklistItems[3].detail").value(org.hamcrest.Matchers.containsString("auth/openplatform/compliance regression suites passed")))
+                .andExpect(jsonPath("$.data.checklistItems[4].itemCode").value("external_integration_readiness"))
+                .andExpect(jsonPath("$.data.checklistItems[4].status").value("passed"))
+                .andExpect(jsonPath("$.data.checklistItems[4].evidenceCount").value(6))
+                .andExpect(jsonPath("$.data.checklistItems[5].itemCode").value("observability_stack_readiness"))
+                .andExpect(jsonPath("$.data.checklistItems[5].status").value("passed"))
+                .andExpect(jsonPath("$.data.checklistItems[6].itemCode").value("delivery_pipeline_readiness"))
+                .andExpect(jsonPath("$.data.checklistItems[6].status").value("passed"))
+                .andExpect(jsonPath("$.data.checklistItems[7].itemCode").value("dual_delivery_acceptance"))
+                .andExpect(jsonPath("$.data.checklistItems[7].status").value("passed"))
                 .andExpect(jsonPath("$.data.blockingReasons[0]").value(org.hamcrest.Matchers.containsString("default auth secret")))
                 .andExpect(jsonPath("$.data.blockingReasons[1]").value(org.hamcrest.Matchers.containsString("bootstrap password")))
                 .andExpect(jsonPath("$.data.blockingReasons[2]").value(org.hamcrest.Matchers.containsString("explicit auth secret enforcement is disabled")))
@@ -287,6 +324,36 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.evidenceSummary.cleanupTaskCount").value(1))
                 .andExpect(jsonPath("$.data.evidenceSummary.complianceAcceptanceCount").value(1))
                 .andExpect(jsonPath("$.data.evidenceSummary.billingOrderCount").value(1));
+    }
+
+    @Test
+    void shouldExposeStructuredDeliveryReadinessDetails() throws Exception {
+        String tenantId = registerTenant("tenant-delivery-readiness", "13800000007");
+
+        mockMvc.perform(get("/api/admin/tenants/{id}/delivery-readiness", tenantId)
+                        .header("X-Operator-Id", "platform-ops-1")
+                        .header("X-Operator-Type", "platform-ops"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.tenantId").value(tenantId))
+                .andExpect(jsonPath("$.data.pipeline.ready").value(true))
+                .andExpect(jsonPath("$.data.pipeline.githubOwner").value("lsjAnne"))
+                .andExpect(jsonPath("$.data.pipeline.githubRepository").value("saas"))
+                .andExpect(jsonPath("$.data.pipeline.repository").value("lsjAnne/saas"))
+                .andExpect(jsonPath("$.data.pipeline.registry").value("ghcr.io"))
+                .andExpect(jsonPath("$.data.pipeline.imageRepository").value("lsjAnne/dian-shang-ping-tai"))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyConfigured").value(true))
+                .andExpect(jsonPath("$.data.pipeline.canaryEnabled").value(true))
+                .andExpect(jsonPath("$.data.acceptance.ready").value(true))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.mode").value("standard-saas"))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.configured").value(true))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.host").value("saas.example.com"))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.maskedBaseUrl").value("https://saas.example.com/***"))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.verifiedAt").value("2026-06-10T15:10:00+08:00"))
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.mode").value("private-deployment"))
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.configured").value(true))
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.host").value("private.example.com"))
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.maskedBaseUrl").value("https://private.example.com/***"))
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.verifiedAt").value("2026-06-10T15:25:00+08:00"));
     }
 
     @Test

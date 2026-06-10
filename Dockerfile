@@ -13,6 +13,8 @@ COPY --from=build /workspace/target/dianShangPingTai-1.0.0-SNAPSHOT.jar /app/app
 ENV SPRING_PROFILES_ACTIVE=postgres
 ENV APP_AUTH_TOKEN_SECRET=change-me-before-production
 ENV APP_AUTH_BOOTSTRAP_PASSWORD=change-me-before-production
+ENV APP_AUTH_REQUIRE_EXPLICIT_SECRETS=true
+ENV APP_AUTH_ALLOW_LEGACY_HEADER_CONTEXT=false
 
 EXPOSE 8080
 

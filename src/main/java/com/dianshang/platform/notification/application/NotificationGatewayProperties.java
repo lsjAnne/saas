@@ -110,6 +110,10 @@ public class NotificationGatewayProperties {
         return (int) listProviders().stream().filter(ResolvedGateway::mockMode).count();
     }
 
+    public int realProviderCount() {
+        return (int) listProviders().stream().filter(provider -> !provider.mockMode()).count();
+    }
+
     private NotificationGatewayProvider sanitize(String gatewayCode,
                                                  String notifyType,
                                                  NotificationGatewayProvider provider) {

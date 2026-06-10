@@ -58,7 +58,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "app.integrations.external.bi.provider=superset",
+        "app.integrations.external.bi.endpoint=https://superset.example.com/api/v1",
+        "app.integrations.external.bi.dashboard-count=6",
+        "app.integrations.external.bi.dataset-count=18",
+        "app.integrations.external.bi.embed-enabled=true",
+        "app.integrations.external.systems.bi.endpoint=https://superset.example.com/api/v1",
+        "app.integrations.external.systems.bi.credential-configured=true"
+})
 @AutoConfigureMockMvc
 class MemberFinanceDashboardControllerTest {
 
@@ -1294,10 +1302,28 @@ class MemberFinanceDashboardControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[?(@.checkCode=='notification_dead_letter')].affectedCount").value(Matchers.contains(0)));
 
+        mockMvc.perform(withBearerToken(get("/api/bi/external-platform-overview"), fixture.token()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("superset"))
+                .andExpect(jsonPath("$.data.overviewStatus").value("ready"))
+                .andExpect(jsonPath("$.data.configured").value(true))
+                .andExpect(jsonPath("$.data.host").value("superset.example.com"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value("https://superset.example.com/***"))
+                .andExpect(jsonPath("$.data.dashboardCount").value(6))
+                .andExpect(jsonPath("$.data.datasetCount").value(18))
+                .andExpect(jsonPath("$.data.embedEnabled").value(true))
+                .andExpect(jsonPath("$.data.linkedThemeDomains.length()").value(6))
+                .andExpect(jsonPath("$.data.linkedThemeDomains", Matchers.hasItems(
+                        "order",
+                        "finance",
+                        "member"
+                )));
+
         mockMvc.perform(withBearerToken(get("/api/bi/delivery-checklist"), fixture.token()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.overallStatus").value("ready_for_integration"))
-                .andExpect(jsonPath("$.data.checkItems.length()").value(6));
+                .andExpect(jsonPath("$.data.checkItems.length()").value(7))
+                .andExpect(jsonPath("$.data.checkItems[?(@.itemCode=='external_platform_ready')].itemStatus").value(Matchers.contains("completed")));
     }
 
     private TenantStoreFixture prepareTenantStore(String tenantName) throws Exception {

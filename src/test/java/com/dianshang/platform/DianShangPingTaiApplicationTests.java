@@ -2,6 +2,7 @@ package com.dianshang.platform;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,7 +22,24 @@ class DianShangPingTaiApplicationTests {
 }
 
 @SpringBootTest(
-        classes = PostgreSqlProfileConfigurationTest.TestConfiguration.class,
+        classes = ProfilePropertiesTestConfiguration.class,
+        webEnvironment = SpringBootTest.WebEnvironment.NONE
+)
+class DefaultRedisConfigurationTest {
+
+    @Autowired
+    private RedisProperties redisProperties;
+
+    @Test
+    void shouldResolveLocalDockerRedisByDefault() {
+        assertThat(redisProperties.getHost()).isEqualTo("127.0.0.1");
+        assertThat(redisProperties.getPort()).isEqualTo(16379);
+        assertThat(redisProperties.getPassword()).isEqualTo("saas_redis_password");
+    }
+}
+
+@SpringBootTest(
+        classes = ProfilePropertiesTestConfiguration.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
 @ActiveProfiles("postgres")
@@ -30,15 +48,56 @@ class PostgreSqlProfileConfigurationTest {
     @Autowired
     private DataSourceProperties dataSourceProperties;
 
+    @Autowired
+    private RedisProperties redisProperties;
+
     @Test
     void shouldResolvePostgreSqlDatasourceWhenPostgresProfileIsActive() {
         assertThat(dataSourceProperties.getDriverClassName()).isEqualTo("org.postgresql.Driver");
         assertThat(dataSourceProperties.getUrl()).contains("jdbc:postgresql://");
     }
 
-    @Configuration
-    @EnableConfigurationProperties(DataSourceProperties.class)
-    static class TestConfiguration {
+    @Test
+    void shouldResolveLocalDockerRedisWhenPostgresProfileIsActive() {
+        assertThat(redisProperties.getHost()).isEqualTo("127.0.0.1");
+        assertThat(redisProperties.getPort()).isEqualTo(16379);
+        assertThat(redisProperties.getPassword()).isEqualTo("saas_redis_password");
+    }
+}
+
+@SpringBootTest(
+        classes = ProfilePropertiesTestConfiguration.class,
+        webEnvironment = SpringBootTest.WebEnvironment.NONE
+)
+@ActiveProfiles("tunnel-local")
+class TunnelLocalRedisProfileConfigurationTest {
+
+    @Autowired
+    private RedisProperties redisProperties;
+
+    @Test
+    void shouldResolveLocalDockerRedisWhenTunnelLocalProfileIsActive() {
+        assertThat(redisProperties.getHost()).isEqualTo("127.0.0.1");
+        assertThat(redisProperties.getPort()).isEqualTo(16379);
+        assertThat(redisProperties.getPassword()).isEqualTo("saas_redis_password");
+    }
+}
+
+@SpringBootTest(
+        classes = ProfilePropertiesTestConfiguration.class,
+        webEnvironment = SpringBootTest.WebEnvironment.NONE
+)
+@ActiveProfiles("server-local")
+class ServerLocalRedisProfileConfigurationTest {
+
+    @Autowired
+    private RedisProperties redisProperties;
+
+    @Test
+    void shouldResolveLocalDockerRedisWhenServerLocalProfileIsActive() {
+        assertThat(redisProperties.getHost()).isEqualTo("127.0.0.1");
+        assertThat(redisProperties.getPort()).isEqualTo(16379);
+        assertThat(redisProperties.getPassword()).isEqualTo("saas_redis_password");
     }
 }
 
@@ -70,4 +129,9 @@ class ServerLocalPostgreSqlConnectionSmokeTest {
         );
         assertThat(tableCount).isEqualTo(1);
     }
+}
+
+@Configuration
+@EnableConfigurationProperties({DataSourceProperties.class, RedisProperties.class})
+class ProfilePropertiesTestConfiguration {
 }

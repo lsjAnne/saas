@@ -33,6 +33,7 @@ public class FulfillmentService {
     private final LogisticsRecordRepository logisticsRecordRepository;
     private final OrderRepository orderRepository;
     private final ExceptionService exceptionService;
+    private final ExternalRoutingAdapter externalRoutingAdapter;
     private static final Map<String, TmsCarrier> TMS_CARRIER_STORAGE = new ConcurrentHashMap<>();
     private static final AtomicLong TMS_CARRIER_SEQUENCE = new AtomicLong();
     private static final Map<String, TmsShipment> TMS_SHIPMENT_STORAGE = new ConcurrentHashMap<>();
@@ -49,13 +50,15 @@ public class FulfillmentService {
                               FulfillmentTaskRepository fulfillmentTaskRepository,
                               LogisticsRecordRepository logisticsRecordRepository,
                               OrderRepository orderRepository,
-                              ExceptionService exceptionService) {
+                              ExceptionService exceptionService,
+                              ExternalRoutingAdapter externalRoutingAdapter) {
         this.auditLogService = auditLogService;
         this.storeRepository = storeRepository;
         this.fulfillmentTaskRepository = fulfillmentTaskRepository;
         this.logisticsRecordRepository = logisticsRecordRepository;
         this.orderRepository = orderRepository;
         this.exceptionService = exceptionService;
+        this.externalRoutingAdapter = externalRoutingAdapter;
     }
 
     public List<FulfillmentTask> listTasks(String tenantId) {
@@ -333,6 +336,63 @@ public class FulfillmentService {
         );
     }
 
+    public ExternalRoutePlanView planExternalRoute(String tenantId,
+                                                   CreateExternalRoutePlanCommand command) {
+        ExternalRoutingAdapter.RoutePlanResult result = externalRoutingAdapter.planRoute(
+                new ExternalRoutingAdapter.RoutePlanRequest(
+                        new ExternalRoutingAdapter.RoutingCoordinate(command.originLongitude(), command.originLatitude()),
+                        new ExternalRoutingAdapter.RoutingCoordinate(command.destinationLongitude(), command.destinationLatitude()),
+                        command.profile()
+                )
+        );
+        auditLogService.recordForTenant(tenantId, "PLAN_EXTERNAL_ROUTE", "tms_external_route", result.provider());
+        return new ExternalRoutePlanView(
+                result.provider(),
+                result.profile(),
+                result.routeStatus(),
+                result.usedFallback(),
+                result.fallbackReason(),
+                result.waypointCount(),
+                result.distanceMeters(),
+                result.durationSeconds(),
+                result.configured(),
+                result.host(),
+                result.maskedEndpoint()
+        );
+    }
+
+    public ExternalDistanceMatrixView calculateExternalDistanceMatrix(String tenantId,
+                                                                     CreateExternalDistanceMatrixCommand command) {
+        if (command.coordinates() == null || command.coordinates().size() < 2) {
+            throw new BusinessException("1004", "at least two coordinates are required", HttpStatus.BAD_REQUEST);
+        }
+        ExternalRoutingAdapter.DistanceMatrixResult result = externalRoutingAdapter.calculateDistanceMatrix(
+                new ExternalRoutingAdapter.DistanceMatrixRequest(
+                        command.coordinates().stream()
+                                .map(coordinate -> new ExternalRoutingAdapter.RoutingCoordinate(
+                                        coordinate.longitude(),
+                                        coordinate.latitude()
+                                ))
+                                .toList(),
+                        command.profile()
+                )
+        );
+        auditLogService.recordForTenant(tenantId, "CALCULATE_EXTERNAL_DISTANCE_MATRIX", "tms_external_route", result.provider());
+        return new ExternalDistanceMatrixView(
+                result.provider(),
+                result.profile(),
+                result.matrixStatus(),
+                result.usedFallback(),
+                result.fallbackReason(),
+                result.coordinateCount(),
+                result.distanceMatrixMeters(),
+                result.durationMatrixSeconds(),
+                result.configured(),
+                result.host(),
+                result.maskedEndpoint()
+        );
+    }
+
     public void clear() {
         TMS_CARRIER_STORAGE.clear();
         TMS_CARRIER_SEQUENCE.set(0);
@@ -571,6 +631,57 @@ public class FulfillmentService {
             String latestTrackingStatus,
             int settlementPendingCount,
             int podArchiveCount
+    ) {
+    }
+
+    public record CreateExternalRoutePlanCommand(
+            double originLongitude,
+            double originLatitude,
+            double destinationLongitude,
+            double destinationLatitude,
+            String profile
+    ) {
+    }
+
+    public record ExternalRoutePlanView(
+            String provider,
+            String profile,
+            String routeStatus,
+            boolean usedFallback,
+            String fallbackReason,
+            int waypointCount,
+            int distanceMeters,
+            int durationSeconds,
+            boolean configured,
+            String host,
+            String maskedEndpoint
+    ) {
+    }
+
+    public record RoutingCoordinateInput(
+            double longitude,
+            double latitude
+    ) {
+    }
+
+    public record CreateExternalDistanceMatrixCommand(
+            List<RoutingCoordinateInput> coordinates,
+            String profile
+    ) {
+    }
+
+    public record ExternalDistanceMatrixView(
+            String provider,
+            String profile,
+            String matrixStatus,
+            boolean usedFallback,
+            String fallbackReason,
+            int coordinateCount,
+            List<List<Integer>> distanceMatrixMeters,
+            List<List<Integer>> durationMatrixSeconds,
+            boolean configured,
+            String host,
+            String maskedEndpoint
     ) {
     }
 }

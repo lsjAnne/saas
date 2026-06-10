@@ -46,6 +46,8 @@ public class OpenPlatformApplicationService {
     private static final String ERP_MASTER_DATA_READ_SCOPE = "erp.master_data.read";
     private static final String ERP_ACCOUNT_MAPPING_READ_SCOPE = "erp.account_mapping.read";
     private static final String ERP_INTEGRATION_BASELINE_READ_SCOPE = "erp.integration_baseline.read";
+    private static final String WMS_LINKAGE_READ_SCOPE = "wms.linkage.read";
+    private static final String TMS_CONTROL_TOWER_READ_SCOPE = "tms.control_tower.read";
     private static final String SOURCE_MODULE = "openplatform";
 
     private final AuditLogService auditLogService;
@@ -552,6 +554,20 @@ public class OpenPlatformApplicationService {
         return authenticateExternalProfile(accessKey, secret, endpoint, List.of(
                 ERP_INTEGRATION_BASELINE_READ_SCOPE,
                 ERP_FINANCE_READ_SCOPE
+        ));
+    }
+
+    public ExternalAppProfile authorizeExternalWmsLinkageRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, List.of(
+                WMS_LINKAGE_READ_SCOPE,
+                "inventory.write"
+        ));
+    }
+
+    public ExternalAppProfile authorizeExternalTmsControlTowerRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, List.of(
+                TMS_CONTROL_TOWER_READ_SCOPE,
+                "order.read"
         ));
     }
 

@@ -23,11 +23,13 @@ import com.dianshang.platform.store.domain.repository.StoreRepository;
 import com.dianshang.platform.store.model.Store;
 import com.dianshang.platform.supplier.domain.repository.SupplierRepository;
 import com.dianshang.platform.supplier.model.Supplier;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -65,6 +67,7 @@ public class DashboardService {
     private final SupplierRepository supplierRepository;
     private final ServiceCaseService serviceCaseService;
     private final FinanceService financeService;
+    private final Environment environment;
 
     public DashboardService(StoreRepository storeRepository,
                             OrderRepository orderRepository,
@@ -78,7 +81,8 @@ public class DashboardService {
                             MemberService memberService,
                             SupplierRepository supplierRepository,
                             ServiceCaseService serviceCaseService,
-                            FinanceService financeService) {
+                            FinanceService financeService,
+                            Environment environment) {
         this.storeRepository = storeRepository;
         this.orderRepository = orderRepository;
         this.fulfillmentTaskRepository = fulfillmentTaskRepository;
@@ -92,6 +96,7 @@ public class DashboardService {
         this.supplierRepository = supplierRepository;
         this.serviceCaseService = serviceCaseService;
         this.financeService = financeService;
+        this.environment = environment;
     }
 
     public DashboardSummaryView getSummary(String tenantId, String storeId) {
@@ -598,6 +603,8 @@ public class DashboardService {
     }
 
     public BiDeliveryChecklistView getBiDeliveryChecklist(String tenantId, String storeId) {
+        BiExternalPlatformOverviewView externalBiPlatformOverview = getExternalBiPlatformOverview(tenantId, storeId);
+        /*
         List<BiDeliveryCheckItemView> checkItems = List.of(
                 new BiDeliveryCheckItemView("theme_domain_ready", "主题域建模", listBiThemeDomains(tenantId, storeId).size() >= 6 ? "completed" : "pending", "订单、商品、供应商、会员、客服、财务主题域已具备最小视图"),
                 new BiDeliveryCheckItemView("metric_dictionary_ready", "指标字典", !listBiMetricDefinitions(tenantId).isEmpty() ? "completed" : "pending", "核心经营指标已进入统一口径管理"),
@@ -605,12 +612,43 @@ public class DashboardService {
                 new BiDeliveryCheckItemView("analysis_ready", "专题看板", "completed", "经营总览、运营分析、营销分析已可联调"),
                 new BiDeliveryCheckItemView("export_ready", "导出与订阅", !listBiExportTasks(tenantId).isEmpty() && !listBiSubscriptions(tenantId).isEmpty() ? "completed" : "pending", "导出任务和日报/周报订阅链路已打通"),
                 new BiDeliveryCheckItemView("quality_ready", "数据校验与修复", !BI_REPAIR_TASK_STORAGE.values().stream().filter(item -> tenantId.equals(item.tenantId())).toList().isEmpty() ? "completed" : "pending", "数据质量检查与修复任务机制已具备")
+                new BiDeliveryCheckItemView("external_platform_ready", "澶栭儴 BI 骞冲彴", externalBiPlatformOverview.configured() ? "completed" : "pending", externalBiPlatformOverview.configured() ? "Superset 只读工作区与嵌入配置已具备最小接线骨架" : "Superset 只读工作区尚未完成最小配置")
+        );
+        */
+        List<BiDeliveryCheckItemView> checkItems = List.of(
+                new BiDeliveryCheckItemView("theme_domain_ready", "theme_domains", listBiThemeDomains(tenantId, storeId).size() >= 6 ? "completed" : "pending", "theme domains are available"),
+                new BiDeliveryCheckItemView("metric_dictionary_ready", "metric_dictionary", !listBiMetricDefinitions(tenantId).isEmpty() ? "completed" : "pending", "metric dictionary is available"),
+                new BiDeliveryCheckItemView("layer_plan_ready", "layer_plan", listBiLayers().size() == 4 ? "completed" : "pending", "bi layers are available"),
+                new BiDeliveryCheckItemView("analysis_ready", "analysis_views", "completed", "overview operations and marketing views are available"),
+                new BiDeliveryCheckItemView("export_ready", "export_and_subscription", !listBiExportTasks(tenantId).isEmpty() && !listBiSubscriptions(tenantId).isEmpty() ? "completed" : "pending", "export tasks and subscriptions are available"),
+                new BiDeliveryCheckItemView("quality_ready", "data_quality_repair", !BI_REPAIR_TASK_STORAGE.values().stream().filter(item -> tenantId.equals(item.tenantId())).toList().isEmpty() ? "completed" : "pending", "data quality checks and repair tasks are available"),
+                new BiDeliveryCheckItemView("external_platform_ready", "external_bi_platform", externalBiPlatformOverview.configured() ? "completed" : "pending", externalBiPlatformOverview.configured() ? "superset read only workspace is ready" : "superset read only workspace is not configured")
         );
         boolean ready = checkItems.stream().allMatch(item -> "completed".equals(item.itemStatus()));
         return new BiDeliveryChecklistView(
                 ready ? "ready_for_integration" : "in_progress",
                 checkItems,
                 OffsetDateTime.now()
+        );
+    }
+
+    public BiExternalPlatformOverviewView getExternalBiPlatformOverview(String tenantId, String storeId) {
+        List<String> linkedThemeDomains = listBiThemeDomains(tenantId, storeId).stream()
+                .map(BiThemeDomainView::domainCode)
+                .toList();
+        String endpoint = environment.getProperty("app.integrations.external.bi.endpoint", "");
+        boolean configured = endpoint != null && !endpoint.isBlank();
+        String provider = normalizedProperty("app.integrations.external.bi.provider", "superset");
+        return new BiExternalPlatformOverviewView(
+                provider,
+                configured ? "ready" : "fallback_config_required",
+                configured,
+                resolveHost(endpoint),
+                maskEndpoint(endpoint),
+                environment.getProperty("app.integrations.external.bi.dashboard-count", Integer.class, linkedThemeDomains.size()),
+                environment.getProperty("app.integrations.external.bi.dataset-count", Integer.class, listBiMetricDefinitions(tenantId).size()),
+                environment.getProperty("app.integrations.external.bi.embed-enabled", Boolean.class, false),
+                linkedThemeDomains
         );
     }
 
@@ -733,6 +771,47 @@ public class DashboardService {
         }
         long days = ChronoUnit.DAYS.between(latestTime.toLocalDate(), OffsetDateTime.now().toLocalDate());
         return days <= 3 ? "fresh" : "stale";
+    }
+
+    private String normalizedProperty(String key, String defaultValue) {
+        String value = environment.getProperty(key, defaultValue);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return value.trim();
+    }
+
+    private String resolveHost(String rawEndpoint) {
+        if (rawEndpoint == null || rawEndpoint.isBlank()) {
+            return "";
+        }
+        try {
+            URI uri = URI.create(rawEndpoint);
+            return uri.getHost() == null ? "" : uri.getHost();
+        } catch (IllegalArgumentException exception) {
+            return "";
+        }
+    }
+
+    private String maskEndpoint(String rawEndpoint) {
+        if (rawEndpoint == null || rawEndpoint.isBlank()) {
+            return "";
+        }
+        try {
+            URI uri = URI.create(rawEndpoint);
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme();
+            String host = uri.getHost() == null ? "" : uri.getHost();
+            String authority = host;
+            if (uri.getPort() >= 0) {
+                authority = authority + ":" + uri.getPort();
+            }
+            if (scheme.isBlank() || authority.isBlank()) {
+                return "***";
+            }
+            return scheme + "://" + authority + "/***";
+        } catch (IllegalArgumentException exception) {
+            return "***";
+        }
     }
 
     private List<BiMetricDefinitionView> builtinMetricDefinitions(String tenantId) {
@@ -1061,6 +1140,19 @@ public class DashboardService {
             String overallStatus,
             List<BiDeliveryCheckItemView> checkItems,
             OffsetDateTime generatedAt
+    ) {
+    }
+
+    public record BiExternalPlatformOverviewView(
+            String provider,
+            String overviewStatus,
+            boolean configured,
+            String host,
+            String maskedEndpoint,
+            int dashboardCount,
+            int datasetCount,
+            boolean embedEnabled,
+            List<String> linkedThemeDomains
     ) {
     }
 

@@ -7,6 +7,7 @@ import com.dianshang.platform.dashboard.application.DashboardService;
 import com.dianshang.platform.dashboard.application.DashboardService.BiCockpitView;
 import com.dianshang.platform.dashboard.application.DashboardService.BiDataQualityCheckView;
 import com.dianshang.platform.dashboard.application.DashboardService.BiDeliveryChecklistView;
+import com.dianshang.platform.dashboard.application.DashboardService.BiExternalPlatformOverviewView;
 import com.dianshang.platform.dashboard.application.DashboardService.BiExportTaskView;
 import com.dianshang.platform.dashboard.application.DashboardService.BiLayerDefinitionView;
 import com.dianshang.platform.dashboard.application.DashboardService.BiMarketingAnalysisView;
@@ -216,6 +217,14 @@ public class DashboardController {
     public ApiResponse<BiDeliveryChecklistView> getBiDeliveryChecklist(@RequestParam(required = false) String storeId) {
         return ApiResponse.success(
                 dashboardService.getBiDeliveryChecklist(TenantAccessSupport.requiredTenantId(), storeId),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/bi/external-platform-overview")
+    public ApiResponse<BiExternalPlatformOverviewView> getBiExternalPlatformOverview(@RequestParam(required = false) String storeId) {
+        return ApiResponse.success(
+                dashboardService.getExternalBiPlatformOverview(TenantAccessSupport.requiredTenantId(), storeId),
                 TraceIdHolder.get()
         );
     }

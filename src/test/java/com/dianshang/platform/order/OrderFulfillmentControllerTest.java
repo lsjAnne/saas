@@ -557,6 +557,65 @@ class OrderFulfillmentControllerTest {
                 .andExpect(jsonPath("$.data.podArchiveCount").value(1));
     }
 
+    @Test
+    void shouldProvideExternalRoutingPlanAndDistanceMatrix() throws Exception {
+        OrderFixture fixture = prepareOrderFixture();
+
+        mockMvc.perform(post("/api/tms/external-route-plan")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "originLongitude": 120.1551,
+                                  "originLatitude": 30.2741,
+                                  "destinationLongitude": 121.4737,
+                                  "destinationLatitude": 31.2304,
+                                  "profile": "driving"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("osrm"))
+                .andExpect(jsonPath("$.data.profile").value("driving"))
+                .andExpect(jsonPath("$.data.routeStatus").value("fallback_estimated"))
+                .andExpect(jsonPath("$.data.usedFallback").value(true))
+                .andExpect(jsonPath("$.data.waypointCount").value(2))
+                .andExpect(jsonPath("$.data.distanceMeters").value(org.hamcrest.Matchers.greaterThan(0)))
+                .andExpect(jsonPath("$.data.durationSeconds").value(org.hamcrest.Matchers.greaterThan(0)));
+
+        mockMvc.perform(post("/api/tms/external-distance-matrix")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "profile": "driving",
+                                  "coordinates": [
+                                    {
+                                      "longitude": 120.1551,
+                                      "latitude": 30.2741
+                                    },
+                                    {
+                                      "longitude": 121.4737,
+                                      "latitude": 31.2304
+                                    }
+                                  ]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("osrm"))
+                .andExpect(jsonPath("$.data.profile").value("driving"))
+                .andExpect(jsonPath("$.data.matrixStatus").value("fallback_estimated"))
+                .andExpect(jsonPath("$.data.usedFallback").value(true))
+                .andExpect(jsonPath("$.data.coordinateCount").value(2))
+                .andExpect(jsonPath("$.data.distanceMatrixMeters[0][0]").value(0))
+                .andExpect(jsonPath("$.data.distanceMatrixMeters[0][1]").value(org.hamcrest.Matchers.greaterThan(0)))
+                .andExpect(jsonPath("$.data.durationMatrixSeconds[0][0]").value(0))
+                .andExpect(jsonPath("$.data.durationMatrixSeconds[0][1]").value(org.hamcrest.Matchers.greaterThan(0)));
+    }
+
     private OrderFixture prepareOrderFixture() throws Exception {
         MvcResult tenantResult = mockMvc.perform(post("/api/tenants/register")
                         .contentType(MediaType.APPLICATION_JSON)

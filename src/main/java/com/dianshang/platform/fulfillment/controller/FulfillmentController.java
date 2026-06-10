@@ -5,6 +5,8 @@ import com.dianshang.platform.common.trace.TraceIdHolder;
 import com.dianshang.platform.auth.AuthPermissionCodes;
 import com.dianshang.platform.fulfillment.application.FulfillmentService;
 import com.dianshang.platform.fulfillment.application.FulfillmentService.ControlTowerView;
+import com.dianshang.platform.fulfillment.application.FulfillmentService.ExternalDistanceMatrixView;
+import com.dianshang.platform.fulfillment.application.FulfillmentService.ExternalRoutePlanView;
 import com.dianshang.platform.fulfillment.application.FulfillmentService.FreightSettlementRecord;
 import com.dianshang.platform.fulfillment.application.FulfillmentService.FulfillmentReplayView;
 import com.dianshang.platform.fulfillment.application.FulfillmentService.ReverseLogisticsRecord;
@@ -20,6 +22,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -180,6 +183,30 @@ public class FulfillmentController {
         );
     }
 
+    @PostMapping("/api/tms/external-route-plan")
+    public ApiResponse<ExternalRoutePlanView> planExternalRoute(@Valid @RequestBody ExternalRoutePlanRequest request) {
+        return ApiResponse.success(
+                fulfillmentService.planExternalRoute(
+                        TenantAccessSupport.requiredTenantId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/external-distance-matrix")
+    public ApiResponse<ExternalDistanceMatrixView> calculateExternalDistanceMatrix(
+            @Valid @RequestBody ExternalDistanceMatrixRequest request
+    ) {
+        return ApiResponse.success(
+                fulfillmentService.calculateExternalDistanceMatrix(
+                        TenantAccessSupport.requiredTenantId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
     public record CreateTmsCarrierRequest(
             @NotBlank(message = "storeId is required")
             String storeId,
@@ -300,8 +327,56 @@ public class FulfillmentController {
                     shipmentId,
                     carrierId,
                     reverseType,
-                    remark
+                remark
             );
+        }
+    }
+
+    public record ExternalRoutePlanRequest(
+            @NotNull(message = "originLongitude is required")
+            Double originLongitude,
+            @NotNull(message = "originLatitude is required")
+            Double originLatitude,
+            @NotNull(message = "destinationLongitude is required")
+            Double destinationLongitude,
+            @NotNull(message = "destinationLatitude is required")
+            Double destinationLatitude,
+            String profile
+    ) {
+        FulfillmentService.CreateExternalRoutePlanCommand toCommand() {
+            return new FulfillmentService.CreateExternalRoutePlanCommand(
+                    originLongitude,
+                    originLatitude,
+                    destinationLongitude,
+                    destinationLatitude,
+                    profile
+            );
+        }
+    }
+
+    public record ExternalDistanceMatrixRequest(
+            @Size(min = 2, message = "coordinates must contain at least two points")
+            List<@Valid RoutingCoordinateRequest> coordinates,
+            String profile
+    ) {
+        FulfillmentService.CreateExternalDistanceMatrixCommand toCommand() {
+            return new FulfillmentService.CreateExternalDistanceMatrixCommand(
+                    coordinates == null ? List.of() : coordinates.stream()
+                            .map(RoutingCoordinateRequest::toCommand)
+                            .toList(),
+                    profile
+            );
+        }
+    }
+
+    public record RoutingCoordinateRequest(
+            @NotNull(message = "longitude is required")
+            Double longitude,
+            @NotNull(message = "latitude is required")
+            Double latitude
+    ) {
+        FulfillmentService.RoutingCoordinateInput toCommand() {
+            return new FulfillmentService.RoutingCoordinateInput(longitude, latitude);
         }
     }
 }

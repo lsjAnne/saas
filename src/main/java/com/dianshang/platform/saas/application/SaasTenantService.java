@@ -46,6 +46,7 @@ import com.dianshang.platform.tenant.TenantContextHolder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -53,13 +54,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -118,6 +122,7 @@ public class SaasTenantService {
     private final String releaseAutomationEvidenceSummary;
     private final ObjectMapper objectMapper;
     private final JdbcTemplate jdbcTemplate;
+    private final Environment environment;
 
     public SaasTenantService(OrganizationService organizationService,
                              AuditLogService auditLogService,
@@ -146,7 +151,8 @@ public class SaasTenantService {
                              @Value("${app.release.automation-evidence.executed-at:}") String releaseAutomationEvidenceExecutedAt,
                              @Value("${app.release.automation-evidence.summary:}") String releaseAutomationEvidenceSummary,
                              ObjectMapper objectMapper,
-                             JdbcTemplate jdbcTemplate) {
+                             JdbcTemplate jdbcTemplate,
+                             Environment environment) {
         this.organizationService = organizationService;
         this.auditLogService = auditLogService;
         this.tenantProfileRepository = tenantProfileRepository;
@@ -175,6 +181,7 @@ public class SaasTenantService {
         this.releaseAutomationEvidenceSummary = releaseAutomationEvidenceSummary;
         this.objectMapper = objectMapper;
         this.jdbcTemplate = jdbcTemplate;
+        this.environment = environment;
         seedSubscriptionPlans();
         seedComplianceDocuments();
     }
@@ -1012,7 +1019,11 @@ public class SaasTenantService {
                 buildConfigHardeningChecklistItem(blockingReasons),
                 buildCriticalStateEvidenceChecklistItem(evidenceSummary),
                 buildAuditTraceabilityChecklistItem(tenantId),
-                buildAutomationRegressionChecklistItem()
+                buildAutomationRegressionChecklistItem(),
+                buildExternalIntegrationChecklistItem(blockingReasons),
+                buildObservabilityStackChecklistItem(blockingReasons),
+                buildDeliveryPipelineChecklistItem(blockingReasons),
+                buildDualDeliveryAcceptanceChecklistItem(blockingReasons)
         );
         return new ReleaseReadinessView(
                 tenantId,
@@ -1020,6 +1031,15 @@ public class SaasTenantService {
                 blockingReasons,
                 evidenceSummary,
                 checklistItems
+        );
+    }
+
+    public DeliveryReadinessView getDeliveryReadiness(String tenantId) {
+        requireTenantProfile(tenantId);
+        return new DeliveryReadinessView(
+                tenantId,
+                buildDeliveryPipelineSnapshot(),
+                buildDualDeliveryAcceptanceSnapshot()
         );
     }
 
@@ -1394,6 +1414,13 @@ public class SaasTenantService {
     ) {
     }
 
+    public record DeliveryReadinessView(
+            String tenantId,
+            DeliveryPipelineSnapshot pipeline,
+            DualDeliveryAcceptanceSnapshot acceptance
+    ) {
+    }
+
     public record ReleaseChecklistItemView(
             String itemCode,
             String status,
@@ -1407,6 +1434,34 @@ public class SaasTenantService {
             int cleanupTaskCount,
             int complianceAcceptanceCount,
             int billingOrderCount
+    ) {
+    }
+
+    public record DeliveryPipelineSnapshot(
+            boolean ready,
+            String githubOwner,
+            String githubRepository,
+            String repository,
+            String registry,
+            String imageRepository,
+            boolean releaseKeyConfigured,
+            boolean canaryEnabled
+    ) {
+    }
+
+    public record DualDeliveryAcceptanceSnapshot(
+            boolean ready,
+            DeliveryEndpointSnapshot standardSaas,
+            DeliveryEndpointSnapshot privateDeployment
+    ) {
+    }
+
+    public record DeliveryEndpointSnapshot(
+            String mode,
+            boolean configured,
+            String host,
+            String maskedBaseUrl,
+            String verifiedAt
     ) {
     }
 
@@ -1551,6 +1606,206 @@ public class SaasTenantService {
         );
     }
 
+    private ReleaseChecklistItemView buildExternalIntegrationChecklistItem(List<String> blockingReasons) {
+        List<String> requiredSystems = resolveRequiredExternalSystems();
+        if (requiredSystems.isEmpty()) {
+            return new ReleaseChecklistItemView(
+                    "external_integration_readiness",
+                    "blocked",
+                    0,
+                    "required external integrations are not declared"
+            );
+        }
+        List<String> missing = new ArrayList<>();
+        int readyCount = 0;
+        for (String systemCode : requiredSystems) {
+            ExternalSystemReadiness readiness = evaluateExternalSystem(systemCode);
+            if (readiness.ready()) {
+                readyCount++;
+                continue;
+            }
+            String detail = systemCode + " integration is missing " + String.join(", ", readiness.missingParts());
+            missing.add(detail);
+            blockingReasons.add(detail);
+        }
+        return new ReleaseChecklistItemView(
+                "external_integration_readiness",
+                missing.isEmpty() ? "passed" : "blocked",
+                readyCount,
+                missing.isEmpty()
+                        ? "erp/wms/tax/messaging/bi integrations expose endpoint, credentials and callback readiness"
+                        : String.join("; ", missing)
+        );
+    }
+
+    private ReleaseChecklistItemView buildObservabilityStackChecklistItem(List<String> blockingReasons) {
+        List<String> missing = new ArrayList<>();
+        if (!isConfigured("app.observability.log-aggregation-endpoint")) {
+            missing.add("log aggregation endpoint");
+            blockingReasons.add("observability stack is missing log aggregation endpoint");
+        }
+        if (!isConfigured("app.observability.trace-endpoint")) {
+            missing.add("trace endpoint");
+            blockingReasons.add("observability stack is missing trace endpoint");
+        }
+        if (!isConfigured("app.observability.alert-router-endpoint")) {
+            missing.add("alert router endpoint");
+            blockingReasons.add("observability stack is missing alert router endpoint");
+        }
+        if (!isConfigured("app.observability.dashboard-url")) {
+            missing.add("dashboard url");
+            blockingReasons.add("observability stack is missing dashboard url");
+        }
+        int totalChecks = 4;
+        return new ReleaseChecklistItemView(
+                "observability_stack_readiness",
+                missing.isEmpty() ? "passed" : "blocked",
+                totalChecks - missing.size(),
+                missing.isEmpty()
+                        ? "log aggregation, tracing, alert routing and dashboard access are configured"
+                        : "missing " + String.join(", ", missing)
+        );
+    }
+
+    private ReleaseChecklistItemView buildDeliveryPipelineChecklistItem(List<String> blockingReasons) {
+        List<String> missing = new ArrayList<>();
+        if (!isConfigured("app.delivery.github-owner")) {
+            missing.add("github owner");
+            blockingReasons.add("delivery pipeline is missing github owner");
+        }
+        if (!isConfigured("app.delivery.github-repository")) {
+            missing.add("github repository");
+            blockingReasons.add("delivery pipeline is missing github repository");
+        }
+        if (!isConfigured("app.delivery.registry")) {
+            missing.add("container registry");
+            blockingReasons.add("delivery pipeline is missing container registry");
+        }
+        if (!isConfigured("app.delivery.image-repository")) {
+            missing.add("image repository");
+            blockingReasons.add("delivery pipeline is missing image repository");
+        }
+        if (!environment.getProperty("app.delivery.release-key-configured", Boolean.class, false)) {
+            missing.add("release key");
+            blockingReasons.add("delivery pipeline is missing release key injection");
+        }
+        if (!environment.getProperty("app.delivery.canary-enabled", Boolean.class, false)) {
+            missing.add("canary switch");
+            blockingReasons.add("delivery pipeline canary switch is disabled");
+        }
+        int totalChecks = 6;
+        return new ReleaseChecklistItemView(
+                "delivery_pipeline_readiness",
+                missing.isEmpty() ? "passed" : "blocked",
+                totalChecks - missing.size(),
+                missing.isEmpty()
+                        ? "github, registry, release key and canary controls are configured"
+                        : "missing " + String.join(", ", missing)
+        );
+    }
+
+    private ReleaseChecklistItemView buildDualDeliveryAcceptanceChecklistItem(List<String> blockingReasons) {
+        List<String> missing = new ArrayList<>();
+        if (!isConfigured("app.delivery.standard-saas-base-url")) {
+            missing.add("standard saas base url");
+            blockingReasons.add("dual delivery acceptance is missing standard saas base url");
+        }
+        if (!isConfigured("app.delivery.standard-saas-verified-at")) {
+            missing.add("standard saas verification timestamp");
+            blockingReasons.add("dual delivery acceptance is missing standard saas verification timestamp");
+        }
+        if (!isConfigured("app.delivery.private-base-url")) {
+            missing.add("private deployment base url");
+            blockingReasons.add("dual delivery acceptance is missing private deployment base url");
+        }
+        if (!isConfigured("app.delivery.private-verified-at")) {
+            missing.add("private deployment verification timestamp");
+            blockingReasons.add("dual delivery acceptance is missing private deployment verification timestamp");
+        }
+        int totalChecks = 4;
+        return new ReleaseChecklistItemView(
+                "dual_delivery_acceptance",
+                missing.isEmpty() ? "passed" : "blocked",
+                totalChecks - missing.size(),
+                missing.isEmpty()
+                        ? "standard saas and private deployment acceptance evidence is attached"
+                        : "missing " + String.join(", ", missing)
+        );
+    }
+
+    private DeliveryPipelineSnapshot buildDeliveryPipelineSnapshot() {
+        String owner = environment.getProperty("app.delivery.github-owner", "");
+        String repository = environment.getProperty("app.delivery.github-repository", "");
+        boolean releaseKeyConfigured = environment.getProperty("app.delivery.release-key-configured", Boolean.class, false);
+        boolean canaryEnabled = environment.getProperty("app.delivery.canary-enabled", Boolean.class, false);
+        return new DeliveryPipelineSnapshot(
+                isDeliveryPipelineReady(),
+                owner,
+                repository,
+                owner.isBlank() || repository.isBlank() ? "" : owner + "/" + repository,
+                environment.getProperty("app.delivery.registry", ""),
+                environment.getProperty("app.delivery.image-repository", ""),
+                releaseKeyConfigured,
+                canaryEnabled
+        );
+    }
+
+    private DualDeliveryAcceptanceSnapshot buildDualDeliveryAcceptanceSnapshot() {
+        DeliveryEndpointSnapshot standardSaas = buildDeliveryEndpointSnapshot(
+                "standard-saas",
+                "app.delivery.standard-saas-base-url",
+                "app.delivery.standard-saas-verified-at"
+        );
+        DeliveryEndpointSnapshot privateDeployment = buildDeliveryEndpointSnapshot(
+                "private-deployment",
+                "app.delivery.private-base-url",
+                "app.delivery.private-verified-at"
+        );
+        return new DualDeliveryAcceptanceSnapshot(
+                standardSaas.configured() && privateDeployment.configured(),
+                standardSaas,
+                privateDeployment
+        );
+    }
+
+    private DeliveryEndpointSnapshot buildDeliveryEndpointSnapshot(String mode, String baseUrlKey, String verifiedAtKey) {
+        String baseUrl = environment.getProperty(baseUrlKey, "");
+        String verifiedAt = environment.getProperty(verifiedAtKey, "");
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return new DeliveryEndpointSnapshot(mode, false, "", "", verifiedAt == null ? "" : verifiedAt);
+        }
+        try {
+            URI uri = URI.create(baseUrl);
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme();
+            String host = uri.getHost() == null ? "" : uri.getHost();
+            String authority = host;
+            if (uri.getPort() >= 0) {
+                authority = authority + ":" + uri.getPort();
+            }
+            String maskedBaseUrl = scheme.isBlank() || authority.isBlank()
+                    ? "***"
+                    : scheme + "://" + authority + "/***";
+            return new DeliveryEndpointSnapshot(
+                    mode,
+                    !verifiedAt.isBlank(),
+                    host,
+                    maskedBaseUrl,
+                    verifiedAt
+            );
+        } catch (IllegalArgumentException exception) {
+            return new DeliveryEndpointSnapshot(mode, !verifiedAt.isBlank(), "", "***", verifiedAt);
+        }
+    }
+
+    private boolean isDeliveryPipelineReady() {
+        return isConfigured("app.delivery.github-owner")
+                && isConfigured("app.delivery.github-repository")
+                && isConfigured("app.delivery.registry")
+                && isConfigured("app.delivery.image-repository")
+                && environment.getProperty("app.delivery.release-key-configured", Boolean.class, false)
+                && environment.getProperty("app.delivery.canary-enabled", Boolean.class, false);
+    }
+
     private boolean hasTraceabilityEvidence(com.dianshang.platform.audit.AuditLogRecord auditLogRecord) {
         return auditLogRecord != null
                 && auditLogRecord.traceId() != null
@@ -1572,6 +1827,43 @@ public class SaasTenantService {
             return "conditional_release";
         }
         return "allow_release";
+    }
+
+    private List<String> resolveRequiredExternalSystems() {
+        return Arrays.stream(environment.getProperty("app.integrations.external.required-systems", "erp,wms,tax,messaging,bi").split(","))
+                .map(String::trim)
+                .map(value -> value.toLowerCase(Locale.ROOT))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .toList();
+    }
+
+    private ExternalSystemReadiness evaluateExternalSystem(String systemCode) {
+        String prefix = "app.integrations.external.systems." + systemCode + ".";
+        List<String> missingParts = new ArrayList<>();
+        if (!isConfigured(prefix + "endpoint")) {
+            missingParts.add("endpoint");
+        }
+        if (!environment.getProperty(prefix + "credential-configured", Boolean.class, false)) {
+            missingParts.add("credentials");
+        }
+        boolean callbackRequired = environment.getProperty(prefix + "callback-required", Boolean.class, false);
+        if (callbackRequired && !isConfigured(prefix + "callback-url")) {
+            missingParts.add("callback url");
+        }
+        return new ExternalSystemReadiness(systemCode, missingParts.isEmpty(), missingParts);
+    }
+
+    private boolean isConfigured(String key) {
+        String value = environment.getProperty(key, "");
+        return value != null && !value.isBlank();
+    }
+
+    private record ExternalSystemReadiness(
+            String systemCode,
+            boolean ready,
+            List<String> missingParts
+    ) {
     }
 
     private DataExportScope requireExportScope(String scopeCode) {

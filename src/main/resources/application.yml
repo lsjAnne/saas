@@ -9,6 +9,13 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
+  data:
+    redis:
+      host: ${APP_REDIS_HOST:127.0.0.1}
+      port: ${APP_REDIS_PORT:16379}
+      password: ${APP_REDIS_PASSWORD:saas_redis_password}
+      timeout: 2s
+      connect-timeout: 2s
   sql:
     init:
       mode: always
@@ -74,10 +81,61 @@ app:
     bootstrap-admin-username: ${APP_AUTH_BOOTSTRAP_ADMIN_USERNAME:}
     bootstrap-admin-password: ${APP_AUTH_BOOTSTRAP_ADMIN_PASSWORD:}
     bootstrap-admin-display-name: ${APP_AUTH_BOOTSTRAP_ADMIN_DISPLAY_NAME:平台系统管理员}
+  observability:
+    log-aggregation-endpoint: ${APP_OBSERVABILITY_LOG_ENDPOINT:}
+    trace-endpoint: ${APP_OBSERVABILITY_TRACE_ENDPOINT:}
+    alert-router-endpoint: ${APP_OBSERVABILITY_ALERT_ENDPOINT:}
+    dashboard-url: ${APP_OBSERVABILITY_DASHBOARD_URL:}
   deployment:
     default-mode: ${APP_DEPLOYMENT_DEFAULT_MODE:standard-saas}
     supported-modes: ${APP_DEPLOYMENT_SUPPORTED_MODES:standard-saas,private-deployment}
+  delivery:
+    github-owner: ${APP_DELIVERY_GITHUB_OWNER:lsjAnne}
+    github-repository: ${APP_DELIVERY_GITHUB_REPOSITORY:saas}
+    registry: ${APP_DELIVERY_REGISTRY:ghcr.io}
+    image-repository: ${APP_DELIVERY_IMAGE_REPOSITORY:lsjAnne/dian-shang-ping-tai}
+    release-key-configured: ${APP_DELIVERY_RELEASE_KEY_CONFIGURED:false}
+    canary-enabled: ${APP_DELIVERY_CANARY_ENABLED:false}
+    standard-saas-base-url: ${APP_DELIVERY_STANDARD_SAAS_BASE_URL:}
+    standard-saas-verified-at: ${APP_DELIVERY_STANDARD_SAAS_VERIFIED_AT:}
+    private-base-url: ${APP_DELIVERY_PRIVATE_BASE_URL:}
+    private-verified-at: ${APP_DELIVERY_PRIVATE_VERIFIED_AT:}
   integrations:
+    external:
+      required-systems: ${APP_EXTERNAL_REQUIRED_SYSTEMS:erp,wms,tax,messaging,bi,routing}
+      bi:
+        provider: ${APP_EXTERNAL_BI_PROVIDER:superset}
+        endpoint: ${APP_EXTERNAL_BI_ENDPOINT:}
+        dashboard-count: ${APP_EXTERNAL_BI_DASHBOARD_COUNT:0}
+        dataset-count: ${APP_EXTERNAL_BI_DATASET_COUNT:0}
+        embed-enabled: ${APP_EXTERNAL_BI_EMBED_ENABLED:false}
+      routing:
+        provider: ${APP_EXTERNAL_ROUTING_PROVIDER:osrm}
+        endpoint: ${APP_EXTERNAL_ROUTING_ENDPOINT:}
+        profile: ${APP_EXTERNAL_ROUTING_PROFILE:driving}
+        fallback-enabled: ${APP_EXTERNAL_ROUTING_FALLBACK_ENABLED:true}
+        timeout-millis: ${APP_EXTERNAL_ROUTING_TIMEOUT_MILLIS:2000}
+      systems:
+        erp:
+          endpoint: ${APP_EXTERNAL_ERP_ENDPOINT:}
+          credential-configured: ${APP_EXTERNAL_ERP_CREDENTIAL_CONFIGURED:false}
+        wms:
+          endpoint: ${APP_EXTERNAL_WMS_ENDPOINT:}
+          credential-configured: ${APP_EXTERNAL_WMS_CREDENTIAL_CONFIGURED:false}
+        tax:
+          endpoint: ${APP_EXTERNAL_TAX_ENDPOINT:}
+          credential-configured: ${APP_EXTERNAL_TAX_CREDENTIAL_CONFIGURED:false}
+        messaging:
+          endpoint: ${APP_EXTERNAL_MESSAGING_ENDPOINT:}
+          credential-configured: ${APP_EXTERNAL_MESSAGING_CREDENTIAL_CONFIGURED:false}
+          callback-url: ${APP_EXTERNAL_MESSAGING_CALLBACK_URL:}
+          callback-required: ${APP_EXTERNAL_MESSAGING_CALLBACK_REQUIRED:true}
+        bi:
+          endpoint: ${APP_EXTERNAL_BI_ENDPOINT:}
+          credential-configured: ${APP_EXTERNAL_BI_CREDENTIAL_CONFIGURED:false}
+        routing:
+          endpoint: ${APP_EXTERNAL_ROUTING_ENDPOINT:}
+          credential-configured: ${APP_EXTERNAL_ROUTING_CONNECTION_CONFIGURED:true}
     notification:
       require-configured-gateway: ${APP_NOTIFICATION_REQUIRE_CONFIGURED_GATEWAY:false}
       channel-bindings:
@@ -156,14 +214,6 @@ spring:
         - classpath:db/migration/V022__openplatform_credentials.sql
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
-  data:
-    redis:
-      host: 192.168.112.101
-      port: 6379
-      password: 123456
-      timeout: 2s
-      connect-timeout: 2s
-
 app:
   persistence:
     mode: jdbc
@@ -214,14 +264,6 @@ spring:
         - classpath:db/migration/V022__openplatform_credentials.sql
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 16379
-      password: 123456
-      timeout: 2s
-      connect-timeout: 2s
-
 app:
   persistence:
     mode: jdbc
@@ -272,14 +314,6 @@ spring:
         - classpath:db/migration/V022__openplatform_credentials.sql
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-      password: mypassword
-      timeout: 2s
-      connect-timeout: 2s
-
 app:
   persistence:
     mode: jdbc

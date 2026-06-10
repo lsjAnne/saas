@@ -713,6 +713,250 @@ class OpenPlatformControllerTest {
     }
 
     @Test
+    void shouldExposeExternalWmsAndTmsViewsAndRecordExternalLogs() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-external-execution-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        ExternalExecutionFixture executionFixture = prepareExternalExecutionFixture(
+                fixture.organizationId(),
+                ownerToken,
+                "open-external-execution-shop"
+        );
+
+        MvcResult warehouseResult = mockMvc.perform(post("/api/wms/warehouses")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "warehouseName": "Hangzhou Central Warehouse",
+                                  "zoneCode": "HZ-A",
+                                  "locationCode": "A-01-01",
+                                  "temperatureZone": "ambient"
+                                }
+                                """.formatted(executionFixture.storeId())))
+                .andExpect(status().isOk())
+                .andReturn();
+        String warehouseCode = objectMapper.readTree(warehouseResult.getResponse().getContentAsString())
+                .path("data")
+                .path("warehouseCode")
+                .asText();
+
+        mockMvc.perform(post("/api/wms/waves")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "warehouseCode": "%s",
+                                  "waveType": "outbound",
+                                  "strategyCode": "priority",
+                                  "items": [
+                                    {
+                                      "productId": "%s",
+                                      "skuId": "sku-1001",
+                                      "locationCode": "A-01-01",
+                                      "plannedQty": 2
+                                    }
+                                  ]
+                                }
+                                """.formatted(executionFixture.storeId(), warehouseCode, executionFixture.productId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.waveStatus").value("released"));
+
+        MvcResult carrierResult = mockMvc.perform(post("/api/tms/carriers")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "carrierName": "External Express",
+                                  "carrierCode": "EXT-EXP",
+                                  "channelType": "express",
+                                  "serviceScope": "national"
+                                }
+                                """.formatted(executionFixture.storeId())))
+                .andExpect(status().isOk())
+                .andReturn();
+        String carrierId = objectMapper.readTree(carrierResult.getResponse().getContentAsString())
+                .path("data")
+                .path("carrierId")
+                .asText();
+
+        MvcResult shipmentResult = mockMvc.perform(post("/api/tms/shipments")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "fulfillmentTaskId": "%s",
+                                  "carrierId": "%s",
+                                  "shippingMode": "express",
+                                  "freightAmount": 22.50,
+                                  "originCity": "Hangzhou",
+                                  "destinationCity": "Shanghai"
+                                }
+                                """.formatted(executionFixture.fulfillmentTaskId(), carrierId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String shipmentId = objectMapper.readTree(shipmentResult.getResponse().getContentAsString())
+                .path("data")
+                .path("shipmentId")
+                .asText();
+
+        mockMvc.perform(post("/api/tms/shipments/{id}/tracking-events", shipmentId)
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "trackingStatus": "in_transit",
+                                  "locationText": "Hangzhou Sorting Center",
+                                  "remark": "route collected"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.latestTrackingStatus").value("in_transit"));
+
+        mockMvc.perform(post("/api/tms/freight-settlements")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "shipmentId": "%s",
+                                  "settleMode": "monthly",
+                                  "costType": "freight",
+                                  "billableWeight": 2.40,
+                                  "freightAmount": 22.50
+                                }
+                                """.formatted(shipmentId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.settlementStatus").value("pending"));
+
+        mockMvc.perform(post("/api/tms/shipments/{id}/sign-off", shipmentId)
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "signStatus": "delivered",
+                                  "proofType": "electronic_pod",
+                                  "remark": "customer signed"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.podStatus").value("archived"));
+
+        mockMvc.perform(post("/api/tms/reverse-logistics")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "orderId": "%s",
+                                  "shipmentId": "%s",
+                                  "carrierId": "%s",
+                                  "reverseType": "return_pickup",
+                                  "remark": "after sale reverse pickup"
+                                }
+                                """.formatted(executionFixture.orderId(), shipmentId, carrierId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.reverseStatus").value("initiated"));
+
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "external-execution-app",
+                "wms.linkage.read",
+                "tms.control_tower.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/wms/linkage")
+                        .header("X-Trace-Id", "open-wms-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret)
+                        .param("storeId", executionFixture.storeId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.storeId").value(executionFixture.storeId()))
+                .andExpect(jsonPath("$.data.warehouseCount").value(1))
+                .andExpect(jsonPath("$.data.activeWaveCount").value(1))
+                .andExpect(jsonPath("$.data.lockedBatchCount").value(0))
+                .andExpect(jsonPath("$.data.omsSyncStatus").value("ready"))
+                .andExpect(jsonPath("$.data.erpSyncStatus").value("ready"))
+                .andExpect(jsonPath("$.data.tmsHandoverStatus").value("pending"));
+
+        mockMvc.perform(get("/api/open/external/tms/control-tower")
+                        .header("X-Trace-Id", "open-tms-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.storeId").value(executionFixture.storeId()))
+                .andExpect(jsonPath("$.data.carrierCount").value(1))
+                .andExpect(jsonPath("$.data.shipmentCount").value(1))
+                .andExpect(jsonPath("$.data.signedShipmentCount").value(1))
+                .andExpect(jsonPath("$.data.reverseLogisticsCount").value(1))
+                .andExpect(jsonPath("$.data.latestTrackingStatus").value("in_transit"))
+                .andExpect(jsonPath("$.data.settlementPendingCount").value(1))
+                .andExpect(jsonPath("$.data.podArchiveCount").value(1));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[2].traceId").value("open-wms-trace-001"))
+                .andExpect(jsonPath("$.data[3].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[3].traceId").value("open-tms-trace-001"));
+    }
+
+    @Test
+    void shouldRejectTmsExternalAccessWhenControlTowerScopeMissing() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-tms-scope-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "tms-scope-missing-app",
+                "wms.linkage.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/tms/control-tower")
+                        .header("X-Trace-Id", "open-tms-scope-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1009"))
+                .andExpect(jsonPath("$.message").value("integration permission scope denied"));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("rejected_scope"))
+                .andExpect(jsonPath("$.data[2].appId").value(appId))
+                .andExpect(jsonPath("$.data[2].traceId").value("open-tms-scope-trace-001"));
+    }
+
+    @Test
     void shouldManagePluginCredentialLifecycleAndExposeOpenPlatformOverview() throws Exception {
         OpenPlatformFixture fixture = prepareFixture("open-platform-lifecycle-center");
         String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
@@ -889,6 +1133,93 @@ class OpenPlatformControllerTest {
         return objectMapper.readTree(result.getResponse().getContentAsString()).path("data").path("storeId").asText();
     }
 
+    private ExternalExecutionFixture prepareExternalExecutionFixture(String organizationId,
+                                                                    String token,
+                                                                    String platformShopId) throws Exception {
+        String storeId = connectStore(token, organizationId, platformShopId);
+
+        MvcResult candidateResult = mockMvc.perform(post("/api/candidate-products")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "sourceType": "1688",
+                                  "sourceUrl": "https://source.example.com/p/open-external-3001",
+                                  "title": "开放集成测试商品",
+                                  "category": "家居",
+                                  "estimatedProfit": 21.50,
+                                  "riskLevel": "low",
+                                  "recommendationReason": "用于开放平台外部系统联调验证",
+                                  "aiSummary": "系统生成开放平台联调测试商品"
+                                }
+                                """.formatted(storeId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String candidateProductId = objectMapper.readTree(candidateResult.getResponse().getContentAsString())
+                .path("data")
+                .path("candidateProductId")
+                .asText();
+
+        MvcResult draftResult = mockMvc.perform(post("/api/product-drafts/generate")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "candidateProductId": "%s",
+                                  "aiVersion": "ai-open-external-v1",
+                                  "suggestedPrice": 99.90
+                                }
+                                """.formatted(candidateProductId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String draftId = objectMapper.readTree(draftResult.getResponse().getContentAsString())
+                .path("data")
+                .path("productDraftId")
+                .asText();
+
+        MvcResult productResult = mockMvc.perform(post("/api/product-drafts/{id}/publish", draftId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "platformProductId": "open-external-product-3001"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        String productId = objectMapper.readTree(productResult.getResponse().getContentAsString())
+                .path("data")
+                .path("productId")
+                .asText();
+
+        MvcResult syncResult = mockMvc.perform(post("/api/orders/sync")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "platformOrderId": "open-external-order-9201",
+                                  "productId": "%s",
+                                  "skuId": "sku-1001",
+                                  "quantity": 2,
+                                  "unitPrice": 76.90,
+                                  "buyerName": "external-buyer",
+                                  "buyerPhoneMask": "137****2001",
+                                  "shippingAddress": "Hangzhou Yuhang Tongxie Road 66"
+                                }
+                                """.formatted(storeId, productId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode syncData = objectMapper.readTree(syncResult.getResponse().getContentAsString()).path("data");
+        return new ExternalExecutionFixture(
+                storeId,
+                productId,
+                syncData.path("orderId").asText(),
+                syncData.path("fulfillmentTaskId").asText()
+        );
+    }
+
     private void confirmSensitivePermission(String token, String permissionCode) throws Exception {
         mockMvc.perform(post("/api/auth/sensitive-operation-confirmations")
                         .header("Authorization", "Bearer " + token)
@@ -962,4 +1293,7 @@ record OpenPlatformFixture(String tenantId, String organizationId) {
 }
 
 record WebhookFixture(String subscriptionId, String secretToken) {
+}
+
+record ExternalExecutionFixture(String storeId, String productId, String orderId, String fulfillmentTaskId) {
 }
