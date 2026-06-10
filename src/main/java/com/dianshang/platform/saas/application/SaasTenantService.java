@@ -55,7 +55,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1040,6 +1047,7 @@ public class SaasTenantService {
         return new DeliveryReadinessView(
                 tenantId,
                 buildDeliveryPipelineSnapshot(),
+                buildExternalIntegrationConnectivitySnapshot(),
                 buildDualDeliveryAcceptanceSnapshot()
         );
     }
@@ -1418,6 +1426,7 @@ public class SaasTenantService {
     public record DeliveryReadinessView(
             String tenantId,
             DeliveryPipelineSnapshot pipeline,
+            ExternalIntegrationConnectivitySnapshot externalIntegrations,
             DualDeliveryAcceptanceSnapshot acceptance
     ) {
     }
@@ -1447,6 +1456,30 @@ public class SaasTenantService {
             String imageRepository,
             boolean releaseKeyConfigured,
             boolean canaryEnabled
+    ) {
+    }
+
+    public record ExternalIntegrationConnectivitySnapshot(
+            boolean ready,
+            int configuredCount,
+            int reachableCount,
+            ExternalSystemConnectivitySnapshot erp,
+            ExternalSystemConnectivitySnapshot wms,
+            ExternalSystemConnectivitySnapshot messaging,
+            ExternalSystemConnectivitySnapshot bi,
+            ExternalSystemConnectivitySnapshot routing
+    ) {
+    }
+
+    public record ExternalSystemConnectivitySnapshot(
+            String systemCode,
+            String provider,
+            String protocol,
+            boolean configured,
+            boolean reachable,
+            String host,
+            String maskedTarget,
+            String detail
     ) {
     }
 
@@ -1754,6 +1787,47 @@ public class SaasTenantService {
         );
     }
 
+    private ExternalIntegrationConnectivitySnapshot buildExternalIntegrationConnectivitySnapshot() {
+        ExternalSystemConnectivitySnapshot erp = probeHttpExternalSystem(
+                "erp",
+                "app.integrations.external.erp.provider",
+                "app.integrations.external.erp.endpoint"
+        );
+        ExternalSystemConnectivitySnapshot wms = probeHttpExternalSystem(
+                "wms",
+                "app.integrations.external.wms.provider",
+                "app.integrations.external.wms.endpoint"
+        );
+        ExternalSystemConnectivitySnapshot messaging = probeTcpExternalSystem(
+                "messaging",
+                "app.integrations.external.messaging.provider",
+                "app.integrations.external.messaging.endpoint"
+        );
+        ExternalSystemConnectivitySnapshot bi = probeHttpExternalSystem(
+                "bi",
+                "app.integrations.external.bi.provider",
+                "app.integrations.external.bi.endpoint"
+        );
+        ExternalSystemConnectivitySnapshot routing = probeHttpExternalSystem(
+                "routing",
+                "app.integrations.external.routing.provider",
+                "app.integrations.external.routing.endpoint"
+        );
+        List<ExternalSystemConnectivitySnapshot> snapshots = List.of(erp, wms, messaging, bi, routing);
+        int configuredCount = (int) snapshots.stream().filter(ExternalSystemConnectivitySnapshot::configured).count();
+        int reachableCount = (int) snapshots.stream().filter(ExternalSystemConnectivitySnapshot::reachable).count();
+        return new ExternalIntegrationConnectivitySnapshot(
+                configuredCount == snapshots.size() && reachableCount == snapshots.size(),
+                configuredCount,
+                reachableCount,
+                erp,
+                wms,
+                messaging,
+                bi,
+                routing
+        );
+    }
+
     private DualDeliveryAcceptanceSnapshot buildDualDeliveryAcceptanceSnapshot() {
         DeliveryEndpointSnapshot standardSaas = buildDeliveryEndpointSnapshot(
                 "standard-saas",
@@ -1801,6 +1875,123 @@ public class SaasTenantService {
         }
     }
 
+    private ExternalSystemConnectivitySnapshot probeHttpExternalSystem(String systemCode,
+                                                                       String providerKey,
+                                                                       String endpointKey) {
+        String endpoint = environment.getProperty(endpointKey, "");
+        String provider = normalizedProperty(providerKey, systemCode);
+        String host = extractHost(endpoint);
+        String maskedTarget = maskEndpoint(endpoint);
+        if (endpoint == null || endpoint.isBlank()) {
+            return new ExternalSystemConnectivitySnapshot(
+                    systemCode,
+                    provider,
+                    "http",
+                    false,
+                    false,
+                    host,
+                    maskedTarget,
+                    "endpoint not configured"
+            );
+        }
+        try {
+            Duration timeout = Duration.ofMillis(resolveExternalProbeTimeoutMillis());
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(timeout)
+                    .build();
+            HttpResponse<String> response = client.send(
+                    HttpRequest.newBuilder(URI.create(endpoint))
+                            .timeout(timeout)
+                            .GET()
+                            .build(),
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+            );
+            return new ExternalSystemConnectivitySnapshot(
+                    systemCode,
+                    provider,
+                    "http",
+                    true,
+                    true,
+                    host,
+                    maskedTarget,
+                    "http " + response.statusCode()
+            );
+        } catch (Exception exception) {
+            return new ExternalSystemConnectivitySnapshot(
+                    systemCode,
+                    provider,
+                    "http",
+                    true,
+                    false,
+                    host,
+                    maskedTarget,
+                    "probe failed: " + exception.getClass().getSimpleName()
+            );
+        }
+    }
+
+    private ExternalSystemConnectivitySnapshot probeTcpExternalSystem(String systemCode,
+                                                                      String providerKey,
+                                                                      String endpointKey) {
+        String endpoint = environment.getProperty(endpointKey, "");
+        String provider = normalizedProperty(providerKey, systemCode);
+        String host = extractHost(endpoint);
+        String maskedTarget = maskEndpoint(endpoint);
+        if (endpoint == null || endpoint.isBlank()) {
+            return new ExternalSystemConnectivitySnapshot(
+                    systemCode,
+                    provider,
+                    "tcp",
+                    false,
+                    false,
+                    host,
+                    maskedTarget,
+                    "endpoint not configured"
+            );
+        }
+        try {
+            URI uri = URI.create(endpoint);
+            String resolvedHost = uri.getHost();
+            if (resolvedHost == null || resolvedHost.isBlank()) {
+                return new ExternalSystemConnectivitySnapshot(
+                        systemCode,
+                        provider,
+                        "tcp",
+                        true,
+                        false,
+                        "",
+                        maskedTarget,
+                        "probe failed: missing host"
+                );
+            }
+            int port = resolveTcpProbePort(uri);
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(resolvedHost, port), resolveExternalProbeTimeoutMillis());
+            }
+            return new ExternalSystemConnectivitySnapshot(
+                    systemCode,
+                    provider,
+                    "tcp",
+                    true,
+                    true,
+                    resolvedHost,
+                    maskedTarget,
+                    "tcp connected"
+            );
+        } catch (Exception exception) {
+            return new ExternalSystemConnectivitySnapshot(
+                    systemCode,
+                    provider,
+                    "tcp",
+                    true,
+                    false,
+                    host,
+                    maskedTarget,
+                    "probe failed: " + exception.getClass().getSimpleName()
+            );
+        }
+    }
+
     private boolean isDeliveryPipelineReady() {
         return isConfigured("app.delivery.github-owner")
                 && isConfigured("app.delivery.github-repository")
@@ -1808,6 +1999,10 @@ public class SaasTenantService {
                 && isConfigured("app.delivery.image-repository")
                 && environment.getProperty("app.delivery.release-key-configured", Boolean.class, false)
                 && environment.getProperty("app.delivery.canary-enabled", Boolean.class, false);
+    }
+
+    private int resolveExternalProbeTimeoutMillis() {
+        return Math.max(250, environment.getProperty("app.integrations.external.probe-timeout-millis", Integer.class, 1500));
     }
 
     private boolean hasTraceabilityEvidence(com.dianshang.platform.audit.AuditLogRecord auditLogRecord) {
@@ -1880,6 +2075,59 @@ public class SaasTenantService {
     private boolean isConfigured(String key) {
         String value = environment.getProperty(key, "");
         return value != null && !value.isBlank();
+    }
+
+    private String normalizedProperty(String key, String defaultValue) {
+        String value = environment.getProperty(key, defaultValue);
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return value.trim();
+    }
+
+    private String extractHost(String rawEndpoint) {
+        if (rawEndpoint == null || rawEndpoint.isBlank()) {
+            return "";
+        }
+        try {
+            URI uri = URI.create(rawEndpoint);
+            return uri.getHost() == null ? "" : uri.getHost();
+        } catch (IllegalArgumentException exception) {
+            return "";
+        }
+    }
+
+    private String maskEndpoint(String rawEndpoint) {
+        if (rawEndpoint == null || rawEndpoint.isBlank()) {
+            return "";
+        }
+        try {
+            URI uri = URI.create(rawEndpoint);
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme();
+            String host = uri.getHost() == null ? "" : uri.getHost();
+            String authority = host;
+            if (uri.getPort() >= 0) {
+                authority = authority + ":" + uri.getPort();
+            }
+            if (scheme.isBlank() || authority.isBlank()) {
+                return "***";
+            }
+            return scheme + "://" + authority + "/***";
+        } catch (IllegalArgumentException exception) {
+            return "***";
+        }
+    }
+
+    private int resolveTcpProbePort(URI uri) {
+        if (uri.getPort() > 0) {
+            return uri.getPort();
+        }
+        String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+        return switch (scheme) {
+            case "amqps" -> 5671;
+            case "amqp" -> 5672;
+            default -> 5672;
+        };
     }
 
     private record ExternalSystemReadiness(

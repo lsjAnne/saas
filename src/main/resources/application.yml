@@ -102,6 +102,7 @@ app:
     private-verified-at: ${APP_DELIVERY_PRIVATE_VERIFIED_AT:}
   integrations:
     external:
+      probe-timeout-millis: ${APP_EXTERNAL_PROBE_TIMEOUT_MILLIS:1500}
       required-systems: ${APP_EXTERNAL_REQUIRED_SYSTEMS:erp,wms,tax,messaging,bi,routing}
       bi:
         provider: ${APP_EXTERNAL_BI_PROVIDER:superset}

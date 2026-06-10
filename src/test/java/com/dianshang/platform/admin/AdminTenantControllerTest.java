@@ -1,5 +1,7 @@
 package com.dianshang.platform.admin;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import com.dianshang.platform.audit.AuditLogService;
 import com.dianshang.platform.auth.application.AuthService;
 import com.dianshang.platform.organization.application.OrganizationService;
@@ -11,16 +13,26 @@ import com.dianshang.platform.saas.model.TenantProfile;
 import com.dianshang.platform.saas.model.TenantSubscription;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.time.OffsetDateTime;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -85,6 +97,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class AdminTenantControllerTest {
 
+    private static final HttpServer EXTERNAL_HTTP_SERVER = createExternalHttpServer();
+    private static final int HTTP_PORT = EXTERNAL_HTTP_SERVER.getAddress().getPort();
+    private static final TcpProbeServer RABBITMQ_TCP_SERVER = createRabbitMqProbeServer();
+
+    @DynamicPropertySource
+    static void registerExternalProbeProperties(DynamicPropertyRegistry registry) {
+        String httpBase = "http://127.0.0.1:" + HTTP_PORT;
+        String messagingEndpoint = "amqp://127.0.0.1:" + RABBITMQ_TCP_SERVER.port() + "/tenant-hub";
+        registry.add("app.integrations.external.systems.erp.endpoint", () -> httpBase + "/ofbiz/webtools/control");
+        registry.add("app.integrations.external.systems.wms.endpoint", () -> httpBase + "/openboxes/api");
+        registry.add("app.integrations.external.systems.messaging.endpoint", () -> messagingEndpoint);
+        registry.add("app.integrations.external.systems.bi.endpoint", () -> httpBase + "/superset/api/v1");
+        registry.add("app.integrations.external.systems.routing.endpoint", () -> httpBase + "/osrm");
+        registry.add("app.integrations.external.erp.endpoint", () -> httpBase + "/ofbiz/webtools/control");
+        registry.add("app.integrations.external.wms.endpoint", () -> httpBase + "/openboxes/api");
+        registry.add("app.integrations.external.messaging.endpoint", () -> messagingEndpoint);
+        registry.add("app.integrations.external.bi.endpoint", () -> httpBase + "/superset/api/v1");
+        registry.add("app.integrations.external.routing.endpoint", () -> httpBase + "/osrm");
+        registry.add("app.integrations.external.probe-timeout-millis", () -> "1000");
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -111,6 +144,12 @@ class AdminTenantControllerTest {
 
     @Autowired
     private AuthService authService;
+
+    @AfterAll
+    static void shutdownProbeServers() {
+        EXTERNAL_HTTP_SERVER.stop(0);
+        RABBITMQ_TCP_SERVER.close();
+    }
 
     @BeforeEach
     void setUp() {
@@ -365,6 +404,30 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.pipeline.imageRepository").value("lsjAnne/dian-shang-ping-tai"))
                 .andExpect(jsonPath("$.data.pipeline.releaseKeyConfigured").value(true))
                 .andExpect(jsonPath("$.data.pipeline.canaryEnabled").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrations.ready").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrations.configuredCount").value(5))
+                .andExpect(jsonPath("$.data.externalIntegrations.reachableCount").value(5))
+                .andExpect(jsonPath("$.data.externalIntegrations.erp.systemCode").value("erp"))
+                .andExpect(jsonPath("$.data.externalIntegrations.erp.provider").value("ofbiz"))
+                .andExpect(jsonPath("$.data.externalIntegrations.erp.protocol").value("http"))
+                .andExpect(jsonPath("$.data.externalIntegrations.erp.reachable").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrations.erp.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.externalIntegrations.erp.detail").value("http 200"))
+                .andExpect(jsonPath("$.data.externalIntegrations.wms.systemCode").value("wms"))
+                .andExpect(jsonPath("$.data.externalIntegrations.wms.provider").value("openboxes"))
+                .andExpect(jsonPath("$.data.externalIntegrations.wms.reachable").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrations.messaging.systemCode").value("messaging"))
+                .andExpect(jsonPath("$.data.externalIntegrations.messaging.provider").value("rabbitmq"))
+                .andExpect(jsonPath("$.data.externalIntegrations.messaging.protocol").value("tcp"))
+                .andExpect(jsonPath("$.data.externalIntegrations.messaging.reachable").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrations.messaging.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.externalIntegrations.messaging.detail").value("tcp connected"))
+                .andExpect(jsonPath("$.data.externalIntegrations.bi.systemCode").value("bi"))
+                .andExpect(jsonPath("$.data.externalIntegrations.bi.provider").value("superset"))
+                .andExpect(jsonPath("$.data.externalIntegrations.bi.reachable").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrations.routing.systemCode").value("routing"))
+                .andExpect(jsonPath("$.data.externalIntegrations.routing.provider").value("osrm"))
+                .andExpect(jsonPath("$.data.externalIntegrations.routing.reachable").value(true))
                 .andExpect(jsonPath("$.data.acceptance.ready").value(true))
                 .andExpect(jsonPath("$.data.acceptance.standardSaas.mode").value("standard-saas"))
                 .andExpect(jsonPath("$.data.acceptance.standardSaas.configured").value(true))
@@ -647,5 +710,64 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.permissionCode").value(permissionCode))
                 .andExpect(jsonPath("$.data.confirmed").value(true))
                 .andExpect(jsonPath("$.data.expiresAt").isString());
+    }
+
+    private static HttpServer createExternalHttpServer() {
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext("/ofbiz/webtools/control", AdminTenantControllerTest::writeOk);
+            server.createContext("/openboxes/api", AdminTenantControllerTest::writeOk);
+            server.createContext("/superset/api/v1", AdminTenantControllerTest::writeOk);
+            server.createContext("/osrm", AdminTenantControllerTest::writeOk);
+            server.setExecutor(Executors.newCachedThreadPool());
+            server.start();
+            return server;
+        } catch (IOException exception) {
+            throw new IllegalStateException("failed to start external http probe server", exception);
+        }
+    }
+
+    private static void writeOk(HttpExchange exchange) throws IOException {
+        byte[] body = "{\"status\":\"ok\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, body.length);
+        exchange.getResponseBody().write(body);
+        exchange.close();
+    }
+
+    private static TcpProbeServer createRabbitMqProbeServer() {
+        try {
+            ServerSocket serverSocket = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                while (!serverSocket.isClosed()) {
+                    try (Socket socket = serverSocket.accept()) {
+                        socket.getOutputStream().write(0);
+                        socket.getOutputStream().flush();
+                    } catch (IOException exception) {
+                        if (!serverSocket.isClosed()) {
+                            throw new IllegalStateException("rabbitmq probe accept failed", exception);
+                        }
+                    }
+                }
+            });
+            return new TcpProbeServer(serverSocket, executor);
+        } catch (IOException exception) {
+            throw new IllegalStateException("failed to start rabbitmq probe server", exception);
+        }
+    }
+
+    private record TcpProbeServer(ServerSocket serverSocket, ExecutorService executor) {
+        private int port() {
+            return serverSocket.getLocalPort();
+        }
+
+        private void close() {
+            try {
+                serverSocket.close();
+            } catch (IOException ignored) {
+            }
+            executor.shutdownNow();
+        }
     }
 }

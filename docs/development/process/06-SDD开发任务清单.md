@@ -50,6 +50,7 @@
 
 - `GET /api/tenant/system/observability-overview`
 - `GET /api/admin/tenants/{id}/release-readiness`
+- `GET /api/admin/tenants/{id}/delivery-readiness`
 - `/actuator/health`
 - `/actuator/info`
 - `/actuator/prometheus`
@@ -60,7 +61,7 @@
 
 | 编号 | 事项 | 状态 | 说明 |
 | --- | --- | --- | --- |
-| T13-01 | 外部 ERP/WMS/BI/消息系统真实接线 | 进行中 | 当前只是骨架和配置可见性，不是全部真实联通 |
+| T13-01 | 外部 ERP/WMS/BI/消息系统真实接线 | 进行中 | 当前已具备骨架、配置可见性与 delivery-readiness 本地探测，不是全部真实联通 |
 | T13-02 | 观测平台真实接线 | 未完成 | 日志、链路、告警、dashboard 还未做真联通 |
 | T13-03 | 发布与交付链路真实接线 | 未完成 | 仓库凭据、镜像仓库、release key、灰度发布待完成 |
 | T13-04 | 双交付真实验收 | 未完成 | 标准 SaaS 和私有化环境还需真实验证 |
@@ -93,6 +94,7 @@ mvn "-Dtest=OpenPlatformControllerTest,TenantSystemControllerTest,AdminTenantCon
 - `OFBiz / OpenBoxes / RabbitMQ` 只读基线开放接口
 - 租户系统观测视图与 actuator 外部平台摘要
 - `release-readiness` 外部集成 provider 文案
+- `delivery-readiness` 外部接线 HTTP/TCP 探测摘要
 
 ### 5.2 之前已通过且仍有效
 
