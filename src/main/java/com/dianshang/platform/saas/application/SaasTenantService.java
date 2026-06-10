@@ -1650,17 +1650,25 @@ public class SaasTenantService {
                     "required external integrations are not declared"
             );
         }
+        ExternalIntegrationConnectivitySnapshot connectivitySnapshot = buildExternalIntegrationConnectivitySnapshot();
         List<String> missing = new ArrayList<>();
         int readyCount = 0;
         for (String systemCode : requiredSystems) {
             ExternalSystemReadiness readiness = evaluateExternalSystem(systemCode);
-            if (readiness.ready()) {
-                readyCount++;
+            if (!readiness.ready()) {
+                String detail = buildExternalSystemDisplayName(systemCode) + " integration is missing " + String.join(", ", readiness.missingParts());
+                missing.add(detail);
+                blockingReasons.add(detail);
                 continue;
             }
-            String detail = buildExternalSystemDisplayName(systemCode) + " integration is missing " + String.join(", ", readiness.missingParts());
-            missing.add(detail);
-            blockingReasons.add(detail);
+            ExternalSystemConnectivitySnapshot connectivity = findConnectivitySnapshot(connectivitySnapshot, systemCode);
+            if (connectivity != null && !connectivity.reachable()) {
+                String detail = buildExternalSystemDisplayName(systemCode) + " integration probe is unreachable";
+                missing.add(detail);
+                blockingReasons.add(detail);
+                continue;
+            }
+            readyCount++;
         }
         String readyDetail = requiredSystems.stream()
                 .map(this::buildExternalSystemDisplayName)
@@ -1670,7 +1678,8 @@ public class SaasTenantService {
                 missing.isEmpty() ? "passed" : "blocked",
                 readyCount,
                 missing.isEmpty()
-                        ? readyDetail + " integrations expose endpoint, credentials and callback readiness"
+                        ? readyDetail + " integrations expose endpoint, credentials and callback readiness; "
+                        + buildConnectivityProbeSummary(connectivitySnapshot, requiredSystems)
                         : String.join("; ", missing)
         );
     }
@@ -1826,6 +1835,17 @@ public class SaasTenantService {
                 bi,
                 routing
         );
+    }
+
+    private ExternalSystemConnectivitySnapshot findConnectivitySnapshot(ExternalIntegrationConnectivitySnapshot snapshot, String systemCode) {
+        return switch (systemCode) {
+            case "erp" -> snapshot.erp();
+            case "wms" -> snapshot.wms();
+            case "messaging" -> snapshot.messaging();
+            case "bi" -> snapshot.bi();
+            case "routing" -> snapshot.routing();
+            default -> null;
+        };
     }
 
     private DualDeliveryAcceptanceSnapshot buildDualDeliveryAcceptanceSnapshot() {
@@ -2003,6 +2023,18 @@ public class SaasTenantService {
 
     private int resolveExternalProbeTimeoutMillis() {
         return Math.max(250, environment.getProperty("app.integrations.external.probe-timeout-millis", Integer.class, 1500));
+    }
+
+    private String buildConnectivityProbeSummary(ExternalIntegrationConnectivitySnapshot snapshot, List<String> requiredSystems) {
+        List<ExternalSystemConnectivitySnapshot> probeTargets = requiredSystems.stream()
+                .map(systemCode -> findConnectivitySnapshot(snapshot, systemCode))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        if (probeTargets.isEmpty()) {
+            return "probe not required";
+        }
+        long reachable = probeTargets.stream().filter(ExternalSystemConnectivitySnapshot::reachable).count();
+        return "probe reachable " + reachable + "/" + probeTargets.size();
     }
 
     private boolean hasTraceabilityEvidence(com.dianshang.platform.audit.AuditLogRecord auditLogRecord) {

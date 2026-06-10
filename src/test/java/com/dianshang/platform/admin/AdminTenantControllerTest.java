@@ -371,6 +371,7 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.checklistItems[4].detail").value(org.hamcrest.Matchers.containsString("erp(ofbiz)")))
                 .andExpect(jsonPath("$.data.checklistItems[4].detail").value(org.hamcrest.Matchers.containsString("wms(openboxes)")))
                 .andExpect(jsonPath("$.data.checklistItems[4].detail").value(org.hamcrest.Matchers.containsString("messaging(rabbitmq)")))
+                .andExpect(jsonPath("$.data.checklistItems[4].detail").value(org.hamcrest.Matchers.containsString("probe reachable 5/5")))
                 .andExpect(jsonPath("$.data.checklistItems[5].itemCode").value("observability_stack_readiness"))
                 .andExpect(jsonPath("$.data.checklistItems[5].status").value("passed"))
                 .andExpect(jsonPath("$.data.checklistItems[6].itemCode").value("delivery_pipeline_readiness"))

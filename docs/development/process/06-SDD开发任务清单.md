@@ -95,6 +95,7 @@ mvn "-Dtest=OpenPlatformControllerTest,TenantSystemControllerTest,AdminTenantCon
 - 租户系统观测视图与 actuator 外部平台摘要
 - `release-readiness` 外部集成 provider 文案
 - `delivery-readiness` 外部接线 HTTP/TCP 探测摘要
+- `release-readiness` 外部集成检查中的 `probe reachable x/y` 证据
 
 ### 5.2 之前已通过且仍有效
 
