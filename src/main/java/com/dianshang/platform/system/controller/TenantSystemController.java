@@ -83,6 +83,8 @@ public class TenantSystemController {
         int liveRiskEventCount = liveApplicationService.listLiveRiskEvents(tenantId).size();
         SaasTenantService.ExternalIntegrationConnectivitySnapshot externalIntegrationConnectivity =
                 saasTenantService.getExternalIntegrationConnectivitySnapshot();
+        SaasTenantService.DeliveryPipelineSnapshot deliveryPipeline =
+                saasTenantService.getDeliveryPipelineSnapshot();
         return ApiResponse.success(
                 new ObservabilityOverview(
                         tenantId,
@@ -102,9 +104,10 @@ public class TenantSystemController {
                         resolveRequiredExternalSystems().size(),
                         countReadyExternalSystems(),
                         isObservabilityStackReady(),
-                        isDeliveryPipelineReady(),
+                        deliveryPipeline.ready(),
                         isDualDeliveryAcceptanceReady(),
                         resolveDeliveryRepository(),
+                        buildDeliveryPipelineView(deliveryPipeline),
                         buildObservabilityStack(),
                         externalIntegrationConnectivity,
                         buildExternalErpPlatformView(),
@@ -141,36 +144,26 @@ public class TenantSystemController {
     }
 
     private int countReadyExternalSystems() {
-        return (int) resolveRequiredExternalSystems().stream()
-                .filter(this::isExternalSystemReady)
-                .count();
+        return saasTenantService.countReadyRequiredExternalSystems();
     }
 
     private boolean isExternalSystemReady(String systemCode) {
-        String prefix = "app.integrations.external.systems." + systemCode + ".";
-        boolean credentialConfigured = environment.getProperty(prefix + "credential-configured", Boolean.class, false);
-        boolean callbackRequired = environment.getProperty(prefix + "callback-required", Boolean.class, false);
-        String endpoint = environment.getProperty(prefix + "endpoint", "");
-        String callbackUrl = environment.getProperty(prefix + "callback-url", "");
-        return !endpoint.isBlank()
-                && credentialConfigured
-                && (!callbackRequired || !callbackUrl.isBlank());
+        return saasTenantService.isRequiredExternalSystemReady(systemCode);
     }
 
     private boolean isObservabilityStackReady() {
-        return isConfigured("app.observability.log-aggregation-endpoint")
-                && isConfigured("app.observability.trace-endpoint")
-                && isConfigured("app.observability.alert-router-endpoint")
-                && isConfigured("app.observability.dashboard-url");
+        SaasTenantService.ObservabilityStackConnectivitySnapshot snapshot =
+                saasTenantService.getObservabilityStackConnectivitySnapshot();
+        return isObservabilityEndpointReady(snapshot.logAggregation())
+                && isObservabilityEndpointReady(snapshot.trace())
+                && isObservabilityEndpointReady(snapshot.alertRouter())
+                && isObservabilityEndpointReady(snapshot.dashboard());
     }
 
-    private boolean isDeliveryPipelineReady() {
-        return isConfigured("app.delivery.github-owner")
-                && isConfigured("app.delivery.github-repository")
-                && isConfigured("app.delivery.registry")
-                && isConfigured("app.delivery.image-repository")
-                && environment.getProperty("app.delivery.release-key-configured", Boolean.class, false)
-                && environment.getProperty("app.delivery.canary-enabled", Boolean.class, false);
+    private boolean isObservabilityEndpointReady(SaasTenantService.ExternalSystemConnectivitySnapshot snapshot) {
+        return snapshot.configured()
+                && snapshot.trusted()
+                && snapshot.reachable();
     }
 
     private boolean isDualDeliveryAcceptanceReady() {
@@ -195,11 +188,27 @@ public class TenantSystemController {
     }
 
     private ObservabilityStackView buildObservabilityStack() {
+        SaasTenantService.ObservabilityStackConnectivitySnapshot snapshot =
+                saasTenantService.getObservabilityStackConnectivitySnapshot();
         return new ObservabilityStackView(
-                buildEndpointView("app.observability.log-aggregation-endpoint"),
-                buildEndpointView("app.observability.trace-endpoint"),
-                buildEndpointView("app.observability.alert-router-endpoint"),
-                buildEndpointView("app.observability.dashboard-url")
+                buildEndpointView(snapshot.logAggregation()),
+                buildEndpointView(snapshot.trace()),
+                buildEndpointView(snapshot.alertRouter()),
+                buildEndpointView(snapshot.dashboard())
+        );
+    }
+
+    private DeliveryPipelineObservabilityView buildDeliveryPipelineView(SaasTenantService.DeliveryPipelineSnapshot snapshot) {
+        return new DeliveryPipelineObservabilityView(
+                snapshot.ready(),
+                snapshot.repository(),
+                snapshot.registry(),
+                snapshot.releaseKeyControl(),
+                snapshot.registryAuthControl(),
+                snapshot.githubPublishingControl(),
+                snapshot.canaryControl(),
+                buildEndpointView(snapshot.githubProbe()),
+                buildEndpointView(snapshot.registryProbe())
         );
     }
 
@@ -233,6 +242,8 @@ public class TenantSystemController {
 
     private ExternalMessagingPlatformView buildExternalMessagingPlatformView() {
         String endpoint = environment.getProperty("app.integrations.external.messaging.endpoint", "");
+        SaasTenantService.ExternalMessagingCallbackWorkerSnapshot callbackWorker =
+                saasTenantService.getExternalMessagingCallbackWorkerSnapshot();
         return new ExternalMessagingPlatformView(
                 normalizedProperty("app.integrations.external.messaging.provider", "rabbitmq"),
                 endpoint != null && !endpoint.isBlank(),
@@ -242,7 +253,15 @@ public class TenantSystemController {
                 normalizedProperty("app.integrations.external.messaging.exchange", ""),
                 environment.getProperty("app.integrations.external.messaging.queue-count", Integer.class, 0),
                 environment.getProperty("app.integrations.external.messaging.callback-bridge-enabled", Boolean.class, false),
-                environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false)
+                environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false),
+                callbackWorker.enabled(),
+                callbackWorker.provider(),
+                callbackWorker.maskedEndpoint(),
+                callbackWorker.consumerGroup(),
+                callbackWorker.ready(),
+                callbackWorker.missingParts(),
+                callbackWorker.probeReachable(),
+                callbackWorker.probeDetail()
         );
     }
 
@@ -271,26 +290,19 @@ public class TenantSystemController {
         );
     }
 
-    private ObservabilityEndpointView buildEndpointView(String key) {
-        String rawEndpoint = environment.getProperty(key, "");
-        if (rawEndpoint == null || rawEndpoint.isBlank()) {
-            return new ObservabilityEndpointView(false, "", "");
-        }
-        try {
-            URI uri = URI.create(rawEndpoint);
-            String scheme = uri.getScheme() == null ? "" : uri.getScheme();
-            String host = uri.getHost() == null ? "" : uri.getHost();
-            String authority = host;
-            if (uri.getPort() >= 0) {
-                authority = authority + ":" + uri.getPort();
-            }
-            String maskedEndpoint = scheme.isBlank() || authority.isBlank()
-                    ? "***"
-                    : scheme + "://" + authority + "/***";
-            return new ObservabilityEndpointView(true, host, maskedEndpoint);
-        } catch (IllegalArgumentException exception) {
-            return new ObservabilityEndpointView(true, "", "***");
-        }
+    private ObservabilityEndpointView buildEndpointView(SaasTenantService.ExternalSystemConnectivitySnapshot snapshot) {
+        return new ObservabilityEndpointView(
+                snapshot.configured(),
+                snapshot.host(),
+                snapshot.maskedTarget(),
+                snapshot.sourceType(),
+                snapshot.sourceName(),
+                snapshot.defaultValue(),
+                snapshot.trusted(),
+                snapshot.status(),
+                snapshot.reachable(),
+                snapshot.detail()
+        );
     }
 
     private String normalizedProperty(String key, String defaultValue) {
@@ -356,6 +368,7 @@ record ObservabilityOverview(
         boolean deliveryPipelineReady,
         boolean dualDeliveryAcceptanceReady,
         String deliveryRepository,
+        DeliveryPipelineObservabilityView deliveryPipeline,
         ObservabilityStackView observabilityStack,
         SaasTenantService.ExternalIntegrationConnectivitySnapshot externalIntegrationConnectivity,
         ExternalErpPlatformView externalErpPlatform,
@@ -363,6 +376,19 @@ record ObservabilityOverview(
         ExternalMessagingPlatformView externalMessagingPlatform,
         ExternalBiPlatformView externalBiPlatform,
         ExternalRoutingView externalRouting
+) {
+}
+
+record DeliveryPipelineObservabilityView(
+        boolean ready,
+        String repository,
+        String registry,
+        SaasTenantService.DeliveryControlDiagnosticSnapshot releaseKeyControl,
+        SaasTenantService.DeliveryControlDiagnosticSnapshot registryAuthControl,
+        SaasTenantService.DeliveryControlDiagnosticSnapshot githubPublishingControl,
+        SaasTenantService.DeliveryControlDiagnosticSnapshot canaryControl,
+        ObservabilityEndpointView githubProbe,
+        ObservabilityEndpointView registryProbe
 ) {
 }
 
@@ -377,7 +403,14 @@ record ObservabilityStackView(
 record ObservabilityEndpointView(
         boolean configured,
         String host,
-        String maskedEndpoint
+        String maskedEndpoint,
+        String sourceType,
+        String sourceName,
+        boolean defaultValue,
+        boolean trusted,
+        String status,
+        boolean probeReachable,
+        String probeDetail
 ) {
 }
 
@@ -414,7 +447,15 @@ record ExternalMessagingPlatformView(
         String exchange,
         int queueCount,
         boolean callbackBridgeEnabled,
-        boolean deadLetterEnabled
+        boolean deadLetterEnabled,
+        boolean callbackWorkerEnabled,
+        String callbackWorkerProvider,
+        String callbackWorkerMaskedEndpoint,
+        String callbackWorkerConsumerGroup,
+        boolean callbackWorkerReady,
+        List<String> callbackWorkerMissingParts,
+        boolean callbackWorkerProbeReachable,
+        String callbackWorkerProbeDetail
 ) {
 }
 

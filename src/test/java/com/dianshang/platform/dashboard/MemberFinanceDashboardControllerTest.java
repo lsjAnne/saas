@@ -1312,6 +1312,11 @@ class MemberFinanceDashboardControllerTest {
                 .andExpect(jsonPath("$.data.dashboardCount").value(6))
                 .andExpect(jsonPath("$.data.datasetCount").value(18))
                 .andExpect(jsonPath("$.data.embedEnabled").value(true))
+                .andExpect(jsonPath("$.data.credentialConfigured").value(true))
+                .andExpect(jsonPath("$.data.readinessStatus").value("ready"))
+                .andExpect(jsonPath("$.data.missingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.probeReachable").exists())
+                .andExpect(jsonPath("$.data.probeDetail").exists())
                 .andExpect(jsonPath("$.data.linkedThemeDomains.length()").value(6))
                 .andExpect(jsonPath("$.data.linkedThemeDomains", Matchers.hasItems(
                         "order",

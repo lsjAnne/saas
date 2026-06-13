@@ -2,11 +2,16 @@ package com.dianshang.platform.openplatform.controller;
 
 import com.dianshang.platform.common.api.ApiResponse;
 import com.dianshang.platform.common.trace.TraceIdHolder;
+import com.dianshang.platform.dashboard.application.DashboardService;
+import com.dianshang.platform.dashboard.application.DashboardService.BiExternalPlatformOverviewView;
 import com.dianshang.platform.finance.application.FinanceService;
 import com.dianshang.platform.fulfillment.application.FulfillmentService;
 import com.dianshang.platform.inventory.application.InventoryService;
 import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService;
 import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.ExternalAppProfile;
+import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.ExternalDeliveryReadinessOverviewView;
+import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.ExternalMessagingCallbackBridgeOverviewView;
+import com.dianshang.platform.openplatform.application.OpenPlatformApplicationService.ExternalObservabilityReadinessOverviewView;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,15 +23,18 @@ import java.util.List;
 public class OpenPlatformExternalController {
 
     private final OpenPlatformApplicationService openPlatformApplicationService;
+    private final DashboardService dashboardService;
     private final FinanceService financeService;
     private final InventoryService inventoryService;
     private final FulfillmentService fulfillmentService;
 
     public OpenPlatformExternalController(OpenPlatformApplicationService openPlatformApplicationService,
+                                          DashboardService dashboardService,
                                           FinanceService financeService,
                                           InventoryService inventoryService,
                                           FulfillmentService fulfillmentService) {
         this.openPlatformApplicationService = openPlatformApplicationService;
+        this.dashboardService = dashboardService;
         this.financeService = financeService;
         this.inventoryService = inventoryService;
         this.fulfillmentService = fulfillmentService;
@@ -157,6 +165,62 @@ public class OpenPlatformExternalController {
         );
         return ApiResponse.success(
                 openPlatformApplicationService.getExternalMessagingRabbitMqBaseline(),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/external/bi/superset-overview")
+    public ApiResponse<BiExternalPlatformOverviewView> getExternalBiSupersetOverview(@RequestHeader("X-Open-App-Key") String accessKey,
+                                                                                     @RequestHeader("X-Open-App-Secret") String secret) {
+        ExternalAppProfile profile = openPlatformApplicationService.authorizeExternalBiSupersetOverviewRead(
+                accessKey,
+                secret,
+                "/api/open/external/bi/superset-overview"
+        );
+        return ApiResponse.success(
+                dashboardService.getExternalBiPlatformOverview(profile.tenantId(), null),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/external/messaging/callback-bridge")
+    public ApiResponse<ExternalMessagingCallbackBridgeOverviewView> getExternalMessagingCallbackBridge(@RequestHeader("X-Open-App-Key") String accessKey,
+                                                                                                        @RequestHeader("X-Open-App-Secret") String secret) {
+        ExternalAppProfile profile = openPlatformApplicationService.authorizeExternalMessagingCallbackBridgeRead(
+                accessKey,
+                secret,
+                "/api/open/external/messaging/callback-bridge"
+        );
+        return ApiResponse.success(
+                openPlatformApplicationService.getExternalMessagingCallbackBridgeOverview(profile.tenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/external/system/observability-readiness")
+    public ApiResponse<ExternalObservabilityReadinessOverviewView> getExternalObservabilityReadiness(@RequestHeader("X-Open-App-Key") String accessKey,
+                                                                                                     @RequestHeader("X-Open-App-Secret") String secret) {
+        ExternalAppProfile profile = openPlatformApplicationService.authorizeExternalObservabilityReadinessRead(
+                accessKey,
+                secret,
+                "/api/open/external/system/observability-readiness"
+        );
+        return ApiResponse.success(
+                openPlatformApplicationService.getExternalObservabilityReadiness(profile.tenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/open/external/delivery/readiness")
+    public ApiResponse<ExternalDeliveryReadinessOverviewView> getExternalDeliveryReadiness(@RequestHeader("X-Open-App-Key") String accessKey,
+                                                                                           @RequestHeader("X-Open-App-Secret") String secret) {
+        ExternalAppProfile profile = openPlatformApplicationService.authorizeExternalDeliveryReadinessRead(
+                accessKey,
+                secret,
+                "/api/open/external/delivery/readiness"
+        );
+        return ApiResponse.success(
+                openPlatformApplicationService.getExternalDeliveryReadiness(profile.tenantId()),
                 TraceIdHolder.get()
         );
     }

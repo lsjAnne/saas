@@ -9,6 +9,7 @@ import com.dianshang.platform.saas.application.SaasTenantService.AdminCompliance
 import com.dianshang.platform.saas.application.SaasTenantService.ComplianceDocument;
 import com.dianshang.platform.saas.application.SaasTenantService.ComplianceDocumentPublishRequest;
 import com.dianshang.platform.saas.application.SaasTenantService.DeliveryReadinessView;
+import com.dianshang.platform.saas.application.SaasTenantService.ObservabilityReadinessView;
 import com.dianshang.platform.saas.application.SaasTenantService.ReleaseReadinessView;
 import com.dianshang.platform.saas.application.SaasTenantService;
 import com.dianshang.platform.saas.application.SaasTenantService.SubscriptionAutomationSummary;
@@ -71,6 +72,11 @@ public class AdminTenantController {
     @GetMapping("/{id}/delivery-readiness")
     public ApiResponse<DeliveryReadinessView> getDeliveryReadiness(@PathVariable String id) {
         return ApiResponse.success(saasTenantService.getDeliveryReadiness(id), TraceIdHolder.get());
+    }
+
+    @GetMapping("/{id}/observability-readiness")
+    public ApiResponse<ObservabilityReadinessView> getObservabilityReadiness(@PathVariable String id) {
+        return ApiResponse.success(saasTenantService.getObservabilityReadiness(id), TraceIdHolder.get());
     }
 
     @GetMapping("/compliance/documents")

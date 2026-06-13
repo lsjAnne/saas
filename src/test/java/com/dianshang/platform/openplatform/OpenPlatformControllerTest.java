@@ -1,5 +1,7 @@
 package com.dianshang.platform.openplatform;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import com.dianshang.platform.audit.AuditLogService;
 import com.dianshang.platform.auth.AuthPermissionCodes;
 import com.dianshang.platform.auth.application.AuthService;
@@ -13,21 +15,38 @@ import com.dianshang.platform.store.application.StoreChannelService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,25 +59,95 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.auth.allow-legacy-header-context=false",
         "app.integrations.external.erp.provider=ofbiz",
         "app.integrations.external.erp.endpoint=https://ofbiz.example.com/webtools/control",
+        "app.integrations.external.systems.erp.endpoint=https://ofbiz.example.com/webtools/control",
+        "app.integrations.external.systems.erp.credential-configured=true",
         "app.integrations.external.erp.party-sync-enabled=true",
         "app.integrations.external.erp.order-sync-mode=near_real_time",
         "app.integrations.external.erp.ledger-mapping-count=8",
         "app.integrations.external.erp.catalog-export-enabled=true",
         "app.integrations.external.wms.provider=openboxes",
         "app.integrations.external.wms.endpoint=https://openboxes.example.com/openboxes/api",
+        "app.integrations.external.systems.wms.endpoint=https://openboxes.example.com/openboxes/api",
+        "app.integrations.external.systems.wms.credential-configured=true",
+        "app.integrations.external.systems.tax.endpoint=https://tax.example.com/api",
+        "app.integrations.external.systems.tax.credential-configured=true",
         "app.integrations.external.wms.facility-count=3",
         "app.integrations.external.wms.stock-sync-mode=two_way",
         "app.integrations.external.wms.outbound-flow=wave_and_pick",
         "app.integrations.external.wms.batch-tracking-enabled=true",
         "app.integrations.external.messaging.provider=rabbitmq",
         "app.integrations.external.messaging.endpoint=amqps://rabbitmq.example.com:5671",
+        "app.integrations.external.systems.messaging.endpoint=amqps://rabbitmq.example.com:5671",
+        "app.integrations.external.systems.messaging.credential-configured=true",
+        "app.integrations.external.systems.messaging.callback-required=true",
+        "app.integrations.external.systems.messaging.callback-url=https://callback.example.com/messages",
         "app.integrations.external.messaging.virtual-host=tenant-hub",
         "app.integrations.external.messaging.exchange=tenant.events",
         "app.integrations.external.messaging.queue-count=4",
         "app.integrations.external.messaging.callback-bridge-enabled=true",
-        "app.integrations.external.messaging.dead-letter-enabled=true"
+        "app.integrations.external.messaging.dead-letter-enabled=true",
+        "app.integrations.external.messaging.callback-worker-enabled=true",
+        "app.integrations.external.messaging.callback-worker-provider=spring-event",
+        "app.integrations.external.messaging.callback-worker-endpoint=http://callback-worker.example.internal/consume",
+        "app.integrations.external.messaging.callback-worker-consumer-group=open-platform-callbacks",
+        "app.integrations.external.bi.provider=superset",
+        "app.integrations.external.bi.endpoint=https://superset.example.com/api/v1",
+        "app.integrations.external.systems.bi.credential-configured=true",
+        "app.integrations.external.bi.dashboard-count=6",
+        "app.integrations.external.bi.dataset-count=18",
+        "app.integrations.external.bi.embed-enabled=true",
+        "app.integrations.external.routing.provider=osrm",
+        "app.integrations.external.routing.endpoint=https://router.example.com/osrm",
+        "app.integrations.external.systems.routing.endpoint=https://router.example.com/osrm",
+        "app.integrations.external.systems.routing.credential-configured=true",
+        "app.observability.log-aggregation-endpoint=https://logs.example.com/collect",
+        "app.observability.trace-endpoint=https://trace.example.com/api/traces",
+        "app.observability.alert-router-endpoint=https://alerts.example.com/api/alerts",
+        "app.observability.dashboard-url=https://grafana.example.com/d/tenant",
+        "app.delivery.github-owner=lsjAnne",
+        "app.delivery.github-repository=saas",
+        "app.delivery.registry=ghcr.io",
+        "app.delivery.image-repository=lsjAnne/dian-shang-ping-tai",
+        "app.delivery.release-key-configured=true",
+        "app.delivery.registry-auth-configured=true",
+        "app.delivery.canary-enabled=true",
+        "app.delivery.canary-strategy=header-weighted",
+        "app.delivery.standard-saas-base-url=https://saas.example.com",
+        "app.delivery.standard-saas-verified-at=2026-06-10T15:10:00+08:00",
+        "app.delivery.private-base-url=https://private.example.com",
+        "app.delivery.private-verified-at=2026-06-10T15:25:00+08:00"
 })
 class OpenPlatformControllerTest {
+    private static final String DEFAULT_DELIVERY_GITHUB_PUBLISH_MODE_SOURCE = "default-delivery-github-publish-mode-test";
+
+    private static final HttpServer EXTERNAL_HTTP_SERVER = createExternalHttpServer();
+    private static final int HTTP_PORT = EXTERNAL_HTTP_SERVER.getAddress().getPort();
+    private static final TcpProbeServer RABBITMQ_TCP_SERVER = createRabbitMqProbeServer();
+
+    @DynamicPropertySource
+    static void registerExternalProbeProperties(DynamicPropertyRegistry registry) {
+        String httpBase = "http://127.0.0.1:" + HTTP_PORT;
+        String messagingEndpoint = "amqp://127.0.0.1:" + RABBITMQ_TCP_SERVER.port() + "/tenant-hub";
+        registry.add("app.integrations.external.systems.erp.endpoint", () -> httpBase + "/ofbiz/webtools/control");
+        registry.add("app.integrations.external.systems.wms.endpoint", () -> httpBase + "/openboxes/api");
+        registry.add("app.integrations.external.systems.messaging.endpoint", () -> messagingEndpoint);
+        registry.add("app.integrations.external.systems.bi.endpoint", () -> httpBase + "/superset/api/v1");
+        registry.add("app.integrations.external.erp.endpoint", () -> httpBase + "/ofbiz/webtools/control");
+        registry.add("app.integrations.external.wms.endpoint", () -> httpBase + "/openboxes/api");
+        registry.add("app.integrations.external.messaging.endpoint", () -> messagingEndpoint);
+        registry.add("app.integrations.external.bi.endpoint", () -> httpBase + "/superset/api/v1");
+        registry.add("app.integrations.external.routing.endpoint", () -> httpBase + "/osrm");
+        registry.add("app.integrations.external.messaging.callback-worker-endpoint", () -> httpBase + "/callback-worker/consume");
+        registry.add("app.observability.log-aggregation-endpoint", () -> httpBase + "/observability/logs");
+        registry.add("app.observability.trace-endpoint", () -> httpBase + "/observability/traces");
+        registry.add("app.observability.alert-router-endpoint", () -> httpBase + "/observability/alerts");
+        registry.add("app.observability.dashboard-url", () -> httpBase + "/observability/dashboard");
+        registry.add("app.delivery.github-probe-endpoint", () -> httpBase + "/delivery/github/lsjAnne/saas");
+        registry.add("app.delivery.registry-probe-endpoint", () -> httpBase + "/delivery/registry/lsjAnne/dian-shang-ping-tai");
+        registry.add("app.delivery.standard-saas-base-url", () -> httpBase + "/delivery/standard-saas");
+        registry.add("app.delivery.private-base-url", () -> httpBase + "/delivery/private");
+        registry.add("app.integrations.external.probe-timeout-millis", () -> "1000");
+    }
 
     private static final String OWNER_MOBILE = "13800000000";
     private static final String BOOTSTRAP_PASSWORD = "123456";
@@ -89,6 +178,15 @@ class OpenPlatformControllerTest {
     private StoreChannelService storeChannelService;
 
     @Autowired
+    private ConfigurableEnvironment environment;
+
+    @AfterAll
+    static void shutdownProbeServers() {
+        EXTERNAL_HTTP_SERVER.stop(0);
+        RABBITMQ_TCP_SERVER.close();
+    }
+
+    @Autowired
     private FinanceService financeService;
 
     @BeforeEach
@@ -100,6 +198,10 @@ class OpenPlatformControllerTest {
         saasTenantService.clear();
         organizationService.clear();
         auditLogService.clear();
+        removePropertyOverrides(DEFAULT_DELIVERY_GITHUB_PUBLISH_MODE_SOURCE);
+        applyPropertyOverrides(DEFAULT_DELIVERY_GITHUB_PUBLISH_MODE_SOURCE, Map.of(
+                "app.delivery.github-publish-mode", "github-actions"
+        ));
     }
 
     @Test
@@ -763,12 +865,17 @@ class OpenPlatformControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.provider").value("ofbiz"))
                 .andExpect(jsonPath("$.data.configured").value(true))
-                .andExpect(jsonPath("$.data.host").value("ofbiz.example.com"))
-                .andExpect(jsonPath("$.data.maskedEndpoint").value("https://ofbiz.example.com/***"))
+                .andExpect(jsonPath("$.data.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.partySyncEnabled").value(true))
                 .andExpect(jsonPath("$.data.orderSyncMode").value("near_real_time"))
                 .andExpect(jsonPath("$.data.ledgerMappingCount").value(8))
-                .andExpect(jsonPath("$.data.catalogExportEnabled").value(true));
+                .andExpect(jsonPath("$.data.catalogExportEnabled").value(true))
+                .andExpect(jsonPath("$.data.credentialConfigured").value(true))
+                .andExpect(jsonPath("$.data.readinessStatus").value("ready"))
+                .andExpect(jsonPath("$.data.missingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.probeDetail").value("http 200"));
 
         mockMvc.perform(get("/api/open/external/wms/openboxes-baseline")
                         .header("X-Trace-Id", "open-openboxes-trace-001")
@@ -777,12 +884,17 @@ class OpenPlatformControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.provider").value("openboxes"))
                 .andExpect(jsonPath("$.data.configured").value(true))
-                .andExpect(jsonPath("$.data.host").value("openboxes.example.com"))
-                .andExpect(jsonPath("$.data.maskedEndpoint").value("https://openboxes.example.com/***"))
+                .andExpect(jsonPath("$.data.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.facilityCount").value(3))
                 .andExpect(jsonPath("$.data.stockSyncMode").value("two_way"))
                 .andExpect(jsonPath("$.data.outboundFlow").value("wave_and_pick"))
-                .andExpect(jsonPath("$.data.batchTrackingEnabled").value(true));
+                .andExpect(jsonPath("$.data.batchTrackingEnabled").value(true))
+                .andExpect(jsonPath("$.data.credentialConfigured").value(true))
+                .andExpect(jsonPath("$.data.readinessStatus").value("ready"))
+                .andExpect(jsonPath("$.data.missingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.probeDetail").value("http 200"));
 
         mockMvc.perform(get("/api/open/external/messaging/rabbitmq-baseline")
                         .header("X-Trace-Id", "open-rabbitmq-trace-001")
@@ -791,13 +903,28 @@ class OpenPlatformControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.provider").value("rabbitmq"))
                 .andExpect(jsonPath("$.data.configured").value(true))
-                .andExpect(jsonPath("$.data.host").value("rabbitmq.example.com"))
-                .andExpect(jsonPath("$.data.maskedEndpoint").value("amqps://rabbitmq.example.com:5671/***"))
+                .andExpect(jsonPath("$.data.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
                 .andExpect(jsonPath("$.data.virtualHost").value("tenant-hub"))
                 .andExpect(jsonPath("$.data.exchange").value("tenant.events"))
                 .andExpect(jsonPath("$.data.queueCount").value(4))
                 .andExpect(jsonPath("$.data.callbackBridgeEnabled").value(true))
-                .andExpect(jsonPath("$.data.deadLetterEnabled").value(true));
+                .andExpect(jsonPath("$.data.deadLetterEnabled").value(true))
+                .andExpect(jsonPath("$.data.credentialConfigured").value(true))
+                .andExpect(jsonPath("$.data.callbackRequired").value(true))
+                .andExpect(jsonPath("$.data.callbackUrlConfigured").value(true))
+                .andExpect(jsonPath("$.data.readinessStatus").value("ready"))
+                .andExpect(jsonPath("$.data.missingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.probeDetail").value("tcp connected"))
+                .andExpect(jsonPath("$.data.callbackWorkerEnabled").value(true))
+                .andExpect(jsonPath("$.data.callbackWorkerProvider").value("spring-event"))
+                .andExpect(jsonPath("$.data.callbackWorkerMaskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
+                .andExpect(jsonPath("$.data.callbackWorkerConsumerGroup").value("open-platform-callbacks"))
+                .andExpect(jsonPath("$.data.callbackWorkerReady").value(true))
+                .andExpect(jsonPath("$.data.callbackWorkerMissingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.callbackWorkerProbeReachable").value(true))
+                .andExpect(jsonPath("$.data.callbackWorkerProbeDetail").value("http 200"));
 
         mockMvc.perform(get("/api/open/logs")
                         .header("Authorization", "Bearer " + ownerToken))
@@ -851,6 +978,670 @@ class OpenPlatformControllerTest {
                 .andExpect(jsonPath("$.data[2].resultStatus").value("rejected_scope"))
                 .andExpect(jsonPath("$.data[2].appId").value(appId))
                 .andExpect(jsonPath("$.data[2].traceId").value("open-rabbitmq-scope-trace-001"));
+    }
+
+    @Test
+    void shouldExposeExternalBiAndMessagingCallbackBridgeOverviews() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-external-overview-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        WebhookFixture webhookFixture = createWebhook(fixture.organizationId(), ownerToken, "order.created");
+        String payload = "{\"event\":\"order.created\",\"orderId\":\"order-bridge-1001\"}";
+        String requestId = "req-open-bridge-1001";
+        String timestamp = OffsetDateTime.now(ZoneOffset.UTC).toString();
+        String nonce = "nonce-open-bridge-001";
+        String signature = signCallback(webhookFixture.secretToken(), webhookFixture.subscriptionId(), timestamp, nonce, payload);
+
+        mockMvc.perform(post("/api/open/callbacks/{id}", webhookFixture.subscriptionId())
+                        .header("X-Trace-Id", "callback-bridge-trace-001")
+                        .header("X-Open-Request-Id", requestId)
+                        .header("X-Open-Timestamp", timestamp)
+                        .header("X-Open-Nonce", nonce)
+                        .header("X-Open-Signature", signature)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/open/callbacks/{id}", webhookFixture.subscriptionId())
+                        .header("X-Trace-Id", "callback-bridge-trace-002")
+                        .header("X-Open-Request-Id", requestId)
+                        .header("X-Open-Timestamp", timestamp)
+                        .header("X-Open-Nonce", nonce)
+                        .header("X-Open-Signature", signature)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("1008"));
+
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "external-overview-app",
+                "bi.superset_overview.read",
+                "messaging.callback_bridge.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/bi/superset-overview")
+                        .header("X-Trace-Id", "open-bi-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("superset"))
+                .andExpect(jsonPath("$.data.overviewStatus").value("ready"))
+                .andExpect(jsonPath("$.data.configured").value(true))
+                .andExpect(jsonPath("$.data.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
+                .andExpect(jsonPath("$.data.dashboardCount").value(6))
+                .andExpect(jsonPath("$.data.datasetCount").value(18))
+                .andExpect(jsonPath("$.data.embedEnabled").value(true))
+                .andExpect(jsonPath("$.data.credentialConfigured").value(true))
+                .andExpect(jsonPath("$.data.readinessStatus").value("ready"))
+                .andExpect(jsonPath("$.data.missingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.probeDetail").value("http 200"));
+
+        mockMvc.perform(get("/api/open/external/messaging/callback-bridge")
+                        .header("X-Trace-Id", "open-callback-bridge-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.provider").value("rabbitmq"))
+                .andExpect(jsonPath("$.data.overviewStatus").value("ready"))
+                .andExpect(jsonPath("$.data.configured").value(true))
+                .andExpect(jsonPath("$.data.host").value("127.0.0.1"))
+                .andExpect(jsonPath("$.data.maskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
+                .andExpect(jsonPath("$.data.virtualHost").value("tenant-hub"))
+                .andExpect(jsonPath("$.data.exchange").value("tenant.events"))
+                .andExpect(jsonPath("$.data.callbackBridgeEnabled").value(true))
+                .andExpect(jsonPath("$.data.deadLetterEnabled").value(true))
+                .andExpect(jsonPath("$.data.credentialConfigured").value(true))
+                .andExpect(jsonPath("$.data.callbackRequired").value(true))
+                .andExpect(jsonPath("$.data.callbackUrlConfigured").value(true))
+                .andExpect(jsonPath("$.data.readinessStatus").value("ready"))
+                .andExpect(jsonPath("$.data.missingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.probeDetail").value("tcp connected"))
+                .andExpect(jsonPath("$.data.callbackWorkerEnabled").value(true))
+                .andExpect(jsonPath("$.data.callbackWorkerProvider").value("spring-event"))
+                .andExpect(jsonPath("$.data.callbackWorkerMaskedEndpoint").value(org.hamcrest.Matchers.containsString("127.0.0.1")))
+                .andExpect(jsonPath("$.data.callbackWorkerConsumerGroup").value("open-platform-callbacks"))
+                .andExpect(jsonPath("$.data.callbackWorkerReady").value(true))
+                .andExpect(jsonPath("$.data.callbackWorkerMissingParts.length()").value(0))
+                .andExpect(jsonPath("$.data.callbackWorkerProbeReachable").value(true))
+                .andExpect(jsonPath("$.data.callbackWorkerProbeDetail").value("http 200"))
+                .andExpect(jsonPath("$.data.totalSubscriptionCount").value(1))
+                .andExpect(jsonPath("$.data.enabledSubscriptionCount").value(1))
+                .andExpect(jsonPath("$.data.callbackAttemptCount").value(2))
+                .andExpect(jsonPath("$.data.acceptedCallbackCount").value(1))
+                .andExpect(jsonPath("$.data.rejectedCallbackCount").value(1))
+                .andExpect(jsonPath("$.data.replayRejectedCount").value(1))
+                .andExpect(jsonPath("$.data.signatureRejectedCount").value(0))
+                .andExpect(jsonPath("$.data.lastTraceId").value("callback-bridge-trace-002"))
+                .andExpect(jsonPath("$.data.lastResultStatus").value("rejected_replay"));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(7))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("accepted"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("rejected_replay"))
+                .andExpect(jsonPath("$.data[3].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[4].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[5].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[5].traceId").value("open-bi-trace-001"))
+                .andExpect(jsonPath("$.data[6].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[6].traceId").value("open-callback-bridge-trace-001"));
+    }
+
+    @Test
+    void shouldRejectExternalCallbackBridgeAccessWhenScopeMissing() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-callback-bridge-scope-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "callback-bridge-scope-missing-app",
+                "messaging.rabbitmq_baseline.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/messaging/callback-bridge")
+                        .header("X-Trace-Id", "open-callback-bridge-scope-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1009"))
+                .andExpect(jsonPath("$.message").value("integration permission scope denied"));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("rejected_scope"))
+                .andExpect(jsonPath("$.data[2].appId").value(appId))
+                .andExpect(jsonPath("$.data[2].traceId").value("open-callback-bridge-scope-trace-001"));
+    }
+
+    @Test
+    void shouldExposeExternalObservabilityAndDeliveryReadinessOverviews() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-readiness-overview-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "readiness-overview-app",
+                "system.observability_readiness.read",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/system/observability-readiness")
+                        .header("X-Trace-Id", "open-observability-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.tenantId").value(fixture.tenantId()))
+                .andExpect(jsonPath("$.data.stackReady").value(true))
+                .andExpect(jsonPath("$.data.stack.configuredCount").value(4))
+                .andExpect(jsonPath("$.data.stack.reachableCount").value(4))
+                .andExpect(jsonPath("$.data.stack.logAggregation.sourceType").value("override"))
+                .andExpect(jsonPath("$.data.stack.logAggregation.defaultValue").value(false))
+                .andExpect(jsonPath("$.data.stack.logAggregation.trusted").value(true))
+                .andExpect(jsonPath("$.data.stack.logAggregation.status").value("configured"))
+                .andExpect(jsonPath("$.data.stack.logAggregation.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.stack.logAggregation.probeDetail").value("http 200"))
+                .andExpect(jsonPath("$.data.stack.trace.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.stack.alertRouter.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.stack.dashboard.probeReachable").value(true))
+                .andExpect(jsonPath("$.data.blockingReasons.length()").value(0));
+
+        mockMvc.perform(get("/api/open/external/delivery/readiness")
+                        .header("X-Trace-Id", "open-delivery-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.tenantId").value(fixture.tenantId()))
+                .andExpect(jsonPath("$.data.repository").value("lsjAnne/saas"))
+                .andExpect(jsonPath("$.data.pipelineReady").value(true))
+                .andExpect(jsonPath("$.data.externalIntegrationsReady").value(true))
+                .andExpect(jsonPath("$.data.acceptanceReady").value(true))
+                .andExpect(jsonPath("$.data.pipeline.workflowAsset.ready").value(true))
+                .andExpect(jsonPath("$.data.pipeline.standardSaasComposeAsset.ready").value(true))
+                .andExpect(jsonPath("$.data.pipeline.privateComposeAsset.ready").value(true))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.controlCode").value("release-key"))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.value").value("true"))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.configured").value(true))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.sourceType").value("override"))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.defaultValue").value(false))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.trusted").value(true))
+                .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.status").value("configured"))
+                .andExpect(jsonPath("$.data.pipeline.registryAuthControl.controlCode").value("registry-auth"))
+                .andExpect(jsonPath("$.data.pipeline.registryAuthControl.value").value("true"))
+                .andExpect(jsonPath("$.data.pipeline.registryAuthControl.configured").value(true))
+                .andExpect(jsonPath("$.data.pipeline.registryAuthControl.sourceType").value("override"))
+                .andExpect(jsonPath("$.data.pipeline.registryAuthControl.defaultValue").value(false))
+                .andExpect(jsonPath("$.data.pipeline.registryAuthControl.trusted").value(true))
+                .andExpect(jsonPath("$.data.pipeline.registryAuthControl.status").value("configured"))
+                .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.controlCode").value("github-publish-mode"))
+                .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.value").value("github-actions"))
+                .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.configured").value(true))
+                .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.sourceType").value("override"))
+                .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.defaultValue").value(false))
+                .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.trusted").value(true))
+                .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.status").value("configured"))
+                .andExpect(jsonPath("$.data.pipeline.canaryControl.controlCode").value("canary-strategy"))
+                .andExpect(jsonPath("$.data.pipeline.canaryControl.value").value("header-weighted"))
+                .andExpect(jsonPath("$.data.pipeline.canaryControl.configured").value(true))
+                .andExpect(jsonPath("$.data.pipeline.canaryControl.sourceType").value("override"))
+                .andExpect(jsonPath("$.data.pipeline.canaryControl.defaultValue").value(false))
+                .andExpect(jsonPath("$.data.pipeline.canaryControl.trusted").value(true))
+                .andExpect(jsonPath("$.data.pipeline.canaryControl.status").value("configured"))
+                .andExpect(jsonPath("$.data.pipeline.githubProbe.systemCode").value("github-repository"))
+                .andExpect(jsonPath("$.data.pipeline.githubProbe.reachable").value(true))
+                .andExpect(jsonPath("$.data.pipeline.githubProbe.detail").value("http 200"))
+                .andExpect(jsonPath("$.data.pipeline.registryProbe.systemCode").value("container-registry"))
+                .andExpect(jsonPath("$.data.pipeline.registryProbe.reachable").value(true))
+                .andExpect(jsonPath("$.data.pipeline.registryProbe.detail").value("http 200"))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.verificationFresh").value(true))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.reachable").value(true))
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.verificationFresh").value(true))
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.reachable").value(true))
+                .andExpect(jsonPath("$.data.blockingReasons.length()").value(0));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[2].traceId").value("open-observability-trace-001"))
+                .andExpect(jsonPath("$.data[3].resultStatus").value("authorized"))
+                .andExpect(jsonPath("$.data[3].traceId").value("open-delivery-trace-001"));
+    }
+
+    @Test
+    void shouldExposeStaleAcceptanceEvidenceInExternalDeliveryReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-stale-delivery-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "stale-delivery-app",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        String sourceName = "open-delivery-stale-evidence-test";
+        applyPropertyOverrides(sourceName, Map.of(
+                "app.delivery.acceptance-evidence-max-age-days", "7",
+                "app.delivery.standard-saas-verified-at", OffsetDateTime.now().minusDays(30).toString(),
+                "app.delivery.private-verified-at", OffsetDateTime.now().minusDays(30).toString()
+        ));
+        try {
+            mockMvc.perform(get("/api/open/external/delivery/readiness")
+                            .header("X-Trace-Id", "open-delivery-stale-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.acceptanceReady").value(false))
+                    .andExpect(jsonPath("$.data.acceptance.standardSaas.verificationFresh").value(false))
+                    .andExpect(jsonPath("$.data.acceptance.privateDeployment.verificationFresh").value(false))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("dual delivery acceptance standard-saas verification evidence is stale")))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("dual delivery acceptance private-deployment verification evidence is stale")));
+        } finally {
+            removePropertyOverrides(sourceName);
+        }
+    }
+
+    @Test
+    void shouldExposeMissingDeliveryAssetsInExternalDeliveryReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-missing-delivery-assets-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "missing-delivery-assets-app",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        String sourceName = "open-delivery-missing-assets-test";
+        applyPropertyOverrides(sourceName, Map.of(
+                "app.delivery.workflow-path", ".tools/missing/backend-delivery.yml",
+                "app.delivery.standard-saas-compose-path", ".tools/missing/docker-compose.saas.yml",
+                "app.delivery.private-compose-path", ".tools/missing/docker-compose.private.yml"
+        ));
+        try {
+            mockMvc.perform(get("/api/open/external/delivery/readiness")
+                            .header("X-Trace-Id", "open-delivery-missing-assets-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.pipelineReady").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.workflowAsset.ready").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.standardSaasComposeAsset.ready").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.privateComposeAsset.ready").value(false))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("delivery pipeline workflow asset is missing or invalid")))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("delivery pipeline standard saas compose asset is missing or invalid")))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("delivery pipeline private compose asset is missing or invalid")));
+        } finally {
+            removePropertyOverrides(sourceName);
+        }
+    }
+
+    @Test
+    void shouldExposeMissingCanaryStrategyInExternalDeliveryReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-missing-canary-strategy-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "missing-canary-strategy-app",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        String sourceName = "open-delivery-missing-canary-strategy-test";
+        applyPropertyOverrides(sourceName, Map.of(
+                "app.delivery.canary-strategy", ""
+        ));
+        try {
+            mockMvc.perform(get("/api/open/external/delivery/readiness")
+                            .header("X-Trace-Id", "open-delivery-missing-canary-strategy-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.pipelineReady").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.canaryControl.configured").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.canaryControl.sourceType").value("override"))
+                    .andExpect(jsonPath("$.data.pipeline.canaryControl.status").value("missing-strategy"))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("delivery pipeline canary strategy is missing")));
+        } finally {
+            removePropertyOverrides(sourceName);
+        }
+    }
+
+    @Test
+    void shouldExposeDefaultGithubPublishModeAsBlockingReasonInExternalDeliveryReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-default-github-publish-mode-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "default-github-publish-mode-app",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        removePropertyOverrides(DEFAULT_DELIVERY_GITHUB_PUBLISH_MODE_SOURCE);
+        try {
+            mockMvc.perform(get("/api/open/external/delivery/readiness")
+                            .header("X-Trace-Id", "open-delivery-default-github-publish-mode-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.pipelineReady").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.configured").value(true))
+                    .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.sourceType").value("default"))
+                    .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.defaultValue").value(true))
+                    .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.trusted").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.githubPublishingControl.status").value("configured"))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("delivery pipeline github publish mode must be explicitly configured")));
+        } finally {
+            applyPropertyOverrides(DEFAULT_DELIVERY_GITHUB_PUBLISH_MODE_SOURCE, Map.of(
+                    "app.delivery.github-publish-mode", "github-actions"
+            ));
+        }
+    }
+
+    @Test
+    void shouldExposeUntrustedReleaseKeyAsBlockingReasonInExternalDeliveryReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-untrusted-release-key-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "untrusted-release-key-app",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        String sourceName = "open-delivery-untrusted-release-key-test";
+        InlinedTestPropertiesState originalInlineProperties = replaceInlinedTestProperties(Map.of(
+                "app.delivery.release-key-configured", "${test.delivery.release-key:true}"
+        ));
+        applyPropertyOverrides(sourceName, Map.of(
+                "test.delivery.release-key", "true"
+        ));
+        try {
+            mockMvc.perform(get("/api/open/external/delivery/readiness")
+                            .header("X-Trace-Id", "open-delivery-untrusted-release-key-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.pipelineReady").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.configured").value(true))
+                    .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.sourceType").value("resolved"))
+                    .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.defaultValue").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.releaseKeyControl.trusted").value(false))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("delivery pipeline release key injection must be explicitly configured")));
+        } finally {
+            removePropertyOverrides(sourceName);
+            restoreInlinedTestProperties(originalInlineProperties);
+        }
+    }
+
+    @Test
+    void shouldExposeUntrustedRegistryAuthAsBlockingReasonInExternalDeliveryReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-untrusted-registry-auth-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "untrusted-registry-auth-app",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        String sourceName = "open-delivery-untrusted-registry-auth-test";
+        InlinedTestPropertiesState originalInlineProperties = replaceInlinedTestProperties(Map.of(
+                "app.delivery.registry-auth-configured", "${test.delivery.registry-auth:true}"
+        ));
+        applyPropertyOverrides(sourceName, Map.of(
+                "test.delivery.registry-auth", "true"
+        ));
+        try {
+            mockMvc.perform(get("/api/open/external/delivery/readiness")
+                            .header("X-Trace-Id", "open-delivery-untrusted-registry-auth-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.pipelineReady").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.registryAuthControl.configured").value(true))
+                    .andExpect(jsonPath("$.data.pipeline.registryAuthControl.sourceType").value("resolved"))
+                    .andExpect(jsonPath("$.data.pipeline.registryAuthControl.defaultValue").value(false))
+                    .andExpect(jsonPath("$.data.pipeline.registryAuthControl.trusted").value(false))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("delivery pipeline container registry publish credentials must be explicitly configured")));
+        } finally {
+            removePropertyOverrides(sourceName);
+            restoreInlinedTestProperties(originalInlineProperties);
+        }
+    }
+
+    @Test
+    void shouldExposeUntrustedObservabilityEndpointAsBlockingReasonInExternalObservabilityReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-untrusted-observability-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "untrusted-observability-app",
+                "system.observability_readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        InlinedTestPropertiesState originalDynamicProperties = replaceNamedPropertySource("Dynamic Test Properties", Map.of(
+                "app.observability.log-aggregation-endpoint", "${test.observability.log-endpoint}",
+                "test.observability.log-endpoint", "http://127.0.0.1:" + HTTP_PORT + "/observability/logs"
+        ));
+        try {
+            mockMvc.perform(get("/api/open/external/system/observability-readiness")
+                            .header("X-Trace-Id", "open-observability-untrusted-endpoint-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.stackReady").value(false))
+                    .andExpect(jsonPath("$.data.stack.logAggregation.configured").value(true))
+                    .andExpect(jsonPath("$.data.stack.logAggregation.sourceType").value("resolved"))
+                    .andExpect(jsonPath("$.data.stack.logAggregation.defaultValue").value(false))
+                    .andExpect(jsonPath("$.data.stack.logAggregation.trusted").value(false))
+                    .andExpect(jsonPath("$.data.stack.logAggregation.status").value("configured-untrusted"))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("observability stack log aggregation endpoint must be explicitly configured")));
+        } finally {
+            restoreNamedPropertySource("Dynamic Test Properties", originalDynamicProperties);
+        }
+    }
+
+    @Test
+    void shouldExposeUntrustedExternalCallbackUrlAsBlockingReasonInExternalDeliveryReadinessOverview() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-untrusted-external-callback-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "untrusted-external-callback-app",
+                "delivery.readiness.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        String sourceName = "open-delivery-untrusted-external-callback-test";
+        applyPropertyOverrides(sourceName, Map.of(
+                "app.integrations.external.systems.messaging.callback-url", "${test.external.messaging.callback-url:https://callback.example.com/messages}",
+                "test.external.messaging.callback-url", "https://callback-runtime.example.com/messages"
+        ));
+        try {
+            mockMvc.perform(get("/api/open/external/delivery/readiness")
+                            .header("X-Trace-Id", "open-delivery-untrusted-external-callback-trace-001")
+                            .header("X-Open-App-Key", accessKey)
+                            .header("X-Open-App-Secret", secret))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.externalIntegrationsReady").value(false))
+                    .andExpect(jsonPath("$.data.blockingReasons", org.hamcrest.Matchers.hasItem("messaging(rabbitmq) integration callback url must be explicitly configured")));
+        } finally {
+            removePropertyOverrides(sourceName);
+        }
+    }
+
+    @Test
+    void shouldRejectExternalReadinessOverviewsWhenScopeMissing() throws Exception {
+        OpenPlatformFixture fixture = prepareFixture("open-platform-readiness-scope-center");
+        String ownerToken = login(OWNER_MOBILE, BOOTSTRAP_PASSWORD);
+        JsonNode appData = createAppWithScopes(
+                fixture.organizationId(),
+                ownerToken,
+                "readiness-scope-missing-app",
+                "bi.superset_overview.read"
+        );
+        String appId = appData.path("appId").asText();
+        confirmSensitivePermission(ownerToken, AuthPermissionCodes.OPENPLATFORM_MANAGE);
+
+        MvcResult refreshResult = mockMvc.perform(post("/api/open/apps/{id}/credentials/refresh", appId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode credentialData = objectMapper.readTree(refreshResult.getResponse().getContentAsString()).path("data");
+        String accessKey = credentialData.path("accessKey").asText();
+        String secret = credentialData.path("secret").asText();
+
+        mockMvc.perform(get("/api/open/external/system/observability-readiness")
+                        .header("X-Trace-Id", "open-observability-scope-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1009"))
+                .andExpect(jsonPath("$.message").value("integration permission scope denied"));
+
+        mockMvc.perform(get("/api/open/external/delivery/readiness")
+                        .header("X-Trace-Id", "open-delivery-scope-trace-001")
+                        .header("X-Open-App-Key", accessKey)
+                        .header("X-Open-App-Secret", secret))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("1009"))
+                .andExpect(jsonPath("$.message").value("integration permission scope denied"));
+
+        mockMvc.perform(get("/api/open/logs")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(4))
+                .andExpect(jsonPath("$.data[0].resultStatus").value("created"))
+                .andExpect(jsonPath("$.data[1].resultStatus").value("credential_refreshed"))
+                .andExpect(jsonPath("$.data[2].resultStatus").value("rejected_scope"))
+                .andExpect(jsonPath("$.data[2].traceId").value("open-observability-scope-trace-001"))
+                .andExpect(jsonPath("$.data[3].resultStatus").value("rejected_scope"))
+                .andExpect(jsonPath("$.data[3].traceId").value("open-delivery-scope-trace-001"));
     }
 
     @Test
@@ -1192,6 +1983,74 @@ class OpenPlatformControllerTest {
         );
     }
 
+    private static HttpServer createExternalHttpServer() {
+        try {
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext("/ofbiz/webtools/control", OpenPlatformControllerTest::writeOk);
+            server.createContext("/openboxes/api", OpenPlatformControllerTest::writeOk);
+            server.createContext("/superset/api/v1", OpenPlatformControllerTest::writeOk);
+            server.createContext("/osrm", OpenPlatformControllerTest::writeOk);
+            server.createContext("/callback-worker/consume", OpenPlatformControllerTest::writeOk);
+            server.createContext("/observability/logs", OpenPlatformControllerTest::writeOk);
+            server.createContext("/observability/traces", OpenPlatformControllerTest::writeOk);
+            server.createContext("/observability/alerts", OpenPlatformControllerTest::writeOk);
+            server.createContext("/observability/dashboard", OpenPlatformControllerTest::writeOk);
+            server.createContext("/delivery/github/lsjAnne/saas", OpenPlatformControllerTest::writeOk);
+            server.createContext("/delivery/registry/lsjAnne/dian-shang-ping-tai", OpenPlatformControllerTest::writeOk);
+            server.createContext("/delivery/standard-saas", OpenPlatformControllerTest::writeOk);
+            server.createContext("/delivery/private", OpenPlatformControllerTest::writeOk);
+            server.setExecutor(Executors.newCachedThreadPool());
+            server.start();
+            return server;
+        } catch (IOException exception) {
+            throw new IllegalStateException("failed to start external http probe server", exception);
+        }
+    }
+
+    private static void writeOk(HttpExchange exchange) throws IOException {
+        byte[] body = "{\"status\":\"ok\"}".getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().add("Content-Type", "application/json");
+        exchange.sendResponseHeaders(200, body.length);
+        exchange.getResponseBody().write(body);
+        exchange.close();
+    }
+
+    private static TcpProbeServer createRabbitMqProbeServer() {
+        try {
+            ServerSocket serverSocket = new ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"));
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                while (!serverSocket.isClosed()) {
+                    try (Socket socket = serverSocket.accept()) {
+                        socket.getOutputStream().write(0);
+                        socket.getOutputStream().flush();
+                    } catch (IOException exception) {
+                        if (!serverSocket.isClosed()) {
+                            throw new IllegalStateException("rabbitmq probe accept failed", exception);
+                        }
+                    }
+                }
+            });
+            return new TcpProbeServer(serverSocket, executor);
+        } catch (IOException exception) {
+            throw new IllegalStateException("failed to start rabbitmq probe server", exception);
+        }
+    }
+
+    private record TcpProbeServer(ServerSocket serverSocket, ExecutorService executor) {
+        private int port() {
+            return serverSocket.getLocalPort();
+        }
+
+        private void close() {
+            try {
+                serverSocket.close();
+            } catch (IOException ignored) {
+            }
+            executor.shutdownNow();
+        }
+    }
+
     private JsonNode registerTenant(String tenantName) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/tenants/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -1428,6 +2287,97 @@ class OpenPlatformControllerTest {
         return Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(mac.doFinal(content.getBytes(StandardCharsets.UTF_8)));
     }
+
+    private void applyPropertyOverrides(String sourceName, Map<String, Object> properties) {
+        environment.getPropertySources().addFirst(new MapPropertySource(sourceName, new LinkedHashMap<>(properties)));
+    }
+
+    private void removePropertyOverrides(String sourceName) {
+        environment.getPropertySources().remove(sourceName);
+    }
+
+    private InlinedTestPropertiesState replaceNamedPropertySource(String sourceName, Map<String, Object> overrides) {
+        InlinedTestPropertiesState original = detachPropertySource(sourceName);
+        Map<String, Object> properties = copyProperties(original.propertySource());
+        properties.putAll(overrides);
+        attachPropertySource(new InlinedTestPropertiesState(
+                new MapPropertySource(sourceName, properties),
+                original.previousName(),
+                original.nextName()
+        ));
+        return original;
+    }
+
+    private void restoreNamedPropertySource(String sourceName, InlinedTestPropertiesState original) {
+        environment.getPropertySources().remove(sourceName);
+        attachPropertySource(original);
+    }
+
+    private InlinedTestPropertiesState replaceInlinedTestProperties(Map<String, Object> overrides) {
+        return replaceNamedPropertySource("Inlined Test Properties", overrides);
+    }
+
+    private void restoreInlinedTestProperties(InlinedTestPropertiesState original) {
+        restoreNamedPropertySource("Inlined Test Properties", original);
+    }
+
+    private Map<String, Object> copyProperties(PropertySource<?> propertySource) {
+        Map<String, Object> copied = new LinkedHashMap<>();
+        if (propertySource instanceof EnumerablePropertySource<?> enumerablePropertySource) {
+            for (String propertyName : enumerablePropertySource.getPropertyNames()) {
+                copied.put(propertyName, enumerablePropertySource.getProperty(propertyName));
+            }
+        }
+        return copied;
+    }
+
+    private InlinedTestPropertiesState detachInlinedTestProperties() {
+        return detachPropertySource("Inlined Test Properties");
+    }
+
+    private InlinedTestPropertiesState detachPropertySource(String sourceName) {
+        MutablePropertySources propertySources = environment.getPropertySources();
+        PropertySource<?> original = null;
+        String previousName = null;
+        String nextName = null;
+        boolean found = false;
+        for (PropertySource<?> propertySource : propertySources) {
+            if (sourceName.equals(propertySource.getName())) {
+                original = propertySource;
+                found = true;
+                continue;
+            }
+            if (!found) {
+                previousName = propertySource.getName();
+            } else {
+                nextName = propertySource.getName();
+                break;
+            }
+        }
+        if (original != null) {
+            propertySources.remove(sourceName);
+        }
+        return new InlinedTestPropertiesState(original, previousName, nextName);
+    }
+
+    private void attachPropertySource(InlinedTestPropertiesState state) {
+        if (state == null || state.propertySource() == null) {
+            return;
+        }
+        MutablePropertySources propertySources = environment.getPropertySources();
+        if (state.nextName() != null && propertySources.contains(state.nextName())) {
+            propertySources.addBefore(state.nextName(), state.propertySource());
+            return;
+        }
+        if (state.previousName() != null && propertySources.contains(state.previousName())) {
+            propertySources.addAfter(state.previousName(), state.propertySource());
+            return;
+        }
+        propertySources.addLast(state.propertySource());
+    }
+}
+
+record InlinedTestPropertiesState(PropertySource<?> propertySource, String previousName, String nextName) {
 }
 
 record OpenPlatformFixture(String tenantId, String organizationId) {

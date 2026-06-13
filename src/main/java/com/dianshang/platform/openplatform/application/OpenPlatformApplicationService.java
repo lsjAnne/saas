@@ -3,6 +3,9 @@ package com.dianshang.platform.openplatform.application;
 import com.dianshang.platform.audit.AuditLogService;
 import com.dianshang.platform.common.exception.BusinessException;
 import com.dianshang.platform.common.trace.TraceIdHolder;
+import com.dianshang.platform.saas.application.SaasTenantService;
+import com.dianshang.platform.saas.application.SaasTenantService.ExternalIntegrationConnectivitySnapshot;
+import com.dianshang.platform.saas.application.SaasTenantService.ExternalSystemConnectivitySnapshot;
 import com.dianshang.platform.openplatform.domain.repository.IntegrationCredentialRepository;
 import com.dianshang.platform.openplatform.domain.repository.OpenCallbackReplayRepository;
 import com.dianshang.platform.openplatform.domain.repository.OpenPlatformCallLogRepository;
@@ -26,6 +29,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -53,6 +57,10 @@ public class OpenPlatformApplicationService {
     private static final String WMS_OPENBOXES_BASELINE_READ_SCOPE = "wms.openboxes_baseline.read";
     private static final String TMS_CONTROL_TOWER_READ_SCOPE = "tms.control_tower.read";
     private static final String MESSAGING_RABBITMQ_BASELINE_READ_SCOPE = "messaging.rabbitmq_baseline.read";
+    private static final String MESSAGING_CALLBACK_BRIDGE_READ_SCOPE = "messaging.callback_bridge.read";
+    private static final String BI_SUPERSET_OVERVIEW_READ_SCOPE = "bi.superset_overview.read";
+    private static final String SYSTEM_OBSERVABILITY_READINESS_READ_SCOPE = "system.observability_readiness.read";
+    private static final String DELIVERY_READINESS_READ_SCOPE = "delivery.readiness.read";
     private static final String SOURCE_MODULE = "openplatform";
 
     private final AuditLogService auditLogService;
@@ -62,6 +70,7 @@ public class OpenPlatformApplicationService {
     private final WebhookSubscriptionRepository webhookSubscriptionRepository;
     private final OpenPlatformCallLogRepository openPlatformCallLogRepository;
     private final OpenCallbackReplayRepository openCallbackReplayRepository;
+    private final SaasTenantService saasTenantService;
     private final Environment environment;
 
     public OpenPlatformApplicationService(AuditLogService auditLogService,
@@ -71,6 +80,7 @@ public class OpenPlatformApplicationService {
                                           WebhookSubscriptionRepository webhookSubscriptionRepository,
                                           OpenPlatformCallLogRepository openPlatformCallLogRepository,
                                           OpenCallbackReplayRepository openCallbackReplayRepository,
+                                          SaasTenantService saasTenantService,
                                           Environment environment) {
         this.auditLogService = auditLogService;
         this.organizationRepository = organizationRepository;
@@ -79,6 +89,7 @@ public class OpenPlatformApplicationService {
         this.webhookSubscriptionRepository = webhookSubscriptionRepository;
         this.openPlatformCallLogRepository = openPlatformCallLogRepository;
         this.openCallbackReplayRepository = openCallbackReplayRepository;
+        this.saasTenantService = saasTenantService;
         this.environment = environment;
     }
 
@@ -599,8 +610,26 @@ public class OpenPlatformApplicationService {
         return authenticateExternalProfile(accessKey, secret, endpoint, MESSAGING_RABBITMQ_BASELINE_READ_SCOPE);
     }
 
+    public ExternalAppProfile authorizeExternalMessagingCallbackBridgeRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, MESSAGING_CALLBACK_BRIDGE_READ_SCOPE);
+    }
+
+    public ExternalAppProfile authorizeExternalBiSupersetOverviewRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, BI_SUPERSET_OVERVIEW_READ_SCOPE);
+    }
+
+    public ExternalAppProfile authorizeExternalObservabilityReadinessRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, SYSTEM_OBSERVABILITY_READINESS_READ_SCOPE);
+    }
+
+    public ExternalAppProfile authorizeExternalDeliveryReadinessRead(String accessKey, String secret, String endpoint) {
+        return authenticateExternalProfile(accessKey, secret, endpoint, DELIVERY_READINESS_READ_SCOPE);
+    }
+
     public ExternalErpBaselineView getExternalErpOfbizBaseline() {
         String endpoint = environment.getProperty("app.integrations.external.erp.endpoint", "");
+        ExternalSystemConnectionReadiness readiness = evaluateExternalSystemConnectionReadiness("erp");
+        ExternalSystemConnectivitySnapshot connectivitySnapshot = findConnectivitySnapshot("erp");
         return new ExternalErpBaselineView(
                 normalizedProperty("app.integrations.external.erp.provider", "ofbiz"),
                 endpoint != null && !endpoint.isBlank(),
@@ -609,12 +638,19 @@ public class OpenPlatformApplicationService {
                 environment.getProperty("app.integrations.external.erp.party-sync-enabled", Boolean.class, false),
                 normalizedProperty("app.integrations.external.erp.order-sync-mode", "manual"),
                 environment.getProperty("app.integrations.external.erp.ledger-mapping-count", Integer.class, 0),
-                environment.getProperty("app.integrations.external.erp.catalog-export-enabled", Boolean.class, false)
+                environment.getProperty("app.integrations.external.erp.catalog-export-enabled", Boolean.class, false),
+                readiness.credentialConfigured(),
+                readiness.readinessStatus(),
+                readiness.missingParts(),
+                connectivitySnapshot != null && connectivitySnapshot.reachable(),
+                connectivitySnapshot == null ? "probe not available" : connectivitySnapshot.detail()
         );
     }
 
     public ExternalWmsBaselineView getExternalWmsOpenboxesBaseline() {
         String endpoint = environment.getProperty("app.integrations.external.wms.endpoint", "");
+        ExternalSystemConnectionReadiness readiness = evaluateExternalSystemConnectionReadiness("wms");
+        ExternalSystemConnectivitySnapshot connectivitySnapshot = findConnectivitySnapshot("wms");
         return new ExternalWmsBaselineView(
                 normalizedProperty("app.integrations.external.wms.provider", "openboxes"),
                 endpoint != null && !endpoint.isBlank(),
@@ -623,12 +659,22 @@ public class OpenPlatformApplicationService {
                 environment.getProperty("app.integrations.external.wms.facility-count", Integer.class, 0),
                 normalizedProperty("app.integrations.external.wms.stock-sync-mode", "manual"),
                 normalizedProperty("app.integrations.external.wms.outbound-flow", "manual"),
-                environment.getProperty("app.integrations.external.wms.batch-tracking-enabled", Boolean.class, false)
+                environment.getProperty("app.integrations.external.wms.batch-tracking-enabled", Boolean.class, false),
+                readiness.credentialConfigured(),
+                readiness.readinessStatus(),
+                readiness.missingParts(),
+                connectivitySnapshot != null && connectivitySnapshot.reachable(),
+                connectivitySnapshot == null ? "probe not available" : connectivitySnapshot.detail()
         );
     }
 
     public ExternalMessagingBaselineView getExternalMessagingRabbitMqBaseline() {
         String endpoint = environment.getProperty("app.integrations.external.messaging.endpoint", "");
+        boolean callbackBridgeEnabled = environment.getProperty("app.integrations.external.messaging.callback-bridge-enabled", Boolean.class, false);
+        ExternalCallbackWorkerReadiness callbackWorkerReadiness = evaluateCallbackWorkerReadiness(callbackBridgeEnabled);
+        ExternalSystemConnectivitySnapshot callbackWorkerProbeSnapshot = probeCallbackWorker();
+        ExternalSystemConnectionReadiness readiness = evaluateExternalSystemConnectionReadiness("messaging");
+        ExternalSystemConnectivitySnapshot connectivitySnapshot = findConnectivitySnapshot("messaging");
         return new ExternalMessagingBaselineView(
                 normalizedProperty("app.integrations.external.messaging.provider", "rabbitmq"),
                 endpoint != null && !endpoint.isBlank(),
@@ -637,9 +683,276 @@ public class OpenPlatformApplicationService {
                 normalizedProperty("app.integrations.external.messaging.virtual-host", ""),
                 normalizedProperty("app.integrations.external.messaging.exchange", ""),
                 environment.getProperty("app.integrations.external.messaging.queue-count", Integer.class, 0),
-                environment.getProperty("app.integrations.external.messaging.callback-bridge-enabled", Boolean.class, false),
-                environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false)
+                callbackBridgeEnabled,
+                environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false),
+                readiness.credentialConfigured(),
+                readiness.callbackRequired(),
+                readiness.callbackUrlConfigured(),
+                readiness.readinessStatus(),
+                readiness.missingParts(),
+                connectivitySnapshot != null && connectivitySnapshot.reachable(),
+                connectivitySnapshot == null ? "probe not available" : connectivitySnapshot.detail(),
+                callbackWorkerReadiness.enabled(),
+                callbackWorkerReadiness.provider(),
+                callbackWorkerReadiness.maskedEndpoint(),
+                callbackWorkerReadiness.consumerGroup(),
+                callbackWorkerReadiness.ready(),
+                callbackWorkerReadiness.missingParts(),
+                callbackWorkerProbeSnapshot.reachable(),
+                callbackWorkerProbeSnapshot.detail()
         );
+    }
+
+    public ExternalMessagingCallbackBridgeOverviewView getExternalMessagingCallbackBridgeOverview(String tenantId) {
+        String endpoint = environment.getProperty("app.integrations.external.messaging.endpoint", "");
+        boolean configured = endpoint != null && !endpoint.isBlank();
+        boolean callbackBridgeEnabled = environment.getProperty("app.integrations.external.messaging.callback-bridge-enabled", Boolean.class, false);
+        boolean deadLetterEnabled = environment.getProperty("app.integrations.external.messaging.dead-letter-enabled", Boolean.class, false);
+        ExternalCallbackWorkerReadiness callbackWorkerReadiness = evaluateCallbackWorkerReadiness(callbackBridgeEnabled);
+        ExternalSystemConnectivitySnapshot callbackWorkerProbeSnapshot = probeCallbackWorker();
+        ExternalSystemConnectionReadiness readiness = evaluateExternalSystemConnectionReadiness("messaging");
+        ExternalSystemConnectivitySnapshot connectivitySnapshot = findConnectivitySnapshot("messaging");
+        List<WebhookOrchestrationView> orchestrations = listWebhookOrchestrations(tenantId);
+        List<OpenPlatformCallLog> callbackLogs = listCallLogs(tenantId).stream()
+                .filter(log -> "callback_inbound".equals(log.direction()))
+                .toList();
+        OpenPlatformCallLog lastLog = callbackLogs.stream()
+                .max(java.util.Comparator.comparing(OpenPlatformCallLog::createdAt))
+                .orElse(null);
+        String overviewStatus;
+        if (!configured) {
+            overviewStatus = "fallback_config_required";
+        } else if (!callbackBridgeEnabled) {
+            overviewStatus = "bridge_disabled";
+        } else if (orchestrations.stream().noneMatch(orchestration -> "enabled".equals(orchestration.status()))) {
+            overviewStatus = "callback_subscription_required";
+        } else if (!callbackWorkerReadiness.ready()) {
+            overviewStatus = "callback_worker_required";
+        } else if (!callbackWorkerProbeSnapshot.reachable()) {
+            overviewStatus = "callback_worker_unreachable";
+        } else {
+            overviewStatus = "ready";
+        }
+        return new ExternalMessagingCallbackBridgeOverviewView(
+                normalizedProperty("app.integrations.external.messaging.provider", "rabbitmq"),
+                overviewStatus,
+                configured,
+                extractHost(endpoint),
+                maskEndpoint(endpoint),
+                normalizedProperty("app.integrations.external.messaging.virtual-host", ""),
+                normalizedProperty("app.integrations.external.messaging.exchange", ""),
+                callbackBridgeEnabled,
+                deadLetterEnabled,
+                readiness.credentialConfigured(),
+                readiness.callbackRequired(),
+                readiness.callbackUrlConfigured(),
+                readiness.readinessStatus(),
+                readiness.missingParts(),
+                connectivitySnapshot != null && connectivitySnapshot.reachable(),
+                connectivitySnapshot == null ? "probe not available" : connectivitySnapshot.detail(),
+                callbackWorkerReadiness.enabled(),
+                callbackWorkerReadiness.provider(),
+                callbackWorkerReadiness.maskedEndpoint(),
+                callbackWorkerReadiness.consumerGroup(),
+                callbackWorkerReadiness.ready(),
+                callbackWorkerReadiness.missingParts(),
+                callbackWorkerProbeSnapshot.reachable(),
+                callbackWorkerProbeSnapshot.detail(),
+                orchestrations.size(),
+                (int) orchestrations.stream().filter(orchestration -> "enabled".equals(orchestration.status())).count(),
+                callbackLogs.size(),
+                (int) callbackLogs.stream().filter(log -> "accepted".equals(log.resultStatus())).count(),
+                (int) callbackLogs.stream().filter(log -> log.resultStatus() != null && log.resultStatus().startsWith("rejected")).count(),
+                (int) callbackLogs.stream().filter(log -> "rejected_replay".equals(log.resultStatus())).count(),
+                (int) callbackLogs.stream().filter(log -> "rejected_signature".equals(log.resultStatus())).count(),
+                lastLog == null ? null : lastLog.traceId(),
+                lastLog == null ? null : lastLog.resultStatus()
+        );
+    }
+
+    public ExternalObservabilityReadinessOverviewView getExternalObservabilityReadiness(String tenantId) {
+        SaasTenantService.ObservabilityReadinessView view = saasTenantService.getObservabilityReadiness(tenantId);
+        return new ExternalObservabilityReadinessOverviewView(
+                view.tenantId(),
+                view.stack().ready(),
+                buildExternalObservabilityStackReadinessView(view.stack()),
+                view.auditTraceability(),
+                view.blockingReasons()
+        );
+    }
+
+    public ExternalDeliveryReadinessOverviewView getExternalDeliveryReadiness(String tenantId) {
+        SaasTenantService.DeliveryReadinessView view = saasTenantService.getDeliveryReadiness(tenantId);
+        List<String> blockingReasons = buildExternalDeliveryBlockingReasons(view);
+        return new ExternalDeliveryReadinessOverviewView(
+                view.tenantId(),
+                view.pipeline().repository(),
+                view.pipeline().ready(),
+                view.externalIntegrations().ready(),
+                view.acceptance().ready(),
+                view.pipeline(),
+                view.externalIntegrations(),
+                view.acceptance(),
+                blockingReasons
+        );
+    }
+
+    private List<String> buildExternalDeliveryBlockingReasons(SaasTenantService.DeliveryReadinessView view) {
+        List<String> blockingReasons = new ArrayList<>();
+        collectDeliveryPipelineBlockingReasons(view.pipeline(), blockingReasons);
+        collectExternalIntegrationBlockingReasons(view.externalIntegrations(), blockingReasons);
+        collectAcceptanceBlockingReasons(view.acceptance(), blockingReasons);
+        return List.copyOf(blockingReasons);
+    }
+
+    private void collectDeliveryPipelineBlockingReasons(SaasTenantService.DeliveryPipelineSnapshot pipeline,
+                                                        List<String> blockingReasons) {
+        if (isBlank(pipeline.githubOwner())) {
+            blockingReasons.add("delivery pipeline is missing github owner");
+        }
+        if (isBlank(pipeline.githubRepository())) {
+            blockingReasons.add("delivery pipeline is missing github repository");
+        }
+        if (isBlank(pipeline.registry())) {
+            blockingReasons.add("delivery pipeline is missing container registry");
+        }
+        if (isBlank(pipeline.imageRepository())) {
+            blockingReasons.add("delivery pipeline is missing image repository");
+        }
+        collectDeliveryControlBlockingReason(pipeline.releaseKeyControl(), blockingReasons);
+        collectDeliveryControlBlockingReason(pipeline.registryAuthControl(), blockingReasons);
+        collectDeliveryControlBlockingReason(pipeline.githubPublishingControl(), blockingReasons);
+        collectDeliveryControlBlockingReason(pipeline.canaryControl(), blockingReasons);
+        collectDeliveryAssetBlockingReason(pipeline.workflowAsset(), "workflow asset", blockingReasons);
+        collectDeliveryAssetBlockingReason(pipeline.standardSaasComposeAsset(), "standard saas compose asset", blockingReasons);
+        collectDeliveryAssetBlockingReason(pipeline.privateComposeAsset(), "private compose asset", blockingReasons);
+        collectPipelineProbeBlockingReason(pipeline.githubProbe(), "github repository probe", blockingReasons);
+        collectPipelineProbeBlockingReason(pipeline.registryProbe(), "container registry probe", blockingReasons);
+    }
+
+    private void collectDeliveryAssetBlockingReason(SaasTenantService.DeliveryAssetSnapshot asset,
+                                                    String label,
+                                                    List<String> blockingReasons) {
+        if (!asset.ready()) {
+            blockingReasons.add("delivery pipeline " + label + " is missing or invalid");
+        }
+    }
+
+    private void collectPipelineProbeBlockingReason(SaasTenantService.ExternalSystemConnectivitySnapshot probe,
+                                                    String label,
+                                                    List<String> blockingReasons) {
+        if (!probe.configured()) {
+            blockingReasons.add("delivery pipeline is missing " + label + " endpoint");
+            return;
+        }
+        if (!probe.reachable()) {
+            blockingReasons.add("delivery pipeline " + label + " is unreachable");
+        }
+    }
+
+    private void collectDeliveryControlBlockingReason(SaasTenantService.DeliveryControlDiagnosticSnapshot control,
+                                                      List<String> blockingReasons) {
+        if (isDeliveryControlReady(control)) {
+            return;
+        }
+        if ("release-key".equals(control.controlCode()) && !control.trusted()) {
+            blockingReasons.add("delivery pipeline release key injection must be explicitly configured");
+            return;
+        }
+        if ("release-key".equals(control.controlCode())) {
+            blockingReasons.add("delivery pipeline is missing release key injection");
+            return;
+        }
+        if ("registry-auth".equals(control.controlCode()) && !control.trusted()) {
+            blockingReasons.add("delivery pipeline container registry publish credentials must be explicitly configured");
+            return;
+        }
+        if ("registry-auth".equals(control.controlCode())) {
+            blockingReasons.add("delivery pipeline is missing container registry publish credentials");
+            return;
+        }
+        if ("canary-strategy".equals(control.controlCode()) && "missing-strategy".equals(control.status())) {
+            blockingReasons.add("delivery pipeline canary strategy is missing");
+            return;
+        }
+        if ("canary-strategy".equals(control.controlCode())) {
+            blockingReasons.add("delivery pipeline canary strategy is disabled");
+            return;
+        }
+        if ("github-publish-mode".equals(control.controlCode()) && "workflow-invalid".equals(control.status())) {
+            blockingReasons.add("delivery pipeline github publish workflow asset is missing or invalid");
+            return;
+        }
+        if ("github-publish-mode".equals(control.controlCode()) && !control.trusted()) {
+            blockingReasons.add("delivery pipeline github publish mode must be explicitly configured");
+            return;
+        }
+        if ("github-publish-mode".equals(control.controlCode())) {
+            blockingReasons.add("delivery pipeline is missing github publish mode");
+        }
+    }
+
+    private boolean isDeliveryControlReady(SaasTenantService.DeliveryControlDiagnosticSnapshot control) {
+        if (!control.configured()) {
+            return false;
+        }
+        if ("github-publish-mode".equals(control.controlCode())
+                || "release-key".equals(control.controlCode())
+                || "registry-auth".equals(control.controlCode())) {
+            return control.trusted();
+        }
+        return true;
+    }
+
+    private void collectExternalIntegrationBlockingReasons(SaasTenantService.ExternalIntegrationConnectivitySnapshot snapshot,
+                                                           List<String> blockingReasons) {
+        blockingReasons.addAll(saasTenantService.getExternalIntegrationBlockingReasons());
+        collectExternalIntegrationBlockingReason(snapshot.erp(), blockingReasons);
+        collectExternalIntegrationBlockingReason(snapshot.wms(), blockingReasons);
+        collectExternalIntegrationBlockingReason(snapshot.messaging(), blockingReasons);
+        collectExternalIntegrationBlockingReason(snapshot.bi(), blockingReasons);
+        collectExternalIntegrationBlockingReason(snapshot.routing(), blockingReasons);
+    }
+
+    private void collectExternalIntegrationBlockingReason(SaasTenantService.ExternalSystemConnectivitySnapshot snapshot,
+                                                          List<String> blockingReasons) {
+        String label = isBlank(snapshot.provider()) ? snapshot.systemCode() : snapshot.provider();
+        if (!snapshot.configured()) {
+            blockingReasons.add(label + " integration is not configured");
+            return;
+        }
+        if (!snapshot.trusted()) {
+            blockingReasons.add(label + " integration endpoint must be explicitly configured");
+            return;
+        }
+        if (!snapshot.reachable()) {
+            blockingReasons.add(label + " integration probe is unreachable");
+        }
+    }
+
+    private void collectAcceptanceBlockingReasons(SaasTenantService.DualDeliveryAcceptanceSnapshot acceptance,
+                                                  List<String> blockingReasons) {
+        collectAcceptanceEndpointBlockingReason(acceptance.standardSaas(), blockingReasons);
+        collectAcceptanceEndpointBlockingReason(acceptance.privateDeployment(), blockingReasons);
+    }
+
+    private void collectAcceptanceEndpointBlockingReason(SaasTenantService.DeliveryEndpointSnapshot endpoint,
+                                                         List<String> blockingReasons) {
+        if (!endpoint.configured()) {
+            blockingReasons.add("dual delivery acceptance is missing " + endpoint.mode() + " base url or verification evidence");
+            return;
+        }
+        if ("invalid".equals(endpoint.verificationStatus())) {
+            blockingReasons.add("dual delivery acceptance " + endpoint.mode() + " verification timestamp is invalid");
+            return;
+        }
+        if (!endpoint.verificationFresh()) {
+            blockingReasons.add("dual delivery acceptance " + endpoint.mode() + " verification evidence is stale");
+            return;
+        }
+        if (!endpoint.reachable()) {
+            blockingReasons.add("dual delivery acceptance " + endpoint.mode() + " probe is unreachable");
+        }
     }
 
     private ExternalAppProfile authenticateExternalProfile(String accessKey,
@@ -1047,6 +1360,115 @@ public class OpenPlatformApplicationService {
         return value.trim();
     }
 
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private ExternalSystemConnectionReadiness evaluateExternalSystemConnectionReadiness(String systemCode) {
+        String prefix = "app.integrations.external.systems." + systemCode + ".";
+        List<String> missingParts = new ArrayList<>();
+        if (!isConfigured(prefix + "endpoint")) {
+            missingParts.add("endpoint");
+        }
+        boolean credentialConfigured = environment.getProperty(prefix + "credential-configured", Boolean.class, false);
+        if (!credentialConfigured) {
+            missingParts.add("credentials");
+        }
+        boolean callbackRequired = environment.getProperty(prefix + "callback-required", Boolean.class, false);
+        boolean callbackUrlConfigured = !callbackRequired || isConfigured(prefix + "callback-url");
+        if (callbackRequired && !callbackUrlConfigured) {
+            missingParts.add("callback url");
+        }
+        return new ExternalSystemConnectionReadiness(
+                credentialConfigured,
+                callbackRequired,
+                callbackUrlConfigured,
+                missingParts.isEmpty() ? "ready" : "blocked",
+                List.copyOf(missingParts)
+        );
+    }
+
+    private ExternalCallbackWorkerReadiness evaluateCallbackWorkerReadiness(boolean callbackBridgeEnabled) {
+        String endpointKey = "app.integrations.external.messaging.callback-worker-endpoint";
+        String consumerGroupKey = "app.integrations.external.messaging.callback-worker-consumer-group";
+        boolean workerEnabled = environment.getProperty("app.integrations.external.messaging.callback-worker-enabled", Boolean.class, false);
+        List<String> missingParts = new ArrayList<>();
+        if (callbackBridgeEnabled) {
+            if (!workerEnabled) {
+                missingParts.add("worker enabled");
+            }
+            if (!isConfigured(endpointKey)) {
+                missingParts.add("worker endpoint");
+            }
+            if (!isConfigured(consumerGroupKey)) {
+                missingParts.add("consumer group");
+            }
+        }
+        return new ExternalCallbackWorkerReadiness(
+                workerEnabled,
+                normalizedProperty("app.integrations.external.messaging.callback-worker-provider", "spring-event"),
+                maskEndpoint(environment.getProperty(endpointKey, "")),
+                normalizedProperty(consumerGroupKey, ""),
+                !callbackBridgeEnabled || missingParts.isEmpty(),
+                List.copyOf(missingParts)
+        );
+    }
+
+    private ExternalSystemConnectivitySnapshot probeCallbackWorker() {
+        return saasTenantService.probeHttpExternalEndpoint(
+                "callback-worker",
+                normalizedProperty("app.integrations.external.messaging.callback-worker-provider", "spring-event"),
+                environment.getProperty("app.integrations.external.messaging.callback-worker-endpoint", "")
+        );
+    }
+
+    private ExternalSystemConnectivitySnapshot findConnectivitySnapshot(String systemCode) {
+        ExternalIntegrationConnectivitySnapshot snapshot = saasTenantService.getExternalIntegrationConnectivitySnapshot();
+        return switch (systemCode) {
+            case "erp" -> snapshot.erp();
+            case "wms" -> snapshot.wms();
+            case "messaging" -> snapshot.messaging();
+            case "bi" -> snapshot.bi();
+            case "routing" -> snapshot.routing();
+            default -> null;
+        };
+    }
+
+    private ExternalObservabilityStackReadinessView buildExternalObservabilityStackReadinessView(
+            SaasTenantService.ObservabilityStackReadinessSnapshot stack) {
+        return new ExternalObservabilityStackReadinessView(
+                stack.ready(),
+                stack.configuredCount(),
+                stack.reachableCount(),
+                buildExternalObservabilityEndpointView(stack.logAggregation()),
+                buildExternalObservabilityEndpointView(stack.trace()),
+                buildExternalObservabilityEndpointView(stack.alertRouter()),
+                buildExternalObservabilityEndpointView(stack.dashboard()),
+                stack.releaseGateStatus(),
+                stack.releaseGateDetail()
+        );
+    }
+
+    private ExternalObservabilityEndpointView buildExternalObservabilityEndpointView(ExternalSystemConnectivitySnapshot snapshot) {
+        return new ExternalObservabilityEndpointView(
+                snapshot.configured(),
+                snapshot.host(),
+                snapshot.maskedTarget(),
+                snapshot.sourceType(),
+                snapshot.sourceName(),
+                snapshot.defaultValue(),
+                snapshot.trusted(),
+                snapshot.status(),
+                snapshot.reachable(),
+                snapshot.detail()
+        );
+    }
+
+    private boolean isConfigured(String key) {
+        String value = environment.getProperty(key, "");
+        return value != null && !value.isBlank();
+    }
+
     private String extractHost(String rawEndpoint) {
         if (rawEndpoint == null || rawEndpoint.isBlank()) {
             return "";
@@ -1231,7 +1653,12 @@ public class OpenPlatformApplicationService {
             boolean partySyncEnabled,
             String orderSyncMode,
             int ledgerMappingCount,
-            boolean catalogExportEnabled
+            boolean catalogExportEnabled,
+            boolean credentialConfigured,
+            String readinessStatus,
+            List<String> missingParts,
+            boolean probeReachable,
+            String probeDetail
     ) {
     }
 
@@ -1243,7 +1670,12 @@ public class OpenPlatformApplicationService {
             int facilityCount,
             String stockSyncMode,
             String outboundFlow,
-            boolean batchTrackingEnabled
+            boolean batchTrackingEnabled,
+            boolean credentialConfigured,
+            String readinessStatus,
+            List<String> missingParts,
+            boolean probeReachable,
+            String probeDetail
     ) {
     }
 
@@ -1256,7 +1688,108 @@ public class OpenPlatformApplicationService {
             String exchange,
             int queueCount,
             boolean callbackBridgeEnabled,
-            boolean deadLetterEnabled
+            boolean deadLetterEnabled,
+            boolean credentialConfigured,
+            boolean callbackRequired,
+            boolean callbackUrlConfigured,
+            String readinessStatus,
+            List<String> missingParts,
+            boolean probeReachable,
+            String probeDetail,
+            boolean callbackWorkerEnabled,
+            String callbackWorkerProvider,
+            String callbackWorkerMaskedEndpoint,
+            String callbackWorkerConsumerGroup,
+            boolean callbackWorkerReady,
+            List<String> callbackWorkerMissingParts,
+            boolean callbackWorkerProbeReachable,
+            String callbackWorkerProbeDetail
+    ) {
+    }
+
+    public record ExternalMessagingCallbackBridgeOverviewView(
+            String provider,
+            String overviewStatus,
+            boolean configured,
+            String host,
+            String maskedEndpoint,
+            String virtualHost,
+            String exchange,
+            boolean callbackBridgeEnabled,
+            boolean deadLetterEnabled,
+            boolean credentialConfigured,
+            boolean callbackRequired,
+            boolean callbackUrlConfigured,
+            String readinessStatus,
+            List<String> missingParts,
+            boolean probeReachable,
+            String probeDetail,
+            boolean callbackWorkerEnabled,
+            String callbackWorkerProvider,
+            String callbackWorkerMaskedEndpoint,
+            String callbackWorkerConsumerGroup,
+            boolean callbackWorkerReady,
+            List<String> callbackWorkerMissingParts,
+            boolean callbackWorkerProbeReachable,
+            String callbackWorkerProbeDetail,
+            int totalSubscriptionCount,
+            int enabledSubscriptionCount,
+            int callbackAttemptCount,
+            int acceptedCallbackCount,
+            int rejectedCallbackCount,
+            int replayRejectedCount,
+            int signatureRejectedCount,
+            String lastTraceId,
+            String lastResultStatus
+    ) {
+    }
+
+    public record ExternalObservabilityReadinessOverviewView(
+            String tenantId,
+            boolean stackReady,
+            ExternalObservabilityStackReadinessView stack,
+            SaasTenantService.AuditTraceabilitySummary auditTraceability,
+            List<String> blockingReasons
+    ) {
+    }
+
+    public record ExternalDeliveryReadinessOverviewView(
+            String tenantId,
+            String repository,
+            boolean pipelineReady,
+            boolean externalIntegrationsReady,
+            boolean acceptanceReady,
+            SaasTenantService.DeliveryPipelineSnapshot pipeline,
+            SaasTenantService.ExternalIntegrationConnectivitySnapshot externalIntegrations,
+            SaasTenantService.DualDeliveryAcceptanceSnapshot acceptance,
+            List<String> blockingReasons
+    ) {
+    }
+
+    public record ExternalObservabilityStackReadinessView(
+            boolean ready,
+            int configuredCount,
+            int reachableCount,
+            ExternalObservabilityEndpointView logAggregation,
+            ExternalObservabilityEndpointView trace,
+            ExternalObservabilityEndpointView alertRouter,
+            ExternalObservabilityEndpointView dashboard,
+            String releaseGateStatus,
+            String releaseGateDetail
+    ) {
+    }
+
+    public record ExternalObservabilityEndpointView(
+            boolean configured,
+            String host,
+            String maskedEndpoint,
+            String sourceType,
+            String sourceName,
+            boolean defaultValue,
+            boolean trusted,
+            String status,
+            boolean probeReachable,
+            String probeDetail
     ) {
     }
 
@@ -1267,6 +1800,25 @@ public class OpenPlatformApplicationService {
             String secretDigest,
             OffsetDateTime expiresAt,
             OffsetDateTime issuedAt
+    ) {
+    }
+
+    private record ExternalSystemConnectionReadiness(
+            boolean credentialConfigured,
+            boolean callbackRequired,
+            boolean callbackUrlConfigured,
+            String readinessStatus,
+            List<String> missingParts
+    ) {
+    }
+
+    private record ExternalCallbackWorkerReadiness(
+            boolean enabled,
+            String provider,
+            String maskedEndpoint,
+            String consumerGroup,
+            boolean ready,
+            List<String> missingParts
     ) {
     }
 }

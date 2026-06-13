@@ -18,6 +18,7 @@ import com.dianshang.platform.notification.domain.repository.NotificationTaskRep
 import com.dianshang.platform.notification.model.NotificationTask;
 import com.dianshang.platform.order.domain.repository.OrderRepository;
 import com.dianshang.platform.order.model.OrderMain;
+import com.dianshang.platform.saas.application.SaasTenantService;
 import com.dianshang.platform.servicecase.application.ServiceCaseService;
 import com.dianshang.platform.store.domain.repository.StoreRepository;
 import com.dianshang.platform.store.model.Store;
@@ -67,6 +68,7 @@ public class DashboardService {
     private final SupplierRepository supplierRepository;
     private final ServiceCaseService serviceCaseService;
     private final FinanceService financeService;
+    private final SaasTenantService saasTenantService;
     private final Environment environment;
 
     public DashboardService(StoreRepository storeRepository,
@@ -82,6 +84,7 @@ public class DashboardService {
                             SupplierRepository supplierRepository,
                             ServiceCaseService serviceCaseService,
                             FinanceService financeService,
+                            SaasTenantService saasTenantService,
                             Environment environment) {
         this.storeRepository = storeRepository;
         this.orderRepository = orderRepository;
@@ -96,6 +99,7 @@ public class DashboardService {
         this.supplierRepository = supplierRepository;
         this.serviceCaseService = serviceCaseService;
         this.financeService = financeService;
+        this.saasTenantService = saasTenantService;
         this.environment = environment;
     }
 
@@ -639,6 +643,8 @@ public class DashboardService {
         String endpoint = environment.getProperty("app.integrations.external.bi.endpoint", "");
         boolean configured = endpoint != null && !endpoint.isBlank();
         String provider = normalizedProperty("app.integrations.external.bi.provider", "superset");
+        ExternalSystemConnectionReadiness readiness = evaluateExternalSystemConnectionReadiness("bi");
+        SaasTenantService.ExternalSystemConnectivitySnapshot connectivitySnapshot = findConnectivitySnapshot("bi");
         return new BiExternalPlatformOverviewView(
                 provider,
                 configured ? "ready" : "fallback_config_required",
@@ -648,6 +654,11 @@ public class DashboardService {
                 environment.getProperty("app.integrations.external.bi.dashboard-count", Integer.class, linkedThemeDomains.size()),
                 environment.getProperty("app.integrations.external.bi.dataset-count", Integer.class, listBiMetricDefinitions(tenantId).size()),
                 environment.getProperty("app.integrations.external.bi.embed-enabled", Boolean.class, false),
+                readiness.credentialConfigured(),
+                readiness.readinessStatus(),
+                readiness.missingParts(),
+                connectivitySnapshot != null && connectivitySnapshot.reachable(),
+                connectivitySnapshot == null ? "probe not available" : connectivitySnapshot.detail(),
                 linkedThemeDomains
         );
     }
@@ -779,6 +790,40 @@ public class DashboardService {
             return defaultValue;
         }
         return value.trim();
+    }
+
+    private ExternalSystemConnectionReadiness evaluateExternalSystemConnectionReadiness(String systemCode) {
+        String prefix = "app.integrations.external.systems." + systemCode + ".";
+        List<String> missingParts = new ArrayList<>();
+        if (!isConfigured(prefix + "endpoint")) {
+            missingParts.add("endpoint");
+        }
+        boolean credentialConfigured = environment.getProperty(prefix + "credential-configured", Boolean.class, false);
+        if (!credentialConfigured) {
+            missingParts.add("credentials");
+        }
+        return new ExternalSystemConnectionReadiness(
+                credentialConfigured,
+                missingParts.isEmpty() ? "ready" : "blocked",
+                List.copyOf(missingParts)
+        );
+    }
+
+    private SaasTenantService.ExternalSystemConnectivitySnapshot findConnectivitySnapshot(String systemCode) {
+        SaasTenantService.ExternalIntegrationConnectivitySnapshot snapshot = saasTenantService.getExternalIntegrationConnectivitySnapshot();
+        return switch (systemCode) {
+            case "erp" -> snapshot.erp();
+            case "wms" -> snapshot.wms();
+            case "messaging" -> snapshot.messaging();
+            case "bi" -> snapshot.bi();
+            case "routing" -> snapshot.routing();
+            default -> null;
+        };
+    }
+
+    private boolean isConfigured(String key) {
+        String value = environment.getProperty(key, "");
+        return value != null && !value.isBlank();
     }
 
     private String resolveHost(String rawEndpoint) {
@@ -1152,7 +1197,19 @@ public class DashboardService {
             int dashboardCount,
             int datasetCount,
             boolean embedEnabled,
+            boolean credentialConfigured,
+            String readinessStatus,
+            List<String> missingParts,
+            boolean probeReachable,
+            String probeDetail,
             List<String> linkedThemeDomains
+    ) {
+    }
+
+    private record ExternalSystemConnectionReadiness(
+            boolean credentialConfigured,
+            String readinessStatus,
+            List<String> missingParts
     ) {
     }
 

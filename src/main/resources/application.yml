@@ -95,7 +95,10 @@ app:
     registry: ${APP_DELIVERY_REGISTRY:ghcr.io}
     image-repository: ${APP_DELIVERY_IMAGE_REPOSITORY:lsjAnne/dian-shang-ping-tai}
     release-key-configured: ${APP_DELIVERY_RELEASE_KEY_CONFIGURED:false}
+    registry-auth-configured: ${APP_DELIVERY_REGISTRY_AUTH_CONFIGURED:false}
+    github-publish-mode: ${APP_DELIVERY_GITHUB_PUBLISH_MODE:github-actions}
     canary-enabled: ${APP_DELIVERY_CANARY_ENABLED:false}
+    canary-strategy: ${APP_DELIVERY_CANARY_STRATEGY:}
     standard-saas-base-url: ${APP_DELIVERY_STANDARD_SAAS_BASE_URL:}
     standard-saas-verified-at: ${APP_DELIVERY_STANDARD_SAAS_VERIFIED_AT:}
     private-base-url: ${APP_DELIVERY_PRIVATE_BASE_URL:}
@@ -348,3 +351,96 @@ app:
     token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
     bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
     require-explicit-secrets: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: stage13-local
+management:
+  health:
+    redis:
+      enabled: false
+app:
+  stage13-local:
+    http-port: ${APP_STAGE13_LOCAL_HTTP_PORT:18081}
+    tcp-port: ${APP_STAGE13_LOCAL_TCP_PORT:15671}
+  observability:
+    log-aggregation-endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/observability/logs
+    trace-endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/observability/traces
+    alert-router-endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/observability/alerts
+    dashboard-url: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/observability/dashboard
+  delivery:
+    release-key-configured: true
+    registry-auth-configured: true
+    github-publish-mode: github-actions
+    canary-enabled: true
+    canary-strategy: header-weighted
+    github-probe-endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/delivery/github/lsjAnne/saas
+    registry-probe-endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/delivery/registry/lsjAnne/dian-shang-ping-tai
+    standard-saas-base-url: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/delivery/standard-saas
+    standard-saas-verified-at: 2026-06-13T10:00:00+08:00
+    private-base-url: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/delivery/private
+    private-verified-at: 2026-06-13T10:05:00+08:00
+  integrations:
+    external:
+      probe-timeout-millis: 1000
+      erp:
+        provider: ofbiz
+        endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/ofbiz/webtools/control
+        party-sync-enabled: true
+        order-sync-mode: near_real_time
+        ledger-mapping-count: 8
+        catalog-export-enabled: true
+      wms:
+        provider: openboxes
+        endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/openboxes/api
+        facility-count: 3
+        stock-sync-mode: two_way
+        outbound-flow: wave_and_pick
+        batch-tracking-enabled: true
+      messaging:
+        provider: rabbitmq
+        endpoint: amqp://127.0.0.1:${APP_STAGE13_LOCAL_TCP_PORT:15671}/tenant-hub
+        virtual-host: tenant-hub
+        exchange: tenant.events
+        queue-count: 4
+        callback-bridge-enabled: true
+        dead-letter-enabled: true
+        callback-worker-enabled: true
+        callback-worker-provider: spring-event
+        callback-worker-endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/callback-worker/consume
+        callback-worker-consumer-group: open-platform-callbacks
+      bi:
+        provider: superset
+        endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/superset/api/v1
+        dashboard-count: 6
+        dataset-count: 18
+        embed-enabled: true
+      routing:
+        provider: osrm
+        endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/osrm
+        profile: driving
+        fallback-enabled: true
+        timeout-millis: 2000
+      systems:
+        erp:
+          endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/ofbiz/webtools/control
+          credential-configured: true
+        wms:
+          endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/openboxes/api
+          credential-configured: true
+        tax:
+          endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/tax/api
+          credential-configured: true
+        messaging:
+          endpoint: amqp://127.0.0.1:${APP_STAGE13_LOCAL_TCP_PORT:15671}/tenant-hub
+          credential-configured: true
+          callback-url: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/callback-worker/consume
+          callback-required: true
+        bi:
+          endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/superset/api/v1
+          credential-configured: true
+        routing:
+          endpoint: http://127.0.0.1:${APP_STAGE13_LOCAL_HTTP_PORT:18081}/osrm
+          credential-configured: true
