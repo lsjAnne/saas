@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -99,6 +100,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @AutoConfigureMockMvc
 class TenantSystemControllerTest {
+    private static final String FRESH_STANDARD_SAAS_VERIFIED_AT = OffsetDateTime.now().minusDays(2).withNano(0).toString();
+    private static final String FRESH_PRIVATE_VERIFIED_AT = OffsetDateTime.now().minusDays(2).plusMinutes(15).withNano(0).toString();
 
     private static final HttpServer EXTERNAL_HTTP_SERVER = createExternalHttpServer();
     private static final int HTTP_PORT = EXTERNAL_HTTP_SERVER.getAddress().getPort();
@@ -127,6 +130,8 @@ class TenantSystemControllerTest {
         registry.add("app.delivery.registry-probe-endpoint", () -> httpBase + "/delivery/registry/lsjAnne/dian-shang-ping-tai");
         registry.add("app.delivery.standard-saas-base-url", () -> httpBase + "/delivery/standard-saas");
         registry.add("app.delivery.private-base-url", () -> httpBase + "/delivery/private");
+        registry.add("app.delivery.standard-saas-verified-at", () -> FRESH_STANDARD_SAAS_VERIFIED_AT);
+        registry.add("app.delivery.private-verified-at", () -> FRESH_PRIVATE_VERIFIED_AT);
         registry.add("app.integrations.external.probe-timeout-millis", () -> "1000");
     }
 
@@ -314,8 +319,9 @@ class TenantSystemControllerTest {
     @Test
     void shouldExposeActuatorObservabilityEndpoints() throws Exception {
         mockMvc.perform(get("/actuator/health"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.status").value("DOWN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.components.redis.status").value("UP"))
                 .andExpect(jsonPath("$.components.externalDependencies.status").value("UP"))
                 .andExpect(jsonPath("$.components.externalDependencies.details.externalErpPlatform.host").value("127.0.0.1"))
                 .andExpect(jsonPath("$.components.externalDependencies.details.externalWmsPlatform.host").value("127.0.0.1"))

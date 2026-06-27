@@ -12,8 +12,8 @@ spring:
   data:
     redis:
       host: ${APP_REDIS_HOST:127.0.0.1}
-      port: ${APP_REDIS_PORT:16379}
-      password: ${APP_REDIS_PASSWORD:saas_redis_password}
+      port: ${APP_REDIS_PORT:6379}
+      password: ${APP_REDIS_PASSWORD:mypassword}
       timeout: 2s
       connect-timeout: 2s
   sql:
@@ -262,6 +262,11 @@ spring:
     driver-class-name: org.postgresql.Driver
     username: root
     password: 123456
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 16379
+      password: saas_redis_password
   sql:
     init:
       mode: always
@@ -308,10 +313,15 @@ spring:
     activate:
       on-profile: server-local
   datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/dian_shang_ping_tai
+    url: jdbc:postgresql://127.0.0.1:5432/postgres
     driver-class-name: org.postgresql.Driver
     username: username
     password: password
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: mypassword
   sql:
     init:
       mode: always

@@ -110,6 +110,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class AdminTenantControllerTest {
     private static final String DEFAULT_DELIVERY_GITHUB_PUBLISH_MODE_SOURCE = "default-delivery-github-publish-mode-test";
+    private static final String FRESH_STANDARD_SAAS_VERIFIED_AT = OffsetDateTime.now().minusDays(2).withNano(0).toString();
+    private static final String FRESH_PRIVATE_VERIFIED_AT = OffsetDateTime.now().minusDays(2).plusMinutes(15).withNano(0).toString();
 
     private static final HttpServer EXTERNAL_HTTP_SERVER = createExternalHttpServer();
     private static final int HTTP_PORT = EXTERNAL_HTTP_SERVER.getAddress().getPort();
@@ -138,6 +140,8 @@ class AdminTenantControllerTest {
         registry.add("app.delivery.registry-probe-endpoint", () -> httpBase + "/delivery/registry/lsjAnne/dian-shang-ping-tai");
         registry.add("app.delivery.standard-saas-base-url", () -> httpBase + "/delivery/standard-saas");
         registry.add("app.delivery.private-base-url", () -> httpBase + "/delivery/private");
+        registry.add("app.delivery.standard-saas-verified-at", () -> FRESH_STANDARD_SAAS_VERIFIED_AT);
+        registry.add("app.delivery.private-verified-at", () -> FRESH_PRIVATE_VERIFIED_AT);
         registry.add("app.integrations.external.probe-timeout-millis", () -> "1000");
     }
 
@@ -520,7 +524,7 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.acceptance.standardSaas.reachable").value(true))
                 .andExpect(jsonPath("$.data.acceptance.standardSaas.verificationFresh").value(true))
                 .andExpect(jsonPath("$.data.acceptance.standardSaas.detail").value("http 200"))
-                .andExpect(jsonPath("$.data.acceptance.standardSaas.verifiedAt").value("2026-06-10T15:10:00+08:00"))
+                .andExpect(jsonPath("$.data.acceptance.standardSaas.verifiedAt").value(FRESH_STANDARD_SAAS_VERIFIED_AT))
                 .andExpect(jsonPath("$.data.acceptance.privateDeployment.mode").value("private-deployment"))
                 .andExpect(jsonPath("$.data.acceptance.privateDeployment.configured").value(true))
                 .andExpect(jsonPath("$.data.acceptance.privateDeployment.protocol").value("http"))
@@ -529,7 +533,7 @@ class AdminTenantControllerTest {
                 .andExpect(jsonPath("$.data.acceptance.privateDeployment.reachable").value(true))
                 .andExpect(jsonPath("$.data.acceptance.privateDeployment.verificationFresh").value(true))
                 .andExpect(jsonPath("$.data.acceptance.privateDeployment.detail").value("http 200"))
-                .andExpect(jsonPath("$.data.acceptance.privateDeployment.verifiedAt").value("2026-06-10T15:25:00+08:00"));
+                .andExpect(jsonPath("$.data.acceptance.privateDeployment.verifiedAt").value(FRESH_PRIVATE_VERIFIED_AT));
     }
 
     @Test

@@ -122,13 +122,14 @@ mvn "-Dtest=OpenPlatformControllerTest,TenantSystemControllerTest,AdminTenantCon
 docker compose -f docker-compose.saas.yml config
 docker compose -f docker-compose.private.yml config
 mvn -q -DskipTests package
-java -jar target/dianShangPingTai-1.0.0-SNAPSHOT.jar --spring.profiles.active=stage13-local --server.port=18090
+powershell -ExecutionPolicy Bypass -File .\scripts\start-dev-tunnel-local.ps1 -Mode server-local -EnableStage13Local
 ```
 
 结果：
 
 - `docker compose` 两份配置均渲染通过
 - `package` 构建通过
+- 统一复用的本机 Docker 联调启动命令固定为 `powershell -ExecutionPolicy Bypass -File .\scripts\start-dev-tunnel-local.ps1 -Mode server-local -EnableStage13Local`，默认直连 `127.0.0.1:5432/postgres(username/password)` 与 `127.0.0.1:6379(mypassword)`
 - `/actuator/info` 已返回 `externalDependencies.deliveryPipelineReady=true`
 - `/actuator/health` 已返回 `UP`
 - `externalDependencies.observabilityStackReady=true`

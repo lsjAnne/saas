@@ -1,5 +1,6 @@
 package com.dianshang.platform;
 
+import com.dianshang.platform.saas.application.SaasTenantService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
@@ -33,8 +34,8 @@ class DefaultRedisConfigurationTest {
     @Test
     void shouldResolveLocalDockerRedisByDefault() {
         assertThat(redisProperties.getHost()).isEqualTo("127.0.0.1");
-        assertThat(redisProperties.getPort()).isEqualTo(16379);
-        assertThat(redisProperties.getPassword()).isEqualTo("saas_redis_password");
+        assertThat(redisProperties.getPort()).isEqualTo(6379);
+        assertThat(redisProperties.getPassword()).isEqualTo("mypassword");
     }
 }
 
@@ -60,8 +61,8 @@ class PostgreSqlProfileConfigurationTest {
     @Test
     void shouldResolveLocalDockerRedisWhenPostgresProfileIsActive() {
         assertThat(redisProperties.getHost()).isEqualTo("127.0.0.1");
-        assertThat(redisProperties.getPort()).isEqualTo(16379);
-        assertThat(redisProperties.getPassword()).isEqualTo("saas_redis_password");
+        assertThat(redisProperties.getPort()).isEqualTo(6379);
+        assertThat(redisProperties.getPassword()).isEqualTo("mypassword");
     }
 }
 
@@ -96,8 +97,8 @@ class ServerLocalRedisProfileConfigurationTest {
     @Test
     void shouldResolveLocalDockerRedisWhenServerLocalProfileIsActive() {
         assertThat(redisProperties.getHost()).isEqualTo("127.0.0.1");
-        assertThat(redisProperties.getPort()).isEqualTo(16379);
-        assertThat(redisProperties.getPassword()).isEqualTo("saas_redis_password");
+        assertThat(redisProperties.getPort()).isEqualTo(6379);
+        assertThat(redisProperties.getPassword()).isEqualTo("mypassword");
     }
 }
 
@@ -105,7 +106,53 @@ class ServerLocalRedisProfileConfigurationTest {
         classes = DianShangPingTaiApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
-                "spring.datasource.url=jdbc:postgresql://127.0.0.1:5432/dian_shang_ping_tai",
+                "APP_STAGE13_LOCAL_HTTP_PORT=18091",
+                "APP_STAGE13_LOCAL_TCP_PORT=15691",
+                "app.redis.verify-on-startup=false",
+                "app.auth.token-secret=test-stage13-local-token-secret-123456",
+                "app.auth.bootstrap-password=test-stage13-local-bootstrap-password-123456"
+        }
+)
+@ActiveProfiles("stage13-local")
+class Stage13LocalResolvedPlaceholderProbeConfigurationTest {
+
+    @Autowired
+    private SaasTenantService saasTenantService;
+
+    @Test
+    void shouldResolveStage13LocalPlaceholderBackedEndpointsAsReachable() {
+        SaasTenantService.ExternalIntegrationConnectivitySnapshot externalIntegrationConnectivity =
+                saasTenantService.getExternalIntegrationConnectivitySnapshot();
+        assertThat(externalIntegrationConnectivity.ready()).isTrue();
+        assertThat(externalIntegrationConnectivity.configuredCount()).isEqualTo(5);
+        assertThat(externalIntegrationConnectivity.reachableCount()).isEqualTo(5);
+        assertThat(externalIntegrationConnectivity.erp().host()).isEqualTo("127.0.0.1");
+        assertThat(externalIntegrationConnectivity.erp().detail()).isEqualTo("http 200");
+        assertThat(externalIntegrationConnectivity.messaging().host()).isEqualTo("127.0.0.1");
+        assertThat(externalIntegrationConnectivity.messaging().detail()).isEqualTo("tcp connected");
+
+        SaasTenantService.ObservabilityStackConnectivitySnapshot observabilityStack =
+                saasTenantService.getObservabilityStackConnectivitySnapshot();
+        assertThat(observabilityStack.logAggregation().host()).isEqualTo("127.0.0.1");
+        assertThat(observabilityStack.logAggregation().reachable()).isTrue();
+        assertThat(observabilityStack.trace().reachable()).isTrue();
+        assertThat(observabilityStack.alertRouter().reachable()).isTrue();
+        assertThat(observabilityStack.dashboard().reachable()).isTrue();
+
+        SaasTenantService.DeliveryPipelineSnapshot deliveryPipeline = saasTenantService.getDeliveryPipelineSnapshot();
+        assertThat(deliveryPipeline.ready()).isTrue();
+        assertThat(deliveryPipeline.githubProbe().host()).isEqualTo("127.0.0.1");
+        assertThat(deliveryPipeline.githubProbe().detail()).isEqualTo("http 200");
+        assertThat(deliveryPipeline.registryProbe().host()).isEqualTo("127.0.0.1");
+        assertThat(deliveryPipeline.registryProbe().detail()).isEqualTo("http 200");
+    }
+}
+
+@SpringBootTest(
+        classes = DianShangPingTaiApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.NONE,
+        properties = {
+                "spring.datasource.url=jdbc:postgresql://127.0.0.1:5432/postgres",
                 "spring.datasource.driver-class-name=org.postgresql.Driver",
                 "spring.datasource.username=username",
                 "spring.datasource.password=password",

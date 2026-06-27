@@ -119,6 +119,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class OpenPlatformControllerTest {
     private static final String DEFAULT_DELIVERY_GITHUB_PUBLISH_MODE_SOURCE = "default-delivery-github-publish-mode-test";
+    private static final String FRESH_STANDARD_SAAS_VERIFIED_AT = OffsetDateTime.now().minusDays(2).withNano(0).toString();
+    private static final String FRESH_PRIVATE_VERIFIED_AT = OffsetDateTime.now().minusDays(2).plusMinutes(15).withNano(0).toString();
 
     private static final HttpServer EXTERNAL_HTTP_SERVER = createExternalHttpServer();
     private static final int HTTP_PORT = EXTERNAL_HTTP_SERVER.getAddress().getPort();
@@ -146,6 +148,8 @@ class OpenPlatformControllerTest {
         registry.add("app.delivery.registry-probe-endpoint", () -> httpBase + "/delivery/registry/lsjAnne/dian-shang-ping-tai");
         registry.add("app.delivery.standard-saas-base-url", () -> httpBase + "/delivery/standard-saas");
         registry.add("app.delivery.private-base-url", () -> httpBase + "/delivery/private");
+        registry.add("app.delivery.standard-saas-verified-at", () -> FRESH_STANDARD_SAAS_VERIFIED_AT);
+        registry.add("app.delivery.private-verified-at", () -> FRESH_PRIVATE_VERIFIED_AT);
         registry.add("app.integrations.external.probe-timeout-millis", () -> "1000");
     }
 

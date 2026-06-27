@@ -2796,6 +2796,13 @@ public class SaasTenantService {
             if (looksLikePlaceholderValue(normalizedValue)) {
                 return null;
             }
+            if (containsPlaceholderToken(normalizedValue)) {
+                String resolvedValue = configurableEnvironment.getProperty(propertyKey, "");
+                if (resolvedValue == null || resolvedValue.isBlank() || containsPlaceholderToken(resolvedValue)) {
+                    return null;
+                }
+                return new PropertySourceMatch(sourceName, resolvedValue);
+            }
             return new PropertySourceMatch(sourceName, normalizedValue);
         }
         return null;
@@ -2821,6 +2828,10 @@ public class SaasTenantService {
 
     private boolean looksLikePlaceholderValue(String value) {
         return value.startsWith("${") && value.endsWith("}");
+    }
+
+    private boolean containsPlaceholderToken(String value) {
+        return value != null && value.contains("${") && value.contains("}");
     }
 
     private String toEnvironmentKey(String propertyKey) {
