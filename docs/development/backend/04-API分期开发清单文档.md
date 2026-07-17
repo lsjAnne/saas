@@ -2,261 +2,126 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 文档版本 | v1.28 |
-| 最后更新 | 2026-05-31 |
-| 当前状态 | 基线 API 已完成，会员、财务、看板接口已落地 |
-| 统计口径 | 基于 `src/main/java/com/dianshang/platform/**/*Controller.java` |
+| 文档版本 | v2.0 |
+| 最后更新 | 2026-07-17 |
+| 文档定位 | 历史 API 分期参考与当前 API 口径入口 |
+| 当前状态 | 不再直接作为今日进度真值 |
 
-## 1. API 总览
+## 1. 先看这一条
 
-- ✅ 当前已落地 159 个 API 映射
-- ✅ 已覆盖 18 个数据库迁移脚本：`V001` 到 `V018`
-- ✅ 已形成“租户 -> 店铺 -> 商品 -> 库存 -> 订单 -> 履约 -> 售后 -> 审批 -> 通知 -> 营销 -> 会员 -> 财务 -> 看板”的完整主链路
+这份文档现在只做两件事：
 
-## 2. 第 1 期：SaaS 与租户基座
+- 保留 API 按阶段分期的历史参考。
+- 告诉你当前应该去哪里看真实 API 状态。
 
-状态：✅ 已完成
+这份文档不再直接回答“现在还缺哪些接口”。
 
-- `POST /api/tenants/register`
-- `POST /api/tenants/{id}/start-trial`
-- `GET /api/subscription-plans`
-- `GET /api/tenants/{id}/subscription`
-- `POST /api/tenants/{id}/subscription/subscribe`
-- `POST /api/tenants/{id}/subscription/renew`
-- `POST /api/tenants/{id}/subscription/upgrade`
-- `POST /api/tenants/{id}/subscription/downgrade`
-- `GET /api/tenants/{id}/quotas`
-- `POST /api/tenants/{id}/quotas/consume`
-- `POST /api/tenants/{id}/seats/purchase`
-- `GET /api/tenants/{id}/billing-orders`
-- `POST /api/tenants/{id}/invoice-requests`
-- `GET /api/tenant/context`
-- `GET /api/admin/tenants`
-- `PUT /api/admin/tenants/{id}/feature-toggles`
-- `POST /api/admin/tenants/{id}/suspend`
-- `POST /api/admin/tenants/{id}/resume`
-- `GET /api/tenant/system/health`
+当前真实 API 状态请优先看：
 
-## 3. 第 2 期：认证、组织与平台协同
+1. [接口规格文档](../../design/interface/01-接口规格文档.md)
+2. [接口示例与字段说明](../../design/interface/02-接口示例与字段说明.md)
+3. [SDD开发任务清单](../process/06-SDD开发任务清单.md)
+4. `backend/src/main/java/backend/**/*Controller.java`
 
-状态：✅ 已完成
+## 2. 当前源码快照结论
 
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/me`
-- `GET /api/organizations`
-- `POST /api/organizations`
-- `GET /api/organizations/{id}/members`
-- `POST /api/organizations/{id}/members/invite`
-- `PUT /api/organizations/{id}/members/{memberId}/role`
-- `GET /api/tenant/audit-logs`
-- `POST /api/admin/support-sessions`
-- `GET /api/admin/support-sessions`
-- `POST /api/admin/support-sessions/{id}/close`
+基于当前源码扫描，项目后端 API 已不是早期基线阶段。
 
-## 4. 第 3 期：店铺、渠道、商品与供应链
+截至 `2026-07-17`，本地源码可见：
 
-状态：✅ 已完成
+- `32` 个 `Controller`
+- `390` 个 `@*Mapping`
 
-### 4.1 店铺与渠道
+这说明：
 
-- `POST /api/stores/connect`
-- `GET /api/stores`
-- `GET /api/stores/{id}`
-- `PUT /api/stores/{id}/settings`
-- `GET /api/channel-accounts`
-- `POST /api/channel-accounts`
-- `POST /api/channel-accounts/{id}/refresh-auth`
+- 这份文档里早期版本记录的接口数量已经是历史数字。
+- 当前项目不能再按 2026-05-31 的 API 台账判断真实覆盖度。
 
-### 4.2 商品与供应商
+## 3. 当前统一口径
 
-- `GET /api/candidate-products`
-- `POST /api/candidate-products`
-- `GET /api/candidate-products/{id}`
-- `PUT /api/candidate-products/{id}`
-- `POST /api/candidate-products/{id}/status`
-- `GET /api/suppliers`
-- `POST /api/suppliers`
-- `GET /api/suppliers/{id}`
-- `PUT /api/suppliers/{id}`
-- `POST /api/suppliers/{id}/set-primary`
-- `POST /api/suppliers/{id}/set-backup`
-- `GET /api/product-drafts`
-- `POST /api/product-drafts/generate`
-- `GET /api/product-drafts/{id}`
-- `PUT /api/product-drafts/{id}`
-- `POST /api/product-drafts/{id}/publish`
+当前 API 层应这样理解：
 
-### 4.3 供应链与库存
+- 阶段 `0-12` 的核心业务 API 已基本形成。
+- 前端需求补完线相关 API 已不再是空白，包括内容素材中心、租户外部集成偏好、经营分析、开放平台执行页等支撑接口。
+- 当前真正主线不是继续补一批基础 CRUD API，而是阶段 `13` 的真实接线与治理 API 收口。
 
-- `GET /api/product-mappings`
-- `POST /api/product-mappings`
-- `POST /api/product-mappings/{id}/switch-supplier`
-- `GET /api/inventory-snapshots`
-- `PUT /api/inventory-snapshots/{id}/safety-stock`
-- `GET /api/replenishment-tasks`
-- `POST /api/replenishment-tasks`
-- `POST /api/replenishment-tasks/{id}/submit-approval`
+## 4. 历史分期参考
 
-## 5. 第 4 期：订单、履约、异常与售后
+下面的分期仍可作为“系统是怎么逐阶段长出来的”参考，但不再直接表示今日完成度。
 
-状态：✅ 已完成
+| 分期 | 历史范围 | 当前理解 |
+| --- | --- | --- |
+| 第 1 期 | SaaS 与租户基座 | 已完成并进入稳定基线 |
+| 第 2 期 | 认证、组织与平台协同 | 已完成并进入稳定基线 |
+| 第 3 期 | 店铺、渠道、商品与供应链 | 已完成并进入稳定基线 |
+| 第 4 期 | 订单、履约、异常与售后 | 已完成并进入稳定基线 |
+| 第 5 期 | 客服、知识库、直播与规则 | 已完成并进入稳定基线 |
+| 第 6 期 | 审批、通知、营销、会员、财务与看板 | 已完成并进入稳定基线 |
+| 后续增强 | 外部集成、观测、交付与治理深化 | 当前真实主线 |
 
-- `GET /api/orders`
-- `GET /api/orders/{id}`
-- `POST /api/orders/sync`
-- `GET /api/fulfillment-tasks`
-- `GET /api/fulfillment-tasks/{id}`
-- `POST /api/fulfillment-tasks/{id}/confirm`
-- `POST /api/fulfillment-tasks/{id}/retry`
-- `GET /api/fulfillment-tasks/{id}/logistics-records`
-- `POST /api/fulfillment-tasks/{id}/logistics-records`
-- `GET /api/exceptions`
-- `GET /api/exceptions/{id}`
-- `POST /api/exceptions/{id}/process`
-- `POST /api/exceptions/{id}/ignore`
-- `POST /api/exceptions/{id}/escalate`
-- `GET /api/tickets`
-- `GET /api/tickets/{id}`
-- `POST /api/tickets/{id}/reply-suggestion`
-- `POST /api/after-sales`
-- `GET /api/after-sales/{id}`
-- `POST /api/after-sales/{id}/submit-approval`
+## 5. 当前值得关注的 API 面
 
-## 6. 第 5 期：客服、知识库、直播与规则
+### 5.1 需求补完与前端支撑 API
 
-状态：✅ 已完成
+当前源码中已能看到这类较新的接口面：
 
-### 6.1 会话与知识库
+- 租户外部集成偏好：
+  - `GET /api/tenant/external-integrations/preferences`
+  - `PUT /api/tenant/external-integrations/preferences`
+- 内容素材与发布闭环：
+  - `POST /api/content-assets/generate`
+  - `POST /api/content-assets/{id}/publish`
+- 路由与外部规划：
+  - `POST /api/tms/external-route-plan`
+  - `POST /api/tms/external-distance-matrix`
 
-- `GET /api/conversations`
-- `GET /api/conversations/{id}`
-- `GET /api/conversations/{id}/messages`
-- `POST /api/conversations/{id}/reply-suggestion`
-- `POST /api/conversations/{id}/send`
-- `POST /api/conversations/{id}/transfer-manual`
-- `GET /api/faq-knowledge`
-- `POST /api/faq-knowledge`
-- `PUT /api/faq-knowledge/{id}`
+### 5.2 阶段 13 管理与开放平台 API
 
-### 6.2 直播计划与会话
+当前主线相关的重要接口面包括：
 
-- `GET /api/live-plans`
-- `POST /api/live-plans`
-- `GET /api/live-plans/{id}`
-- `PUT /api/live-plans/{id}`
-- `GET /api/live-plans/{id}/product-pool`
-- `GET /api/live-plans/{id}/products`
-- `POST /api/live-plans/{id}/products/bind`
-- `DELETE /api/live-plans/{id}/products/{itemId}`
-- `POST /api/live-plans/{id}/generate-script`
-- `POST /api/live-plans/{id}/review-script`
-- `POST /api/live-plans/{id}/review-scene-template`
-- `POST /api/live-plans/{id}/configure-commitment-whitelist`
-- `POST /api/live-plans/{id}/publish`
-- `POST /api/live-plans/{id}/schedule`
-- `POST /api/live-plans/{id}/duplicate`
-- `POST /api/live-plans/{id}/cancel`
-- `GET /api/live-accounts`
-- `POST /api/live-plans/{id}/validate-concurrency`
-- `POST /api/live-plans/{id}/start`
-- `POST /api/live-plans/{id}/pause`
-- `POST /api/live-plans/{id}/resume`
-- `POST /api/live-plans/{id}/stop`
-- `GET /api/live-sessions`
-- `GET /api/live-sessions/{id}/status`
-- `GET /api/live-sessions/concurrency-overview`
-- `POST /api/live-plans/run-due`
-- `POST /api/live-sessions/{id}/simulate-callback`
-- `POST /api/live-sessions/{id}/skip-current-product`
-- `POST /api/live-sessions/{id}/switch-scene`
-- `POST /api/live-sessions/{id}/enable-control-mode`
-- `POST /api/live-sessions/{id}/manual-takeover`
-- `POST /api/live-sessions/{id}/resume-system-mode`
-- `POST /api/live-sessions/{id}/interaction/reply`
-- `POST /api/live-sessions/{id}/interaction/transfer`
-- `POST /api/live-sessions/{id}/commitments/confirm`
-- `POST /api/live-sessions/{id}/commitments/reject`
-- `GET /api/live-sessions/{id}/risk-events`
+- 管理侧 readiness：
+  - `GET /api/admin/tenants/{id}/release-readiness`
+  - `GET /api/admin/tenants/{id}/delivery-readiness`
+  - `GET /api/admin/tenants/{id}/observability-readiness`
+- 开放平台 readiness：
+  - `GET /api/open/external/system/observability-readiness`
+  - 以及对应的外部 baseline / overview / callback-bridge 接口
 
-### 6.3 自动化规则
+这些接口说明当前项目的 API 主线已经切到：
 
-- `GET /api/rules`
-- `POST /api/rules`
-- `PUT /api/rules/{id}`
-- `POST /api/rules/{id}/enable`
-- `POST /api/rules/{id}/disable`
+- 外部系统 readiness
+- 观测 readiness
+- 交付 readiness
+- 双环境验收相关门禁
 
-## 7. 第 6 期：审批、通知、营销、会员、财务与看板
+## 6. 当前仍未完成的 API 级缺口
 
-状态：✅ 已完成
+当前 API 层的真实缺口，不是“有没有接口骨架”，而是以下几类是否完成真实接线和真实治理：
 
-### 7.1 审批中心
+1. 外部系统真实接线 API。
+2. 观测平台真实接线 API。
+3. 发布与交付链路真实接线 API。
+4. 标准 SaaS / 私有化双环境真实验收 API。
 
-- `GET /api/approvals`
-- `POST /api/approvals`
-- `GET /api/approvals/{id}`
-- `POST /api/approvals/{id}/approve`
-- `POST /api/approvals/{id}/reject`
-- `POST /api/approvals/{id}/transfer`
+开放平台更细粒度 `scope` 拆分、防串租户校验收口、插件中心治理深化已在 `GOV-01 / GOV-02 / GOV-03` 中收口，不再列为当前缺口。
 
-### 7.2 通知中心
+## 7. 如何继续维护
 
-- `GET /api/notifications`
-- `POST /api/notifications/send`
-- `POST /api/notifications/batch-send`
-- `POST /api/notifications/{id}/retry`
-- `POST /api/notifications/run-due`
-- `GET /api/notification-templates`
-- `PUT /api/notification-templates/{id}`
+从现在开始，这份文档只保留：
 
-### 7.3 营销活动中心
+- 历史分期视角
+- 当前 API 口径入口
+- 当前 API 主线与缺口摘要
 
-- `GET /api/campaigns`
-- `POST /api/campaigns`
-- `GET /api/campaigns/{id}`
-- `PUT /api/campaigns/{id}`
-- `POST /api/campaigns/{id}/submit-approval`
-- `POST /api/campaigns/{id}/publish`
-- `GET /api/coupon-templates`
-- `POST /api/coupon-templates`
+不再继续维护：
 
-### 7.4 会员中心
+- 长篇 endpoint 罗列
+- 过期的 API 数量统计
+- 旧的“状态：未完成”式口径
+- 与 `02 / 05 / 06` 冲突的当前进度判断
 
-- `GET /api/members`
-- `GET /api/members/{id}`
-- `POST /api/members/{id}/tags`
-- `DELETE /api/members/{id}/tags/{tagId}`
-- `GET /api/member-tags`
-- `POST /api/member-groups/export`
-
-### 7.5 财务中心
-
-- `GET /api/finance-bills`
-- `POST /api/finance-bills/generate`
-- `GET /api/finance-bills/{id}`
-- `POST /api/finance-bills/{id}/reconcile`
-- `POST /api/finance-bills/{id}/settle`
-
-### 7.6 经营看板
-
-- `GET /api/dashboard/summary`
-- `GET /api/dashboard/trends`
-- `GET /api/dashboard/risks`
-- `GET /api/dashboard/campaign-analysis`
-- `GET /api/dashboard/member-analysis`
-
-## 8. 后续增强 API
-
-状态：未完成
-
-- 通知网关增强 API：真实短信、邮件、飞书、企微通道实接与回执回写
-- 监控运营增强 API：指标导出、告警回调、巡检任务结果回写
-- 财税外部增强 API：发票归档、分账清分、财务凭证对接
-
-## 9. 关联文档
+如果需要看精确接口，请直接回到：
 
 - [接口规格文档](../../design/interface/01-接口规格文档.md)
 - [接口示例与字段说明](../../design/interface/02-接口示例与字段说明.md)
-- [数据库表结构设计文档](../../design/data/02-数据库表结构设计文档.md)
-- [SDD 开发任务清单](../process/06-SDD开发任务清单.md)
+- `backend/src/main/java/backend/**/*Controller.java`

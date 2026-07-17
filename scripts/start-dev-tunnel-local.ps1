@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("server-local", "tunnel-local")]
+    [ValidateSet("server-local", "tunnel-local", "standalone-local")]
     [string]$Mode = "server-local",
 
     [string]$SshUser,
@@ -114,6 +114,91 @@ function Set-EnvDefault {
     Write-Host ("Using local startup default for {0}." -f $Name)
 }
 
+function Resolve-JavaHome {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PreferredJavaHome
+    )
+
+    if (Test-Path -LiteralPath $PreferredJavaHome) {
+        return $PreferredJavaHome
+    }
+
+    $javaCommand = Get-Command java -ErrorAction SilentlyContinue
+    if ($null -ne $javaCommand -and -not [string]::IsNullOrWhiteSpace($javaCommand.Source)) {
+        $javaBin = Split-Path -Parent $javaCommand.Source
+        $detectedJavaHome = Split-Path -Parent $javaBin
+        if (Test-Path -LiteralPath $detectedJavaHome) {
+            Write-Host ("JAVA_HOME fallback to detected JDK: {0}" -f $detectedJavaHome)
+            return $detectedJavaHome
+        }
+    }
+
+    throw "JAVA_HOME does not exist and no fallback java executable was found: $PreferredJavaHome"
+}
+
+function Ensure-MavenRepoAlias {
+    $aliasPath = "E:\ideaCode\dianShangPingTai\backend\target\m2repo"
+    $preferredTarget = "E:\开发工具\maven\repository"
+    $aliasParent = Split-Path -Parent $aliasPath
+
+    if (-not (Test-Path -LiteralPath $aliasParent)) {
+        New-Item -ItemType Directory -Path $aliasParent -Force | Out-Null
+    }
+
+    if (Test-Path -LiteralPath $aliasPath) {
+        return $aliasPath
+    }
+
+    if (Test-Path -LiteralPath $preferredTarget) {
+        New-Item -ItemType Junction -Path $aliasPath -Target $preferredTarget | Out-Null
+        Write-Host ("Using ASCII Maven repo alias: {0}" -f $aliasPath)
+        return $aliasPath
+    }
+
+    New-Item -ItemType Directory -Path $aliasPath -Force | Out-Null
+    Write-Host ("Using local ASCII Maven repo directory: {0}" -f $aliasPath)
+    return $aliasPath
+}
+
+function Test-StandaloneJarNeedsRebuild {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$JarPath
+    )
+
+    if (-not (Test-Path -LiteralPath $JarPath)) {
+        return $true
+    }
+
+    $jarTimestamp = (Get-Item -LiteralPath $JarPath).LastWriteTimeUtc
+    $watchTargets = @(
+        "backend\pom.xml",
+        "backend\src\main",
+        "backend\src\main\resources"
+    )
+
+    foreach ($target in $watchTargets) {
+        if (-not (Test-Path -LiteralPath $target)) {
+            continue
+        }
+
+        $item = Get-Item -LiteralPath $target
+        if ($item.PSIsContainer) {
+            $newestChild = Get-ChildItem -LiteralPath $target -Recurse -File |
+                Sort-Object LastWriteTimeUtc -Descending |
+                Select-Object -First 1
+            if ($null -ne $newestChild -and $newestChild.LastWriteTimeUtc -gt $jarTimestamp) {
+                return $true
+            }
+        } elseif ($item.LastWriteTimeUtc -gt $jarTimestamp) {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 if ($Mode -eq "tunnel-local") {
     if (-not $SshUser) {
         throw "SshUser is required when Mode=tunnel-local."
@@ -155,7 +240,7 @@ if ($Mode -eq "tunnel-local") {
     } else {
         Write-Host "Detected ready local tunnel ports. Skipping tunnel creation."
     }
-} else {
+} elseif ($Mode -eq "server-local") {
     if (-not (Wait-PortReady -Port $RemotePostgresPort)) {
         throw "Local PostgreSQL port $RemotePostgresPort is not ready. Please start the local Docker database first."
     }
@@ -172,15 +257,33 @@ if ($SkipAppStart) {
     return
 }
 
-if (-not (Test-Path -LiteralPath $JavaHome)) {
-    throw "JAVA_HOME does not exist: $JavaHome"
-}
-
-$env:JAVA_HOME = $JavaHome
-$env:Path = "$JavaHome\bin;$env:Path"
+$resolvedJavaHome = Resolve-JavaHome -PreferredJavaHome $JavaHome
+$env:JAVA_HOME = $resolvedJavaHome
+$env:Path = "$resolvedJavaHome\bin;$env:Path"
 
 Set-EnvDefault -Name "APP_AUTH_TOKEN_SECRET" -Value "server-local-token-secret-1234567890"
 Set-EnvDefault -Name "APP_AUTH_BOOTSTRAP_PASSWORD" -Value "server-local-bootstrap-password-123"
+
+$mavenRepoPath = Ensure-MavenRepoAlias
+$mavenRepoArg = "-Dmaven.repo.local=$mavenRepoPath"
+
+$standaloneJar = "backend\target\dianShangPingTai-1.0.0-SNAPSHOT.jar"
+if ($Mode -eq "standalone-local") {
+    Set-EnvDefault -Name "MANAGEMENT_HEALTH_REDIS_ENABLED" -Value "false"
+    if (Test-StandaloneJarNeedsRebuild -JarPath $standaloneJar) {
+        Write-Host "Standalone backend jar is missing or stale. Packaging backend jar first."
+        & mvn $mavenRepoArg -q -f backend/pom.xml -DskipTests package
+        if ($LASTEXITCODE -ne 0) {
+            throw "Standalone backend package failed."
+        }
+    } else {
+        Write-Host "Using existing standalone backend jar."
+    }
+
+    Write-Host "Starting standalone backend jar with default profile."
+    & java -jar $standaloneJar
+    exit $LASTEXITCODE
+}
 
 $profiles = $Mode
 if ($EnableStage13Local) {
@@ -188,4 +291,4 @@ if ($EnableStage13Local) {
 }
 
 Write-Host ("Starting Spring Boot with profiles={0}." -f $profiles)
-& mvn spring-boot:run "-Dspring-boot.run.profiles=$profiles"
+& mvn $mavenRepoArg -f backend/pom.xml spring-boot:run "-Dspring-boot.run.profiles=$profiles"

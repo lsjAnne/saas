@@ -1,0 +1,84 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --color-ink-strong: #241b14;
+  --color-ink: #47382b;
+  --color-ink-soft: #746558;
+  --color-ink-faint: #9e8f81;
+  --color-surface: #f7f1e9;
+  --color-surface-2: #f1e8de;
+  --color-surface-3: #fffdfa;
+  --color-panel: rgba(255, 251, 245, 0.78);
+  --color-panel-strong: #fffaf4;
+  --color-sidebar-top: #4a3a2d;
+  --color-sidebar-bottom: #241b14;
+  --color-line: rgba(91, 72, 54, 0.12);
+  --color-line-strong: rgba(91, 72, 54, 0.2);
+  --color-accent: #856243;
+  --color-accent-soft: #d9c0a3;
+  --color-success: #2f6d53;
+  --color-warning: #b7752f;
+  --color-danger: #a14534;
+  --shadow-soft: 0 18px 60px rgba(58, 43, 28, 0.12);
+  --shadow-card: 0 14px 40px rgba(58, 43, 28, 0.1);
+  --radius-shell: 30px;
+  --radius-xl: 24px;
+  --radius-lg: 20px;
+  --radius-md: 16px;
+  --radius-pill: 999px;
+  --transition-fast: 180ms ease;
+  --transition-medium: 260ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(circle at top left, rgba(220, 205, 188, 0.55), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(216, 192, 163, 0.42), transparent 24%),
+    linear-gradient(135deg, #faf6f1 0%, #f2eadf 48%, #ece2d6 100%);
+  background-attachment: fixed;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+#app {
+  isolation: isolate;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

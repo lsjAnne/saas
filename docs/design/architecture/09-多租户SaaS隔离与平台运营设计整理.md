@@ -22,7 +22,7 @@
 - 租户侧接口默认只能访问当前租户数据，最终 `tenantId` 必须以后端登录态解析结果为准
 - 平台侧接口与租户侧接口必须分开命名空间，不能通过同一个接口传参切换租户
 - 开放平台外部接口必须通过应用凭据反查租户归属，不能依赖调用方自带 `tenantId`
-- 开放平台外部应用“有凭据”不等于“有权限”，外部 ERP 读取接口还必须通过 `permissionScope` 授权，当前统一要求 `finance.read`
+- 开放平台外部应用“有凭据”不等于“有权限”，外部 ERP 读取接口还必须通过 `permissionScope` 授权，当前已按主数据、科目映射、集成基线等能力拆成细粒度 scope
 - 日志、导出、缓存、任务、消息、回调都必须带 `tenant_id`
 - 平台运营默认看经营摘要、订阅状态和平台操作日志，不直接看租户业务明细
 - 平台需要进入租户业务详情时，必须先创建支持会话（support session）
@@ -65,7 +65,7 @@
 - 后端 Repository 默认带 `tenant_id` 查询条件
 - 只有平台后台白名单仓储允许跨租户检索
 - 开放平台外部读取接口必须以后端根据 `X-Open-App-Key` / `X-Open-App-Secret` 解析出的租户为准，不接受额外租户覆盖
-- `/api/open/external/erp/*` 在租户解析成功后仍需校验 `permissionScope`，当前缺少 `finance.read` 必须拒绝访问
+- `/api/open/external/erp/*` 在租户解析成功后仍需校验 `permissionScope`，当前缺少对应细粒度 scope 必须拒绝访问
 
 ## 6. 日志与审计设计
 ### 6.1 日志隔离原则
@@ -143,7 +143,7 @@
 - 平台运营无支持会话（support session）时不能进入租户业务详情
 - 支持会话（support session）过期后再访问必须返回无权限
 - 缓存、导出、异步任务、回调日志不能发生串租户
-- 外部应用缺少 `finance.read` 时，不能读取 `/api/open/external/erp/*` 的任何租户数据
+- 外部应用缺少对应细粒度 scope 时，不能读取 `/api/open/external/erp/*` 的任何租户数据
 - 开放平台拒绝样例需要能从调用日志中抽查到 `rejected_scope`、`rejected_secret` 或 `rejected_replay`
 
 ## 10. 控制分级

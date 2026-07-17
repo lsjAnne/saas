@@ -58,16 +58,18 @@ jobs:
           cache: maven
 
       - name: Maven test
+        working-directory: backend
         run: mvn -B test
 
       - name: Maven package
+        working-directory: backend
         run: mvn -B -DskipTests package
 
       - name: Upload jar artifact
         uses: actions/upload-artifact@v4
         with:
           name: backend-jar
-          path: target/dianShangPingTai-1.0.0-SNAPSHOT.jar
+          path: backend/target/dianShangPingTai-1.0.0-SNAPSHOT.jar
 
   build-image:
     needs: test-and-package
@@ -84,7 +86,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-jar
-          path: target
+          path: backend/target
 
       - name: Resolve image tag
         id: image-meta

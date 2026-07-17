@@ -37,6 +37,13 @@ build/
 
 ### Local Tools ###
 .tools/
+.superpowers/
+.playwright-cli/
+frontend/node_modules/
+frontend/dist/
+frontend/.tmp-*/
+frontend/.tmp-*.log
+frontend/.tmp-*.json
 
 ### Mac OS ###
 .DS_Store

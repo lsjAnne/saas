@@ -1,0 +1,383 @@
+package backend.fulfillment.controller;
+
+import backend.common.api.ApiResponse;
+import backend.common.trace.TraceIdHolder;
+import backend.auth.security.AuthPermissionCodes;
+import backend.fulfillment.application.FulfillmentService;
+import backend.fulfillment.application.FulfillmentService.ControlTowerView;
+import backend.fulfillment.application.FulfillmentService.ExternalDistanceMatrixView;
+import backend.fulfillment.application.FulfillmentService.ExternalRoutePlanView;
+import backend.fulfillment.application.FulfillmentService.FreightSettlementRecord;
+import backend.fulfillment.application.FulfillmentService.FulfillmentReplayView;
+import backend.fulfillment.application.FulfillmentService.ReverseLogisticsRecord;
+import backend.fulfillment.application.FulfillmentService.TmsCarrier;
+import backend.fulfillment.application.FulfillmentService.TmsShipment;
+import backend.fulfillment.application.FulfillmentService.TmsTrackingEvent;
+import backend.fulfillment.dto.CreateLogisticsRecordRequest;
+import backend.fulfillment.model.FulfillmentTask;
+import backend.fulfillment.model.LogisticsRecord;
+import backend.tenant.context.TenantAccessSupport;
+import backend.auth.security.RequireTenantPermission;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@RestController
+@RequireTenantPermission(AuthPermissionCodes.FULFILLMENT_MANAGE)
+public class FulfillmentController {
+
+    private final FulfillmentService fulfillmentService;
+
+    public FulfillmentController(FulfillmentService fulfillmentService) {
+        this.fulfillmentService = fulfillmentService;
+    }
+
+    @GetMapping("/api/fulfillment-tasks")
+    public ApiResponse<List<FulfillmentTask>> listTasks() {
+        return ApiResponse.success(
+                fulfillmentService.listTasks(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/fulfillment-tasks/{id}")
+    public ApiResponse<FulfillmentTask> getTask(@PathVariable String id) {
+        return ApiResponse.success(
+                fulfillmentService.getTask(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/fulfillment-tasks/{id}/confirm")
+    public ApiResponse<FulfillmentTask> confirmTask(@PathVariable String id) {
+        return ApiResponse.success(
+                fulfillmentService.confirmTask(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/fulfillment-tasks/{id}/retry")
+    public ApiResponse<FulfillmentTask> retryTask(@PathVariable String id) {
+        return ApiResponse.success(
+                fulfillmentService.retryTask(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/fulfillment-tasks/{id}/exception-replay")
+    public ApiResponse<FulfillmentReplayView> replayException(@PathVariable String id) {
+        return ApiResponse.success(
+                fulfillmentService.replayException(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/fulfillment-tasks/{id}/logistics-records")
+    public ApiResponse<List<LogisticsRecord>> listLogisticsRecords(@PathVariable String id) {
+        return ApiResponse.success(
+                fulfillmentService.listLogisticsRecords(TenantAccessSupport.requiredTenantId(), id),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/fulfillment-tasks/{id}/logistics-records")
+    public ApiResponse<LogisticsRecord> createLogisticsRecord(@PathVariable String id,
+                                                              @Valid @RequestBody CreateLogisticsRecordRequest request) {
+        return ApiResponse.success(
+                fulfillmentService.createLogisticsRecord(TenantAccessSupport.requiredTenantId(), id, request),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/carriers")
+    public ApiResponse<TmsCarrier> createCarrier(@Valid @RequestBody CreateTmsCarrierRequest request) {
+        return ApiResponse.success(
+                fulfillmentService.createCarrier(
+                        TenantAccessSupport.requiredTenantId(),
+                        TenantAccessSupport.requiredContext().operatorId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/shipments")
+    public ApiResponse<TmsShipment> createShipment(@Valid @RequestBody CreateTmsShipmentRequest request) {
+        return ApiResponse.success(
+                fulfillmentService.createShipment(
+                        TenantAccessSupport.requiredTenantId(),
+                        TenantAccessSupport.requiredContext().operatorId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/shipments/{id}/tracking-events")
+    public ApiResponse<TmsTrackingEvent> createTrackingEvent(@PathVariable String id,
+                                                             @Valid @RequestBody CreateTmsTrackingEventRequest request) {
+        return ApiResponse.success(
+                fulfillmentService.createTrackingEvent(
+                        TenantAccessSupport.requiredTenantId(),
+                        TenantAccessSupport.requiredContext().operatorId(),
+                        id,
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/freight-settlements")
+    public ApiResponse<FreightSettlementRecord> createFreightSettlement(
+            @Valid @RequestBody CreateFreightSettlementRequest request
+    ) {
+        return ApiResponse.success(
+                fulfillmentService.createFreightSettlement(
+                        TenantAccessSupport.requiredTenantId(),
+                        TenantAccessSupport.requiredContext().operatorId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/shipments/{id}/sign-off")
+    public ApiResponse<TmsShipment> signOffShipment(@PathVariable String id,
+                                                    @Valid @RequestBody SignOffShipmentRequest request) {
+        return ApiResponse.success(
+                fulfillmentService.signOffShipment(
+                        TenantAccessSupport.requiredTenantId(),
+                        TenantAccessSupport.requiredContext().operatorId(),
+                        id,
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/reverse-logistics")
+    public ApiResponse<ReverseLogisticsRecord> createReverseLogistics(
+            @Valid @RequestBody CreateReverseLogisticsRequest request
+    ) {
+        return ApiResponse.success(
+                fulfillmentService.createReverseLogistics(
+                        TenantAccessSupport.requiredTenantId(),
+                        TenantAccessSupport.requiredContext().operatorId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @GetMapping("/api/tms/control-tower")
+    public ApiResponse<ControlTowerView> getControlTower() {
+        return ApiResponse.success(
+                fulfillmentService.getControlTower(TenantAccessSupport.requiredTenantId()),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/external-route-plan")
+    public ApiResponse<ExternalRoutePlanView> planExternalRoute(@Valid @RequestBody ExternalRoutePlanRequest request) {
+        return ApiResponse.success(
+                fulfillmentService.planExternalRoute(
+                        TenantAccessSupport.requiredTenantId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    @PostMapping("/api/tms/external-distance-matrix")
+    public ApiResponse<ExternalDistanceMatrixView> calculateExternalDistanceMatrix(
+            @Valid @RequestBody ExternalDistanceMatrixRequest request
+    ) {
+        return ApiResponse.success(
+                fulfillmentService.calculateExternalDistanceMatrix(
+                        TenantAccessSupport.requiredTenantId(),
+                        request.toCommand()
+                ),
+                TraceIdHolder.get()
+        );
+    }
+
+    public record CreateTmsCarrierRequest(
+            @NotBlank(message = "storeId is required")
+            String storeId,
+            @NotBlank(message = "carrierName is required")
+            String carrierName,
+            @NotBlank(message = "carrierCode is required")
+            String carrierCode,
+            @NotBlank(message = "channelType is required")
+            String channelType,
+            @NotBlank(message = "serviceScope is required")
+            String serviceScope
+    ) {
+        FulfillmentService.CreateTmsCarrierCommand toCommand() {
+            return new FulfillmentService.CreateTmsCarrierCommand(
+                    storeId,
+                    carrierName,
+                    carrierCode,
+                    channelType,
+                    serviceScope
+            );
+        }
+    }
+
+    public record CreateTmsShipmentRequest(
+            @NotBlank(message = "fulfillmentTaskId is required")
+            String fulfillmentTaskId,
+            @NotBlank(message = "carrierId is required")
+            String carrierId,
+            @NotBlank(message = "shippingMode is required")
+            String shippingMode,
+            @NotNull(message = "freightAmount is required")
+            @DecimalMin(value = "0.01", message = "freightAmount must be greater than 0")
+            BigDecimal freightAmount,
+            @NotBlank(message = "originCity is required")
+            String originCity,
+            @NotBlank(message = "destinationCity is required")
+            String destinationCity
+    ) {
+        FulfillmentService.CreateTmsShipmentCommand toCommand() {
+            return new FulfillmentService.CreateTmsShipmentCommand(
+                    fulfillmentTaskId,
+                    carrierId,
+                    shippingMode,
+                    freightAmount,
+                    originCity,
+                    destinationCity
+            );
+        }
+    }
+
+    public record CreateTmsTrackingEventRequest(
+            @NotBlank(message = "trackingStatus is required")
+            String trackingStatus,
+            @NotBlank(message = "locationText is required")
+            String locationText,
+            String remark
+    ) {
+        FulfillmentService.CreateTmsTrackingEventCommand toCommand() {
+            return new FulfillmentService.CreateTmsTrackingEventCommand(
+                    trackingStatus,
+                    locationText,
+                    remark
+            );
+        }
+    }
+
+    public record CreateFreightSettlementRequest(
+            @NotBlank(message = "shipmentId is required")
+            String shipmentId,
+            @NotBlank(message = "settleMode is required")
+            String settleMode,
+            @NotBlank(message = "costType is required")
+            String costType,
+            @NotNull(message = "billableWeight is required")
+            @DecimalMin(value = "0.01", message = "billableWeight must be greater than 0")
+            BigDecimal billableWeight,
+            @NotNull(message = "freightAmount is required")
+            @DecimalMin(value = "0.01", message = "freightAmount must be greater than 0")
+            BigDecimal freightAmount
+    ) {
+        FulfillmentService.CreateFreightSettlementCommand toCommand() {
+            return new FulfillmentService.CreateFreightSettlementCommand(
+                    shipmentId,
+                    settleMode,
+                    costType,
+                    billableWeight,
+                    freightAmount
+            );
+        }
+    }
+
+    public record SignOffShipmentRequest(
+            @NotBlank(message = "signStatus is required")
+            String signStatus,
+            @NotBlank(message = "proofType is required")
+            String proofType,
+            String remark
+    ) {
+        FulfillmentService.SignOffShipmentCommand toCommand() {
+            return new FulfillmentService.SignOffShipmentCommand(signStatus, proofType, remark);
+        }
+    }
+
+    public record CreateReverseLogisticsRequest(
+            @NotBlank(message = "orderId is required")
+            String orderId,
+            @NotBlank(message = "shipmentId is required")
+            String shipmentId,
+            @NotBlank(message = "carrierId is required")
+            String carrierId,
+            @NotBlank(message = "reverseType is required")
+            String reverseType,
+            String remark
+    ) {
+        FulfillmentService.CreateReverseLogisticsCommand toCommand() {
+            return new FulfillmentService.CreateReverseLogisticsCommand(
+                    orderId,
+                    shipmentId,
+                    carrierId,
+                    reverseType,
+                remark
+            );
+        }
+    }
+
+    public record ExternalRoutePlanRequest(
+            @NotNull(message = "originLongitude is required")
+            Double originLongitude,
+            @NotNull(message = "originLatitude is required")
+            Double originLatitude,
+            @NotNull(message = "destinationLongitude is required")
+            Double destinationLongitude,
+            @NotNull(message = "destinationLatitude is required")
+            Double destinationLatitude,
+            String profile
+    ) {
+        FulfillmentService.CreateExternalRoutePlanCommand toCommand() {
+            return new FulfillmentService.CreateExternalRoutePlanCommand(
+                    originLongitude,
+                    originLatitude,
+                    destinationLongitude,
+                    destinationLatitude,
+                    profile
+            );
+        }
+    }
+
+    public record ExternalDistanceMatrixRequest(
+            @Size(min = 2, message = "coordinates must contain at least two points")
+            List<@Valid RoutingCoordinateRequest> coordinates,
+            String profile
+    ) {
+        FulfillmentService.CreateExternalDistanceMatrixCommand toCommand() {
+            return new FulfillmentService.CreateExternalDistanceMatrixCommand(
+                    coordinates == null ? List.of() : coordinates.stream()
+                            .map(RoutingCoordinateRequest::toCommand)
+                            .toList(),
+                    profile
+            );
+        }
+    }
+
+    public record RoutingCoordinateRequest(
+            @NotNull(message = "longitude is required")
+            Double longitude,
+            @NotNull(message = "latitude is required")
+            Double latitude
+    ) {
+        FulfillmentService.RoutingCoordinateInput toCommand() {
+            return new FulfillmentService.RoutingCoordinateInput(longitude, latitude);
+        }
+    }
+}
+
