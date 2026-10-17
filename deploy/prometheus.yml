@@ -1,0 +1,14 @@
+# Prometheus 抓取配置 —— 观测基线
+# 抓取后端 actuator 暴露的 prometheus 指标端点（management.endpoints.web.exposure.include 含 prometheus）
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'dian-shang-ping-tai'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['app:8080']
+        labels:
+          application: 'dian-shang-ping-tai'
+          tier: 'backend'

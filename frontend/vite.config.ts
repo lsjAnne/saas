@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url';
 
 import { defineConfig, loadEnv } from 'vite';
@@ -23,6 +24,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true
         }
       }
+    },
+    test: {
+      environment: 'jsdom',
+      include: ['src/**/*.spec.ts'],
+      globals: false
     }
   };
 });

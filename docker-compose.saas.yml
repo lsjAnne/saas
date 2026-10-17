@@ -63,6 +63,19 @@ services:
       - "18080:8080"
     restart: unless-stopped
 
+  # 前端静态资源 + 同源反代（nginx）。外部访问走 web:80，API 由 nginx 反代到 app:8080
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: ${WEB_IMAGE_NAME:-dian-shang-ping-tai-web:saas}
+    depends_on:
+      app:
+        condition: service_started
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -87,3 +100,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 6
+
+  # 观测基线：Prometheus 抓取 app 的 /actuator/prometheus
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    depends_on:
+      app:
+        condition: service_started
+    restart: unless-stopped
+
+  # 观测基线：Grafana 可视化（自动预置 Prometheus 数据源）
+  grafana:
+    image: grafana/grafana:11.1.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-grafana-admin-change-me}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped

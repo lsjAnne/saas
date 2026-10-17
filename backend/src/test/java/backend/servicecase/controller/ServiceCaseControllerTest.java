@@ -176,6 +176,75 @@ class ServiceCaseControllerTest {
                 .andExpect(jsonPath("$.data.order.orderStatus").value("after_sale"));
     }
 
+    @Test
+    void shouldExposeTicketSlaOverviewAndSaveSatisfaction() throws Exception {
+        ServiceCaseFixture fixture = prepareFixture();
+
+        MvcResult syncResult = mockMvc.perform(post("/api/orders/sync")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeId": "%s",
+                                  "platformOrderId": "dy-order-sla-1",
+                                  "productId": "%s",
+                                  "quantity": 1,
+                                  "unitPrice": 89.00
+                                }
+                                """.formatted(fixture.storeId(), fixture.productId())))
+                .andExpect(status().isOk())
+                .andReturn();
+        String orderId = objectMapper.readTree(syncResult.getResponse().getContentAsString())
+                .path("data")
+                .path("orderId")
+                .asText();
+
+        String handledTicketId = serviceCaseService.createTicketSeed(
+                        fixture.tenantId(), fixture.storeId(), orderId, "customer-sla-001", false)
+                .ticketId();
+        serviceCaseService.generateReplySuggestion(fixture.tenantId(), handledTicketId);
+        serviceCaseService.createTicketSeed(
+                fixture.tenantId(), fixture.storeId(), orderId, "customer-sla-002", true);
+
+        mockMvc.perform(get("/api/tickets/sla-overview")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .param("storeId", fixture.storeId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalTicketCount").value(2))
+                .andExpect(jsonPath("$.data.withinSlaCount").value(1))
+                .andExpect(jsonPath("$.data.overdueTicketCount").value(0))
+                .andExpect(jsonPath("$.data.averageFirstResponseMinutes").isNumber())
+                .andExpect(jsonPath("$.data.satisfactionCount").value(0));
+
+        mockMvc.perform(post("/api/tickets/{id}/satisfaction", handledTicketId)
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "score": 5,
+                                  "comment": "resolved within SLA"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.ticketId").value(handledTicketId))
+                .andExpect(jsonPath("$.data.score").value(5))
+                .andExpect(jsonPath("$.data.comment").value("resolved within SLA"));
+
+        mockMvc.perform(get("/api/tickets/sla-overview")
+                        .header("X-Tenant-Id", fixture.tenantId())
+                        .header("X-Operator-Id", "tenant-admin")
+                        .header("X-Operator-Type", "tenant-admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.satisfactionCount").value(1))
+                .andExpect(jsonPath("$.data.averageSatisfactionScore").isNumber());
+    }
+
     private ServiceCaseFixture prepareFixture() throws Exception {
         MvcResult tenantResult = mockMvc.perform(post("/api/tenants/register")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -75,9 +75,9 @@ app:
       executed-at: ${APP_RELEASE_AUTOMATION_EVIDENCE_EXECUTED_AT:}
       summary: ${APP_RELEASE_AUTOMATION_EVIDENCE_SUMMARY:}
   auth:
-    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-token-secret-please-override-2026}
     token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
-    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:dev-bootstrap-password-2026}
     require-explicit-secrets: false
     bootstrap-admin-username: ${APP_AUTH_BOOTSTRAP_ADMIN_USERNAME:}
     bootstrap-admin-password: ${APP_AUTH_BOOTSTRAP_ADMIN_PASSWORD:}
@@ -222,10 +222,10 @@ spring:
     activate:
       on-profile: postgres
   datasource:
-    url: jdbc:postgresql://192.168.112.101:5432/dian_shang_ping_tai
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${SPRING_DATASOURCE_HOST:localhost}:5432/${SPRING_DATASOURCE_DB:dian_shang_ping_tai}}
     driver-class-name: org.postgresql.Driver
-    username: root
-    password: 123456
+    username: ${SPRING_DATASOURCE_USERNAME:}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
   sql:
     init:
       mode: always
@@ -262,9 +262,9 @@ app:
     verify-on-startup: true
     tenant-key-prefix: dsp
   auth:
-    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-secret: ${APP_AUTH_TOKEN_SECRET:}
     token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
-    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:}
     require-explicit-secrets: true
 
 ---
@@ -318,9 +318,9 @@ app:
     verify-on-startup: true
     tenant-key-prefix: dsp
   auth:
-    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-secret: ${APP_AUTH_TOKEN_SECRET:}
     token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
-    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:}
     require-explicit-secrets: true
 
 ---
@@ -374,9 +374,9 @@ app:
     verify-on-startup: true
     tenant-key-prefix: dsp
   auth:
-    token-secret: ${APP_AUTH_TOKEN_SECRET:local-dev-auth-token-secret-change-me}
+    token-secret: ${APP_AUTH_TOKEN_SECRET:}
     token-expire-seconds: ${APP_AUTH_TOKEN_EXPIRE_SECONDS:43200}
-    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:123456}
+    bootstrap-password: ${APP_AUTH_BOOTSTRAP_PASSWORD:}
     require-explicit-secrets: true
 
 ---

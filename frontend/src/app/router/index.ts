@@ -1,34 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import ApprovalCenterPage from '@/pages/ApprovalCenterPage.vue';
-import AuditExportPage from '@/pages/AuditExportPage.vue';
-import BusinessAnalyticsPage from '@/pages/BusinessAnalyticsPage.vue';
-import BusinessAssistantPage from '@/pages/BusinessAssistantPage.vue';
-import CampaignCenterPage from '@/pages/CampaignCenterPage.vue';
-import ContentAssetCenterPage from '@/pages/ContentAssetCenterPage.vue';
-import CustomerServiceAssistantPage from '@/pages/CustomerServiceAssistantPage.vue';
-import CustomerServiceCenterPage from '@/pages/CustomerServiceCenterPage.vue';
-import TenantConsoleLayout from '@/app/layouts/TenantConsoleLayout.vue';
-import DashboardHomePage from '@/pages/DashboardHomePage.vue';
-import ExceptionCenterPage from '@/pages/ExceptionCenterPage.vue';
-import FinanceSettlementCenterPage from '@/pages/FinanceSettlementCenterPage.vue';
-import InventoryReplenishmentCenterPage from '@/pages/InventoryReplenishmentCenterPage.vue';
-import LiveOperationsPage from '@/pages/LiveOperationsPage.vue';
-import LoginPage from '@/pages/LoginPage.vue';
-import MemberCrmCenterPage from '@/pages/MemberCrmCenterPage.vue';
-import NotificationsCenterPage from '@/pages/NotificationsCenterPage.vue';
-import OpenPlatformPage from '@/pages/OpenPlatformPage.vue';
-import OrderFulfillmentCenterPage from '@/pages/OrderFulfillmentCenterPage.vue';
-import OrganizationMembersPage from '@/pages/OrganizationMembersPage.vue';
-import PlatformAdminPage from '@/pages/PlatformAdminPage.vue';
-import ProductCenterPage from '@/pages/ProductCenterPage.vue';
-import ProductMappingCenterPage from '@/pages/ProductMappingCenterPage.vue';
-import StoreChannelCenterPage from '@/pages/StoreChannelCenterPage.vue';
-import SubscriptionBillingPage from '@/pages/SubscriptionBillingPage.vue';
-import SupplierCenterPage from '@/pages/SupplierCenterPage.vue';
-import SupportWorkbenchPage from '@/pages/SupportWorkbenchPage.vue';
-import SystemSettingsPage from '@/pages/SystemSettingsPage.vue';
-import TenantCenterPage from '@/pages/TenantCenterPage.vue';
 import { useAuthStore } from '@/stores/authStore';
 
 type ConsoleRouteMeta = {
@@ -52,7 +23,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'dashboard',
     name: 'dashboard',
-    component: DashboardHomePage,
+    component: () => import('@/pages/DashboardHomePage.vue'),
     meta: {
       title: '经营首页',
       subtitle: '追踪经营趋势、活动回报与关键风险信号',
@@ -66,7 +37,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'business-analytics',
     name: 'business-analytics',
-    component: BusinessAnalyticsPage,
+    component: () => import('@/pages/BusinessAnalyticsPage.vue'),
     meta: {
       title: '经营分析',
       subtitle: '把销售趋势、毛利趋势、商品排行、异常分布、活动效果与会员复购收成统一经营诊断台',
@@ -80,7 +51,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'business-assistant',
     name: 'business-assistant',
-    component: BusinessAssistantPage,
+    component: () => import('@/pages/BusinessAssistantPage.vue'),
     meta: {
       title: '经营助手',
       subtitle: '承接推荐中心、风险解释和执行跳转，让首页之后立即进入可行动的决策视图',
@@ -94,7 +65,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'product-center',
     name: 'product-center',
-    component: ProductCenterPage,
+    component: () => import('@/pages/ProductCenterPage.vue'),
     meta: {
       title: '\u5546\u54c1\u4e2d\u5fc3',
       subtitle:
@@ -114,7 +85,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'product-mapping-center',
     name: 'product-mapping-center',
-    component: ProductMappingCenterPage,
+    component: () => import('@/pages/ProductMappingCenterPage.vue'),
     meta: {
       title: '商品与货源映射',
       subtitle:
@@ -130,7 +101,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'content-asset-center',
     name: 'content-asset-center',
-    component: ContentAssetCenterPage,
+    component: () => import('@/pages/ContentAssetCenterPage.vue'),
     meta: {
       title: '内容素材中心',
       subtitle:
@@ -146,7 +117,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'supplier-center',
     name: 'supplier-center',
-    component: SupplierCenterPage,
+    component: () => import('@/pages/SupplierCenterPage.vue'),
     meta: {
       title: '供应商中心',
       subtitle: '围绕供应商主档、准入评审、评分卡和结算对账统一承接 SRM 主链',
@@ -160,7 +131,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'inventory-replenishment-center',
     name: 'inventory-replenishment-center',
-    component: InventoryReplenishmentCenterPage,
+    component: () => import('@/pages/InventoryReplenishmentCenterPage.vue'),
     meta: {
       title: '库存与补货中心',
       subtitle: '用一页串起库存快照、补货采购、WMS 联动和成本对账的执行主走廊',
@@ -174,7 +145,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'store-channel-center',
     name: 'store-channel-center',
-    component: StoreChannelCenterPage,
+    component: () => import('@/pages/StoreChannelCenterPage.vue'),
     meta: {
       title: '\u5e97\u94fa\u4e0e\u6e20\u9053\u4e2d\u5fc3',
       subtitle:
@@ -194,7 +165,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'order-fulfillment-center',
     name: 'order-fulfillment-center',
-    component: OrderFulfillmentCenterPage,
+    component: () => import('@/pages/OrderFulfillmentCenterPage.vue'),
     meta: {
       title: '订单与履约中心',
       subtitle:
@@ -210,7 +181,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'exception-center',
     name: 'exception-center',
-    component: ExceptionCenterPage,
+    component: () => import('@/pages/ExceptionCenterPage.vue'),
     meta: {
       title: '异常中心',
       subtitle: '集中处理系统识别出的异常、推荐 SOP 和人工升级动作',
@@ -224,7 +195,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'live-operations',
     name: 'live-operations',
-    component: LiveOperationsPage,
+    component: () => import('@/pages/LiveOperationsPage.vue'),
     meta: {
       title: '直播运营中心',
       subtitle: '聚合直播计划、运行会话、并发占用与风险恢复动作的统一指挥台',
@@ -238,7 +209,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'service-assistant',
     name: 'service-assistant',
-    component: CustomerServiceAssistantPage,
+    component: () => import('@/pages/CustomerServiceAssistantPage.vue'),
     meta: {
       title: '客户服务辅助中心',
       subtitle: '围绕会话消息、AI 建议和人工接管形成闭环处理台',
@@ -252,7 +223,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'organization-members',
     name: 'organization-members',
-    component: OrganizationMembersPage,
+    component: () => import('@/pages/OrganizationMembersPage.vue'),
     meta: {
       title: '组织与成员',
       subtitle: '统一查看组织协作、成员结构与会员经营视角',
@@ -266,7 +237,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'customer-service-center',
     name: 'customer-service-center',
-    component: CustomerServiceCenterPage,
+    component: () => import('@/pages/CustomerServiceCenterPage.vue'),
     meta: {
       title: '客服售后中心',
       subtitle: '明确承接工单与售后单主链，不再让客服域只停留在会话辅助或支持联动层',
@@ -280,7 +251,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'campaign-center',
     name: 'campaign-center',
-    component: CampaignCenterPage,
+    component: () => import('@/pages/CampaignCenterPage.vue'),
     meta: {
       title: '营销活动中心',
       subtitle: '把活动、优惠券、审批和发布轨道收敛到一张营销业务页',
@@ -294,7 +265,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'member-crm-center',
     name: 'member-crm-center',
-    component: MemberCrmCenterPage,
+    component: () => import('@/pages/MemberCrmCenterPage.vue'),
     meta: {
       title: '会员与 CRM 中心',
       subtitle: '围绕会员池、标签、分群、触达和 CRM 分析形成独立的会员经营主页',
@@ -308,7 +279,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'finance-settlement-center',
     name: 'finance-settlement-center',
-    component: FinanceSettlementCenterPage,
+    component: () => import('@/pages/FinanceSettlementCenterPage.vue'),
     meta: {
       title: '财务结算中心',
       subtitle: '先围绕账单、回款、利润和票据形成财务主链，再逐步展开 ERP 与关账治理',
@@ -322,7 +293,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'tenant-center',
     name: 'tenant-center',
-    component: TenantCenterPage,
+    component: () => import('@/pages/TenantCenterPage.vue'),
     meta: {
       title: '租户中心',
       subtitle: '聚合租户上下文、配额、导出与生命周期动作',
@@ -336,7 +307,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'subscription',
     name: 'subscription',
-    component: SubscriptionBillingPage,
+    component: () => import('@/pages/SubscriptionBillingPage.vue'),
     meta: {
       title: '订阅与计费中心',
       subtitle: '保持套餐边界、软件选择与观测门禁的一致口径',
@@ -350,7 +321,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'audit-exports',
     name: 'audit-exports',
-    component: AuditExportPage,
+    component: () => import('@/pages/AuditExportPage.vue'),
     meta: {
       title: '审计与导出',
       subtitle: '覆盖审计留痕、导出治理与数据交付责任',
@@ -364,7 +335,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'open-platform',
     name: 'open-platform',
-    component: OpenPlatformPage,
+    component: () => import('@/pages/OpenPlatformPage.vue'),
     meta: {
       title: '开放接口',
       subtitle: '沉淀 apps、webhooks 与集成审计的统一控制台',
@@ -378,7 +349,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'approval-center',
     name: 'approval-center',
-    component: ApprovalCenterPage,
+    component: () => import('@/pages/ApprovalCenterPage.vue'),
     meta: {
       title: '审批与协作中心',
       subtitle: '聚合审批队列、模板治理与协作责任流转的统一工作台',
@@ -392,7 +363,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'support-workbench',
     name: 'support-workbench',
-    component: SupportWorkbenchPage,
+    component: () => import('@/pages/SupportWorkbenchPage.vue'),
     meta: {
       title: '支持与工单',
       subtitle: '围绕工单 SLA、服务会话与通知链路联动处理',
@@ -406,7 +377,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'notifications-center',
     name: 'notifications-center',
-    component: NotificationsCenterPage,
+    component: () => import('@/pages/NotificationsCenterPage.vue'),
     meta: {
       title: '消息通知中心',
       subtitle: '聚合通知网关、渠道统计、失败重试与死信压力的统一总控页',
@@ -420,7 +391,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'system-settings',
     name: 'system-settings',
-    component: SystemSettingsPage,
+    component: () => import('@/pages/SystemSettingsPage.vue'),
     meta: {
       title: '系统设置',
       subtitle: '统一维护策略版本、readiness 与高级参数',
@@ -434,7 +405,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
   {
     path: 'platform-admin',
     name: 'platform-admin',
-    component: PlatformAdminPage,
+    component: () => import('@/pages/PlatformAdminPage.vue'),
     meta: {
       title: '平台管理中心',
       subtitle: '专供平台角色处理租户治理、功能开关、readiness 三联和合规文档工作流',
@@ -474,11 +445,11 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: LoginPage
+      component: () => import('@/pages/LoginPage.vue')
     },
     {
       path: '/app',
-      component: TenantConsoleLayout,
+      component: () => import('@/app/layouts/TenantConsoleLayout.vue'),
       children: [
         {
           path: '',
