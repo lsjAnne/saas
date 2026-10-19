@@ -18,7 +18,6 @@ defineEmits<{
 
 <template>
   <PanelCard
-    eyebrow="Asset Library"
     title="素材列表与工作池"
     description="优先呈现最近活跃、可继续生成视频或待发布的素材，选中后右侧立刻联动。"
   >
@@ -71,17 +70,17 @@ defineEmits<{
 .asset-library__item {
   padding: 1rem;
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .asset-library__item--active {
-  border-color: rgba(41, 101, 88, 0.28);
-  background:
-    radial-gradient(circle at top right, rgba(98, 166, 150, 0.14), transparent 35%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(241, 248, 246, 0.94));
-  box-shadow: 0 18px 40px rgba(41, 101, 88, 0.12);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .asset-library__head {
@@ -101,8 +100,8 @@ defineEmits<{
 
 .asset-library__name {
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .asset-library__meta {
@@ -129,14 +128,14 @@ defineEmits<{
 .asset-library__empty {
   padding: 1.2rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px dashed rgba(91, 72, 54, 0.16);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-line);
 }
 
 .asset-library__empty-title {
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .asset-library__empty-copy {

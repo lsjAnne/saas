@@ -11,6 +11,14 @@ interface Props {
 
 defineProps<Props>();
 
+const sendStatusMap: Record<string, string> = {
+  pending: '待发送',
+  sent: '已发送',
+  delivered: '已送达',
+  failed: '发送失败',
+  dead_letter: '死信'
+};
+
 function toneFromStatus(status: string) {
   if (status === 'delivered' || status === 'sent') {
     return 'success';
@@ -26,9 +34,8 @@ function toneFromStatus(status: string) {
 
 <template>
   <PanelCard
-    eyebrow="Notifications"
     title="通知网关与消息重试压力"
-    description="支持工单页顺带呈现通知链路压力，因为大量客服场景最后都会落到通知送达问题。"
+    description="通知网关启用与失败、死信消息压力一览。"
   >
     <div class="notification-ops">
       <div class="notification-ops__summary">
@@ -61,7 +68,7 @@ function toneFromStatus(status: string) {
                 {{ notification.notifyType }} · {{ notification.targetReceiver }}
               </p>
             </div>
-            <StatusPill :label="notification.sendStatus" :tone="toneFromStatus(notification.sendStatus)" />
+            <StatusPill :label="sendStatusMap[notification.sendStatus] || notification.sendStatus" :tone="toneFromStatus(notification.sendStatus)" />
           </div>
           <p class="notification-ops__time">{{ formatDateTime(notification.createdAt) }}</p>
         </article>
@@ -85,8 +92,8 @@ function toneFromStatus(status: string) {
 .notification-ops__summary-item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .notification-ops__summary-title,
@@ -117,8 +124,8 @@ function toneFromStatus(status: string) {
 .notification-ops__item {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .notification-ops__head {

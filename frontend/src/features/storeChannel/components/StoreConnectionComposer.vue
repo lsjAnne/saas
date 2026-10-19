@@ -193,7 +193,7 @@ function submitSettings() {
 
 <template>
   <PanelCard
-    eyebrow="Action Station"
+
     title="接入与配置操作台"
     description="这里承接三类动作：新增店铺、新增渠道账号、更新当前店铺阈值。为了避免误配，所有 JSON 配置都要求显式可见。"
   >
@@ -388,15 +388,15 @@ function submitSettings() {
 
 .composer__mode-close,
 .composer__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 
 .composer__primary {
   border: 0;
-  background: linear-gradient(135deg, #2e251d, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .composer__primary:disabled,
@@ -424,7 +424,7 @@ function submitSettings() {
 .composer__field input,
 .composer__field textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.14);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.78);
   padding: 0.9rem 1rem;

@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   generateConversationReplySuggestion,
@@ -601,7 +601,7 @@ export function useCustomerServiceCenterOverview() {
     });
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     tickets: sortedTickets,
     linkedConversations,
@@ -645,5 +645,5 @@ export function useCustomerServiceCenterOverview() {
     submitCreateAfterSale,
     openAfterSale,
     submitAfterSaleApproval
-  };
+  });
 }

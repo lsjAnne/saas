@@ -82,12 +82,12 @@ onMounted(() => {
 <template>
   <section class="login-page">
     <header class="login-page__header">
-      <p class="login-page__eyebrow">Tenant Access & Store Onboarding</p>
+      <p class="login-page__eyebrow">接入开通</p>
       <h1 class="login-page__title">
-        把登录页改造成租户接入工作台，而不是一次性跳板
+        接入工作台
       </h1>
       <p class="login-page__subtitle">
-        未登录时在这里完成试用开通与套餐选择，已登录后继续补齐默认组织、店铺授权和初始化设置，最后再进入控制台。
+        登录、开通与店铺接入一站式完成
       </p>
     </header>
 
@@ -145,14 +145,13 @@ onMounted(() => {
   gap: 1.2rem;
   padding: clamp(1.2rem, 3vw, 2rem);
   background:
-    radial-gradient(circle at top left, rgba(216, 192, 163, 0.34), transparent 22%),
-    radial-gradient(circle at bottom right, rgba(45, 36, 28, 0.08), transparent 28%),
-    linear-gradient(145deg, #f7efe6, #f1e6da 52%, #fbf7f2);
+    radial-gradient(circle at top left, var(--color-accent-soft), transparent 26%),
+    var(--color-surface);
 }
 
 .login-page__header {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.35rem;
   width: min(100%, 1320px);
   margin: 0 auto;
 }
@@ -165,24 +164,20 @@ onMounted(() => {
 }
 
 .login-page__eyebrow {
-  color: var(--color-ink-faint);
+  color: var(--color-accent);
   font-size: 0.78rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .login-page__title {
-  max-width: 14ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.4rem, 4vw, 4.6rem);
-  line-height: 0.98;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .login-page__subtitle,
 .login-page__booting {
-  max-width: 68rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 </style>

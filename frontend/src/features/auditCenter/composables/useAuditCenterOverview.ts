@@ -1,4 +1,4 @@
-import { shallowRef } from 'vue';
+import { shallowRef, reactive } from 'vue';;
 
 import { getTenantAuditLogs } from '@/services/auditCenterService';
 import { getTenantDataExports } from '@/services/tenantCenterService';
@@ -31,11 +31,11 @@ export function useAuditCenterOverview() {
     }
   }
 
-  return {
+  return reactive({
     auditLogs,
     exportTasks,
     isLoading,
     errorMessage,
     load
-  };
+  });
 }

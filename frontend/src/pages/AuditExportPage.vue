@@ -28,10 +28,10 @@ onMounted(() => {
 <template>
   <section class="audit-page">
     <header class="audit-page__header">
-      <p class="audit-page__eyebrow">Audit & Exports</p>
-      <h2 class="audit-page__title">把审计轨迹和导出治理收成一个可信留痕中心</h2>
+      <p class="audit-page__eyebrow">合规留痕</p>
+      <h2 class="audit-page__title">审计导出</h2>
       <p class="audit-page__subtitle">
-        这页服务于合规与追溯，不强调操作入口，而强调链路、范围和结果状态。
+        导出申请、审批与审计追踪。
       </p>
     </header>
 
@@ -66,24 +66,23 @@ onMounted(() => {
 }
 
 .audit-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .audit-page__title {
   max-width: 18ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 3.8vw, 3.6rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .audit-page__subtitle {
   max-width: 54rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .audit-page__grid {

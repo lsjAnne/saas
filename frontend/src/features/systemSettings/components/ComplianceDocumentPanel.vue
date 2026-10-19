@@ -33,9 +33,8 @@ const documents = computed(() =>
 
 <template>
   <PanelCard
-    eyebrow="Compliance Docs"
     title="合规文档与确认版本"
-    description="高频状态放租户中心，这里补文档版本与确认版本是否对齐，帮助管理员判断是否需要再次确认。"
+    description="文档版本与确认版本是否对齐，帮助管理员判断是否需要再次确认。"
   >
     <div class="document-panel">
       <article v-for="document in documents" :key="document.documentCode" class="document-panel__item">
@@ -75,8 +74,8 @@ const documents = computed(() =>
 .document-panel__item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .document-panel__header {

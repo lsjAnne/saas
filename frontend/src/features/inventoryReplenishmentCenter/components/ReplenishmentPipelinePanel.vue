@@ -99,11 +99,28 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
 
   return 'neutral';
 }
+
+const statusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  pending_approval: '待审批',
+  pending: '待审批',
+  approved: '已通过',
+  rejected: '已驳回',
+  submitted: '已提交',
+  dispatched: '已下发',
+  creating: '创建中',
+  done: '已完成',
+  completed: '已完成',
+  cancelled: '已取消'
+};
+
+function resolveStatusLabel(status: string | null | undefined) {
+  return statusLabelMap[(status ?? '').toLowerCase()] ?? status ?? '--';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Replenishment Pipeline"
     title="补货与采购推进走廊"
     description="这一块把补货任务、采购申请、采购订单排成连续动作链，避免库存缺口只停留在提醒层。"
   >
@@ -121,7 +138,7 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
             >
               <div class="pipeline__item-top">
                 <strong>{{ task.replenishmentTaskId }}</strong>
-                <StatusPill :label="task.taskStatus" :tone="resolveTaskTone(task)" />
+                <StatusPill :label="resolveStatusLabel(task.taskStatus)" :tone="resolveTaskTone(task)" />
               </div>
               <p class="pipeline__item-copy">{{ task.skuId }} / 建议 {{ task.suggestedQty }}</p>
               <p class="pipeline__item-copy">{{ formatDateTime(task.createdAt) }}</p>
@@ -141,7 +158,7 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
             >
               <div class="pipeline__item-top">
                 <strong>{{ request.requestNo }}</strong>
-                <StatusPill :label="request.requestStatus" tone="neutral" />
+                <StatusPill :label="resolveStatusLabel(request.requestStatus)" tone="neutral" />
               </div>
               <p class="pipeline__item-copy">{{ request.supplierId }} / 数量 {{ request.totalRequestedQty }}</p>
               <p class="pipeline__item-copy">{{ formatDateTime(request.createdAt) }}</p>
@@ -161,7 +178,7 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
             >
               <div class="pipeline__item-top">
                 <strong>{{ order.orderNo }}</strong>
-                <StatusPill :label="order.orderStatus" :tone="resolveOrderTone(order)" />
+                <StatusPill :label="resolveStatusLabel(order.orderStatus)" :tone="resolveOrderTone(order)" />
               </div>
               <p class="pipeline__item-copy">{{ order.supplierId }} / 数量 {{ order.totalRequestedQty }}</p>
               <p class="pipeline__item-copy">{{ order.dispatchStatus }} / {{ formatDateTime(order.createdAt) }}</p>
@@ -272,16 +289,16 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
 
 .pipeline__item {
   padding: 0.9rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--color-surface);
   text-align: left;
   display: grid;
   gap: 0.6rem;
 }
 
 .pipeline__item--active {
-  border-color: rgba(106, 67, 39, 0.38);
+  border-color: var(--color-accent);
 }
 
 .pipeline__item-top {
@@ -304,7 +321,8 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
 .pipeline__action-block {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .pipeline__field {
@@ -320,9 +338,9 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
 .pipeline__field textarea {
   min-height: 2.8rem;
   padding: 0.75rem 0.9rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -336,13 +354,18 @@ function resolveOrderTone(order: PurchaseOrder): 'neutral' | 'warn' | 'success' 
 
 .pipeline__primary {
   border: 0;
-  background: linear-gradient(135deg, #6a4327, #2b1f17);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.pipeline__primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .pipeline__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 

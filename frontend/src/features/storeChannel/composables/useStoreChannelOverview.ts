@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   connectStore,
@@ -254,7 +254,7 @@ export function useStoreChannelOverview() {
     }
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     channelAccounts: visibleChannelAccounts,
     selectedStoreId,
@@ -279,5 +279,5 @@ export function useStoreChannelOverview() {
     submitChannelAccount,
     submitSelectedStoreSettings,
     refreshChannelAuth
-  };
+  });
 }

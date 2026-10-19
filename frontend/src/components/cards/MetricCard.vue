@@ -23,7 +23,7 @@ withDefaults(defineProps<Props>(), {
   border-radius: var(--radius-lg);
   padding: 1rem 1.05rem;
   background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  border: 1px solid var(--color-line);
 }
 
 .metric-card__label {

@@ -148,11 +148,22 @@ function handleSubmit() {
     blacklistFlag: form.blacklistFlag
   });
 }
+
+const riskLevelLabelMap: Record<string, string> = {
+  normal: '正常',
+  low: '低风险',
+  medium: '中风险',
+  high: '高风险',
+  critical: '紧急'
+};
+
+function resolveRiskLevelLabel(level: string | null | undefined) {
+  return riskLevelLabelMap[(level ?? '').toLowerCase()] ?? level ?? '正常';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Profile & Governance"
     title="供应商主档与治理动作"
     description="左侧选主档，右侧在同一个面板里完成创建、编辑和主备切换，避免切页打断采购节奏。"
   >
@@ -198,9 +209,9 @@ function handleSubmit() {
         </div>
 
         <div class="supplier-profile__summary-tags">
-          <StatusPill :label="visibleSupplier.riskLevel || 'normal'" :tone="visibleSupplier.blacklistFlag ? 'warn' : 'neutral'" />
-          <StatusPill v-if="visibleSupplier.primary" label="primary" tone="success" />
-          <StatusPill v-if="visibleSupplier.backup" label="backup" tone="neutral" />
+          <StatusPill :label="resolveRiskLevelLabel(visibleSupplier.riskLevel)" :tone="visibleSupplier.blacklistFlag ? 'warn' : 'neutral'" />
+          <StatusPill v-if="visibleSupplier.primary" label="主供应商" tone="success" />
+          <StatusPill v-if="visibleSupplier.backup" label="备选供应商" tone="neutral" />
         </div>
       </div>
 
@@ -252,9 +263,9 @@ function handleSubmit() {
         <label class="supplier-profile__field">
           <span>风险等级</span>
           <select v-model="form.riskLevel" :disabled="isSubmitting">
-            <option value="low">low</option>
-            <option value="medium">medium</option>
-            <option value="high">high</option>
+            <option value="low">低</option>
+            <option value="medium">中</option>
+            <option value="high">高</option>
           </select>
         </label>
 
@@ -305,21 +316,23 @@ function handleSubmit() {
 
 .supplier-profile__ghost,
 .supplier-profile__chip {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 
 .supplier-profile__ghost--active {
-  background: rgba(133, 98, 67, 0.14);
-  color: var(--color-ink-strong);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .supplier-profile__summary {
   grid-template-columns: 1fr auto;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .supplier-profile__summary-eyebrow,
@@ -331,10 +344,9 @@ function handleSubmit() {
 }
 
 .supplier-profile__summary-eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .supplier-profile__summary-title {
@@ -374,9 +386,9 @@ function handleSubmit() {
 .supplier-profile__field select {
   min-height: 2.8rem;
   padding: 0 0.9rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
 }
 
@@ -395,7 +407,12 @@ function handleSubmit() {
   grid-column: span 3;
   border: 0;
   background: var(--color-accent);
-  color: #fff8f0;
+  color: #ffffff;
+}
+
+.supplier-profile__submit:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 @media (max-width: 1080px) {

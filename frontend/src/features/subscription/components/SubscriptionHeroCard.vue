@@ -50,7 +50,7 @@ const formattedRenewal = computed(() => {
 const seatMetric = computed(() => {
   const seatQuota = props.quotas.find((quota) => quota.quotaCode === 'seat_count');
   if (!seatQuota) {
-    return props.subscription ? `${props.subscription.seatCount} seats` : '--';
+    return props.subscription ? `${props.subscription.seatCount} 个坐席` : '--';
   }
 
   return `${seatQuota.usedAmount} / ${seatQuota.quotaLimit}`;
@@ -70,29 +70,46 @@ const currentPlan = computed(
 
 const selectablePlans = computed(() => props.plans.filter((plan) => plan.planCode !== 'trial'));
 
+const cycleValueMap: Record<string, string> = {
+  active: '生效中',
+  trialing: '试用中',
+  trial: '试用中',
+  expired: '已过期',
+  canceled: '已取消',
+  monthly: '月付',
+  yearly: '年付'
+};
+
+const quotaLabelMap: Record<string, string> = {
+  seat_count: '坐席数',
+  api_quota: 'API 调用',
+  storage_quota: '存储空间',
+  message_quota: '消息量'
+};
+
 const cycleSummary = computed(() => [
   {
-    label: 'Status',
-    value: props.subscription?.subscriptionStatus ?? '--',
+    label: '状态',
+    value: cycleValueMap[props.subscription?.subscriptionStatus ?? ''] ?? props.subscription?.subscriptionStatus ?? '--',
     tone: props.subscription?.subscriptionStatus === 'active' ? 'success' : 'warn'
   },
   {
-    label: 'Auto renew',
-    value: props.subscription?.autoRenew ? 'Enabled' : 'Disabled',
+    label: '自动续费',
+    value: props.subscription?.autoRenew ? '已启用' : '已停用',
     tone: props.subscription?.autoRenew ? 'success' : 'neutral'
   },
   {
-    label: 'Billing type',
-    value: currentPlan.value?.billingType ?? '--',
+    label: '计费方式',
+    value: cycleValueMap[currentPlan.value?.billingType ?? ''] ?? currentPlan.value?.billingType ?? '--',
     tone: 'neutral'
   }
 ]);
 
 const quotaMetrics = computed(() =>
   props.quotas.map((quota) => ({
-    label: quota.quotaCode.replaceAll('_', ' '),
+    label: quotaLabelMap[quota.quotaCode] ?? quota.quotaCode.replaceAll('_', ' '),
     value: `${quota.usedAmount} / ${quota.quotaLimit}`,
-    caption: quota.resetAt ? `Reset at ${formatDate(quota.resetAt)}` : ''
+    caption: quota.resetAt ? `重置于 ${formatDate(quota.resetAt)}` : ''
   }))
 );
 
@@ -129,37 +146,36 @@ function submitSeatPurchase() {
 
 <template>
   <PanelCard
-    eyebrow="Subscription Snapshot"
-    :title="subscription?.planName || 'Current plan'"
-    description="The top section keeps subscription actions focused on plan changes, renewal, seats, and quota signals."
+    :title="subscription?.planName || '当前套餐'"
+    description="套餐变更、续费、坐席与配额用量一览。"
   >
     <div class="subscription-hero">
       <div class="subscription-hero__metrics">
-        <MetricCard label="Renewal" :value="formattedRenewal" caption="Current expiration date" />
-        <MetricCard label="Seat Status" :value="seatMetric" caption="Seat quota usage" />
-        <MetricCard label="Latest Bill" :value="billMetric" caption="Latest payable amount" />
+        <MetricCard label="续费截止" :value="formattedRenewal" caption="当前套餐到期时间" />
+        <MetricCard label="坐席用量" :value="seatMetric" caption="坐席配额使用情况" />
+        <MetricCard label="最新账单" :value="billMetric" caption="最新应付金额" />
       </div>
 
       <div class="subscription-hero__details">
         <article class="subscription-hero__detail-card">
           <div class="subscription-hero__detail-head">
             <div>
-              <p class="subscription-hero__detail-eyebrow">Current Package</p>
+              <p class="subscription-hero__detail-eyebrow">当前套餐</p>
               <h4 class="subscription-hero__detail-title">
-                {{ currentPlan?.planName || subscription?.planName || 'No paid plan yet' }}
+                {{ currentPlan?.planName || subscription?.planName || '暂无付费套餐' }}
               </h4>
             </div>
             <StatusPill
-              :label="subscription?.subscriptionStatus || 'unknown'"
+              :label="cycleValueMap[subscription?.subscriptionStatus ?? ''] || subscription?.subscriptionStatus || '未知'"
               :tone="subscription?.subscriptionStatus === 'active' ? 'success' : 'warn'"
             />
           </div>
           <p class="subscription-hero__detail-copy">
-            Monthly {{ formatCurrency(currentPlan?.monthlyPrice) }} / Yearly
-            {{ formatCurrency(currentPlan?.yearlyPrice) }} / Seat limit {{ currentPlan?.seatLimit ?? '--' }}
+            月付 {{ formatCurrency(currentPlan?.monthlyPrice) }} / 年付
+            {{ formatCurrency(currentPlan?.yearlyPrice) }} / 坐席上限 {{ currentPlan?.seatLimit ?? '--' }}
           </p>
           <label class="subscription-hero__field">
-            <span class="subscription-hero__field-label">Target plan</span>
+            <span class="subscription-hero__field-label">目标套餐</span>
             <select v-model="formState.targetPlanCode" class="subscription-hero__control">
               <option v-for="plan in selectablePlans" :key="plan.planCode" :value="plan.planCode">
                 {{ plan.planName }} / {{ plan.planCode }}
@@ -172,14 +188,14 @@ function submitSeatPurchase() {
             :disabled="isSubmitting || !formState.targetPlanCode"
             @click="submitPlanChange"
           >
-            {{ isSubmitting ? 'Submitting...' : 'Update plan' }}
+            {{ isSubmitting ? '提交中...' : '更新套餐' }}
           </button>
         </article>
 
         <article class="subscription-hero__detail-card">
           <div>
-            <p class="subscription-hero__detail-eyebrow">Subscription Cycle</p>
-            <h4 class="subscription-hero__detail-title">Renewal control</h4>
+            <p class="subscription-hero__detail-eyebrow">续费周期</p>
+            <h4 class="subscription-hero__detail-title">续费管理</h4>
           </div>
           <div class="subscription-hero__pill-row">
             <StatusPill
@@ -190,12 +206,12 @@ function submitSeatPurchase() {
             />
           </div>
           <label class="subscription-hero__field">
-            <span class="subscription-hero__field-label">Renewal months</span>
+            <span class="subscription-hero__field-label">续费月数</span>
             <select v-model.number="formState.renewMonths" class="subscription-hero__control">
-              <option :value="1">1 month</option>
-              <option :value="3">3 months</option>
-              <option :value="6">6 months</option>
-              <option :value="12">12 months</option>
+              <option :value="1">1 个月</option>
+              <option :value="3">3 个月</option>
+              <option :value="6">6 个月</option>
+              <option :value="12">12 个月</option>
             </select>
           </label>
           <button
@@ -204,14 +220,14 @@ function submitSeatPurchase() {
             :disabled="isSubmitting || !hasSubscription"
             @click="submitRenew"
           >
-            {{ isSubmitting ? 'Submitting...' : 'Renew now' }}
+            {{ isSubmitting ? '提交中...' : '立即续费' }}
           </button>
         </article>
 
         <article class="subscription-hero__detail-card">
           <div>
-            <p class="subscription-hero__detail-eyebrow">Seats & Quotas</p>
-            <h4 class="subscription-hero__detail-title">Capacity control</h4>
+            <p class="subscription-hero__detail-eyebrow">坐席与配额</p>
+            <h4 class="subscription-hero__detail-title">容量管理</h4>
           </div>
           <div class="subscription-hero__quota-grid">
             <div
@@ -225,7 +241,7 @@ function submitSeatPurchase() {
             </div>
           </div>
           <label class="subscription-hero__field">
-            <span class="subscription-hero__field-label">Extra seats</span>
+            <span class="subscription-hero__field-label">额外坐席</span>
             <input
               v-model.number="formState.extraSeatCount"
               class="subscription-hero__control"
@@ -239,12 +255,12 @@ function submitSeatPurchase() {
             :disabled="isSubmitting || !hasSubscription"
             @click="submitSeatPurchase"
           >
-            {{ isSubmitting ? 'Submitting...' : 'Purchase seats' }}
+            {{ isSubmitting ? '提交中...' : '购买坐席' }}
           </button>
         </article>
       </div>
 
-      <p v-if="isLoading" class="subscription-hero__loading">Refreshing subscription snapshot...</p>
+      <p v-if="isLoading" class="subscription-hero__loading">正在刷新订阅快照...</p>
     </div>
   </PanelCard>
 </template>
@@ -272,8 +288,8 @@ function submitSeatPurchase() {
   gap: 0.85rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .subscription-hero__detail-head {
@@ -296,9 +312,9 @@ function submitSeatPurchase() {
 .subscription-hero__detail-eyebrow,
 .subscription-hero__field-label,
 .subscription-hero__quota-label {
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.74rem;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .subscription-hero__detail-title {
@@ -321,8 +337,8 @@ function submitSeatPurchase() {
 .subscription-hero__quota-item {
   padding: 0.9rem;
   border-radius: calc(var(--radius-lg) - 0.15rem);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 250, 245, 0.7);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .subscription-hero__quota-value {
@@ -340,10 +356,10 @@ function submitSeatPurchase() {
 .subscription-hero__control {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.72rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: var(--color-surface);
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -357,14 +373,24 @@ function submitSeatPurchase() {
 
 .subscription-hero__solid {
   border: 0;
-  background: linear-gradient(135deg, #2e251d, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.subscription-hero__solid:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .subscription-hero__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+}
+
+.subscription-hero__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 @media (max-width: 1120px) {

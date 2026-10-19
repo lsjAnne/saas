@@ -36,10 +36,8 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <PanelCard
-    eyebrow="Inventory & Replenishment"
-    title="把库存快照、补货决策、采购推进和 WMS 联动压进同一条履约前链"
-    description="这一页不是静态库存总表，而是让运营先发现低库存，再决定补货、采购和仓内联动动作的主控制台。"
-    dark
+    title="库存总览"
+    description="低库存识别、补货审批、采购推进与仓内联动的主控制台。"
   >
     <div class="inventory-hero">
       <div class="inventory-hero__lead">
@@ -102,9 +100,9 @@ withDefaults(defineProps<Props>(), {
     </div>
 
     <div class="inventory-hero__tail">
-      <StatusPill :label="`OMS ${wmsLinkage?.omsSyncStatus || 'unknown'}`" tone="success" />
-      <StatusPill :label="`ERP ${wmsLinkage?.erpSyncStatus || 'unknown'}`" tone="neutral" />
-      <StatusPill :label="`TMS ${wmsLinkage?.tmsHandoverStatus || 'unknown'}`" tone="warn" />
+      <StatusPill :label="`OMS ${wmsLinkage?.omsSyncStatus || '未知'}`" tone="success" />
+      <StatusPill :label="`ERP ${wmsLinkage?.erpSyncStatus || '未知'}`" tone="neutral" />
+      <StatusPill :label="`TMS ${wmsLinkage?.tmsHandoverStatus || '未知'}`" tone="warn" />
       <p class="inventory-hero__tail-copy">
         最近快照时间 {{ formatDateTime(selectedSnapshot?.snapshotAt) }}，当前仓内联动重点是锁批次
         {{ wmsLinkage?.lockedBatchCount ?? 0 }}、盘点 {{ wmsLinkage?.cycleCountTaskCount ?? 0 }}、逆向入库
@@ -131,8 +129,8 @@ withDefaults(defineProps<Props>(), {
 .inventory-hero__focus-item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 248, 240, 0.08);
-  border: 1px solid rgba(255, 244, 236, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .inventory-hero__eyebrow,
@@ -148,32 +146,31 @@ withDefaults(defineProps<Props>(), {
 
 .inventory-hero__eyebrow,
 .inventory-hero__focus-label {
-  color: rgba(255, 244, 236, 0.72);
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .inventory-hero__title,
 .inventory-hero__focus-value {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .inventory-hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .inventory-hero__copy,
 .inventory-hero__feedback,
 .inventory-hero__focus-copy,
 .inventory-hero__tail-copy {
-  color: rgba(255, 244, 236, 0.78);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 
 .inventory-hero__feedback {
-  color: #f6d8b5;
+  color: var(--color-success);
 }
 
 .inventory-hero__focus {

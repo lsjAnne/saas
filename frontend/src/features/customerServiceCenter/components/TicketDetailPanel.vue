@@ -42,7 +42,7 @@ const satisfactionForm = reactive({
 
 const activeChannelLabel = computed(() => {
   if (!props.selectedConversation) {
-    return 'No linked conversation yet';
+    return '暂未关联会话';
   }
 
   return `${props.selectedConversation.platformType} / ${props.selectedConversation.platformConversationId}`;
@@ -69,6 +69,17 @@ function resolveTone(): 'neutral' | 'warn' | 'success' {
   return 'neutral';
 }
 
+const ticketStatusMap: Record<string, string> = {
+  pending: '待处理',
+  processing: '处理中',
+  closed: '已关闭',
+  resolved: '已解决'
+};
+
+function labelOf(value: string) {
+  return ticketStatusMap[value] ?? value;
+}
+
 function submitSatisfaction() {
   emit('saveSatisfaction', {
     score: Number(satisfactionForm.score),
@@ -79,51 +90,50 @@ function submitSatisfaction() {
 
 <template>
   <PanelCard
-    eyebrow="Ticket Detail"
-    title="Customer context, reply readiness, and satisfaction"
-    description="Keep ticket facts, linked customer context, and the closure score in one place before moving into conversation or after-sale actions."
+    title="工单详情与结案满意度"
+    description="集中查看工单事实、关联客户上下文与结案评分，再进入会话或售后动作。"
   >
     <div v-if="ticket" class="ticket-detail">
       <div class="ticket-detail__summary">
         <div class="ticket-detail__summary-copy">
-          <p class="ticket-detail__eyebrow">Current Ticket</p>
+          <p class="ticket-detail__eyebrow">当前工单</p>
           <h4 class="ticket-detail__title">{{ ticket.ticketId }}</h4>
           <p class="ticket-detail__meta">
-            Order {{ ticket.orderId }} / Customer {{ ticket.customerId }}
+            订单 {{ ticket.orderId }} / 客户 {{ ticket.customerId }}
           </p>
-          <p class="ticket-detail__meta">Created {{ formatDateTime(ticket.createdAt) }}</p>
+          <p class="ticket-detail__meta">创建于 {{ formatDateTime(ticket.createdAt) }}</p>
         </div>
         <div class="ticket-detail__summary-tags">
-          <StatusPill :label="ticket.ticketStatus" :tone="resolveTone()" />
-          <StatusPill v-if="ticket.riskFlag" label="risk" tone="warn" />
+          <StatusPill :label="labelOf(ticket.ticketStatus)" :tone="resolveTone()" />
+          <StatusPill v-if="ticket.riskFlag" label="风险" tone="warn" />
         </div>
       </div>
 
       <div class="ticket-detail__context-grid">
         <article class="ticket-detail__context-card">
-          <p class="ticket-detail__section-eyebrow">Linked Conversations</p>
+          <p class="ticket-detail__section-eyebrow">关联会话</p>
           <p class="ticket-detail__context-value">{{ linkedConversationCount }}</p>
           <p class="ticket-detail__section-copy">
-            Active channel: {{ activeChannelLabel }}
+            当前会话通道：{{ activeChannelLabel }}
           </p>
         </article>
 
         <article class="ticket-detail__context-card">
-          <p class="ticket-detail__section-eyebrow">Conversation Status</p>
+          <p class="ticket-detail__section-eyebrow">会话状态</p>
           <p class="ticket-detail__context-value">
-            {{ selectedConversation?.conversationStatus || 'pending' }}
+            {{ labelOf(selectedConversation?.conversationStatus || 'pending') }}
           </p>
           <p class="ticket-detail__section-copy">
-            Risk flag: {{ selectedConversation?.riskFlag ? 'manual escalation required' : 'not flagged' }}
+            风险标记：{{ selectedConversation?.riskFlag ? '需要人工升级处理' : '无风险标记' }}
           </p>
         </article>
 
         <article class="ticket-detail__context-card ticket-detail__context-card--wide">
-          <p class="ticket-detail__section-eyebrow">After-Sale Draft Preview</p>
+          <p class="ticket-detail__section-eyebrow">售后草稿预览</p>
           <p class="ticket-detail__section-copy">
             {{
               generatedAfterSaleDraft?.reasonText ||
-              'Generate a conversation suggestion below, then use the after-sale panel to build the final request note.'
+              '先在下方生成会话建议，再用售后面板整理最终的售后申请说明。'
             }}
           </p>
         </article>
@@ -132,9 +142,9 @@ function submitSatisfaction() {
       <div class="ticket-detail__suggestion">
         <div class="ticket-detail__section-head">
           <div>
-            <p class="ticket-detail__section-eyebrow">Ticket Reply Suggestion</p>
+            <p class="ticket-detail__section-eyebrow">工单回复建议</p>
             <p class="ticket-detail__section-copy">
-              Ticket-level suggestion keeps the service queue moving even before the agent sends a final conversation reply.
+              在客服发出最终会话回复前，先用工单级建议保持队列流转。
             </p>
           </div>
           <button
@@ -143,13 +153,13 @@ function submitSatisfaction() {
             :disabled="isSubmitting"
             @click="emit('generateSuggestion')"
           >
-            Generate suggestion
+            生成建议
           </button>
         </div>
         <div class="ticket-detail__suggestion-box">
           {{
             ticket.aiReplySuggestion ||
-            'No ticket suggestion yet. Use the button to create a first handling draft for this service case.'
+            '当前还没有工单建议，点击按钮为该服务工单生成首条处理草稿。'
           }}
         </div>
       </div>
@@ -157,9 +167,9 @@ function submitSatisfaction() {
       <form class="ticket-detail__satisfaction" @submit.prevent="submitSatisfaction">
         <div class="ticket-detail__section-head">
           <div>
-            <p class="ticket-detail__section-eyebrow">Closure Satisfaction</p>
+            <p class="ticket-detail__section-eyebrow">结案满意度</p>
             <p class="ticket-detail__section-copy">
-              Record the final customer outcome after the conversation and after-sale steps have been handled.
+              在会话与售后步骤处理完成后，记录客户的最终反馈。
             </p>
           </div>
           <StatusPill
@@ -171,7 +181,7 @@ function submitSatisfaction() {
 
         <div class="ticket-detail__form-grid">
           <label class="ticket-detail__field">
-            <span>Score</span>
+            <span>评分</span>
             <select v-model="satisfactionForm.score" :disabled="isSubmitting">
               <option value="5">5</option>
               <option value="4">4</option>
@@ -181,30 +191,30 @@ function submitSatisfaction() {
             </select>
           </label>
           <label class="ticket-detail__field ticket-detail__field--wide">
-            <span>Comment</span>
+            <span>备注</span>
             <textarea
               v-model="satisfactionForm.comment"
               rows="4"
               :disabled="isSubmitting"
-              placeholder="Capture the customer reaction, the final promise, or anything the team should revisit later."
+              placeholder="记录客户反馈、最终承诺或后续需要复盘的内容。"
             />
           </label>
         </div>
 
         <p v-if="satisfaction" class="ticket-detail__history">
-          Last updated {{ formatDateTime(satisfaction.ratedAt) }}.
-          {{ satisfaction.comment || 'No comment recorded.' }}
+          最近更新于 {{ formatDateTime(satisfaction.ratedAt) }}。
+          {{ satisfaction.comment || '未填写备注。' }}
         </p>
         <p v-if="actionError" class="ticket-detail__error">{{ actionError }}</p>
 
         <button class="ticket-detail__ghost" type="submit" :disabled="isSubmitting">
-          Save satisfaction
+          保存满意度
         </button>
       </form>
     </div>
 
     <div v-else class="ticket-detail__empty">
-      Select a ticket from the queue first, then review the linked customer context and closure status.
+      先从队列中选择一个工单，再查看关联的客户上下文与结案状态。
     </div>
   </PanelCard>
 </template>
@@ -225,7 +235,8 @@ function submitSatisfaction() {
   grid-template-columns: 1fr auto;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .ticket-detail__eyebrow,
@@ -242,10 +253,9 @@ function submitSatisfaction() {
 
 .ticket-detail__eyebrow,
 .ticket-detail__section-eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .ticket-detail__title,
@@ -274,7 +284,8 @@ function submitSatisfaction() {
 .ticket-detail__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.66);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .ticket-detail__context-card {
@@ -329,8 +340,8 @@ function submitSatisfaction() {
   min-height: 2.8rem;
   padding: 0.75rem 0.9rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -343,15 +354,27 @@ function submitSatisfaction() {
 }
 
 .ticket-detail__primary {
-  border: 0;
-  background: linear-gradient(135deg, #82493b, #2d1815);
-  color: #fff8f0;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.ticket-detail__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .ticket-detail__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.ticket-detail__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .ticket-detail__error {

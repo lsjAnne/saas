@@ -56,19 +56,17 @@ const headline = computed(() => {
 
 <template>
   <PanelCard
-    eyebrow="Approvals & Collaboration"
-    title="把审批积压、模板治理和协作责任压缩进同一块治理总览"
-    :description="headline"
-    dark
+    title="审批协作总览"
+    description="待审批、已处理、启用模板与治理请求一览。"
   >
     <div class="approval-hero">
       <div class="approval-hero__lead">
-        <p class="approval-hero__badge">Workflow Posture</p>
+        <p class="approval-hero__badge">审批总览</p>
         <h4 class="approval-hero__headline">
-          审批中心不只显示结果，还直接暴露当前处理人、模板启用面和治理请求压力。
+          {{ headline }}
         </h4>
         <p class="approval-hero__subline">
-          这页强调的是责任流转而不是静态台账，让租户管理者能在一个入口里看清谁在处理、哪些模板在跑、哪些治理申请还没落地。
+          责任流转一屏看清谁在处理、哪些模板在跑。
         </p>
       </div>
 
@@ -106,24 +104,23 @@ const headline = computed(() => {
   width: fit-content;
   padding: 0.42rem 0.78rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 244, 236, 0.76);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .approval-hero__headline {
   max-width: 22ch;
-  color: #fff8f0;
-  font-size: clamp(1.8rem, 3vw, 2.7rem);
-  line-height: 1.08;
+  color: var(--color-ink-strong);
+  font-size: clamp(1.35rem, 2.2vw, 1.6rem);
+  line-height: 1.25;
 }
 
 .approval-hero__subline {
   max-width: 60rem;
-  color: rgba(255, 244, 236, 0.72);
-  line-height: 1.7;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
 }
 
 .approval-hero__metrics {

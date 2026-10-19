@@ -78,10 +78,10 @@ onMounted(() => {
 <template>
   <section class="subscription-page">
     <header class="subscription-page__header">
-      <p class="subscription-page__eyebrow">Subscription & Billing Center</p>
-      <h2 class="subscription-page__title">Operate plans, seats, bills, and invoices from one place</h2>
+      <p class="subscription-page__eyebrow">订阅中心</p>
+      <h2 class="subscription-page__title">订阅计费</h2>
       <p class="subscription-page__subtitle">
-        This page turns the billing prototype into an executable workspace so tenant admins can upgrade plans, renew subscriptions, add seats, export bills, and submit invoice requests without leaving the page.
+        套餐、计费方式与账单时间轴。
       </p>
     </header>
 
@@ -127,7 +127,7 @@ onMounted(() => {
       {{ subscriptionOverview.actionError }}
     </p>
     <p v-if="isBootstrapping" class="subscription-page__footer-note">
-      Loading subscription, quota, bill, and payment status...
+      正在加载订阅、配额、账单与支付状态...
     </p>
   </section>
 </template>
@@ -146,27 +146,25 @@ onMounted(() => {
 
 .subscription-page__eyebrow {
   margin: 0;
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .subscription-page__title {
   margin: 0;
   max-width: 18ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.6rem);
-  line-height: 1.02;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .subscription-page__subtitle {
   margin: 0;
   max-width: 62rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
-  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .subscription-page__grid {

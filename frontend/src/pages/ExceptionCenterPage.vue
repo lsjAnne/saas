@@ -72,12 +72,10 @@ onMounted(() => {
 <template>
   <section class="exception-center-page">
     <header class="exception-center-page__header">
-      <p class="exception-center-page__eyebrow">Exception Center</p>
-      <h2 class="exception-center-page__title">
-        把异常分类、推荐 SOP 和处理动作收进同一个风险处置中心
-      </h2>
+      <p class="exception-center-page__eyebrow">风险处置</p>
+      <h2 class="exception-center-page__title">异常中心</h2>
       <p class="exception-center-page__subtitle">
-        这页不是简单告警墙，而是围绕异常分类导航、详情回读和动作留痕形成一条真正可执行的异常处理链路。
+        集中处理订单、库存与履约链路上的异常事项
       </p>
     </header>
 
@@ -150,18 +148,16 @@ onMounted(() => {
 }
 
 .exception-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .exception-center-page__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.15rem, 3.8vw, 3.7rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .exception-center-page__subtitle,

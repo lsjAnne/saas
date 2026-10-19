@@ -17,7 +17,6 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Exception Distribution"
     title="异常分布"
     description="先看哪一类异常最集中，再看是否已经出现高风险堆积。"
   >
@@ -62,8 +61,8 @@ defineProps<Props>();
 .exception-distribution__risk-card {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .exception-distribution__row {
@@ -86,8 +85,6 @@ defineProps<Props>();
 .exception-distribution__type {
   color: var(--color-ink-faint);
   font-size: 0.74rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .exception-distribution__count,

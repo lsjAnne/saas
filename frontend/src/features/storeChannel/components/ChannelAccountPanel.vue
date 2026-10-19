@@ -20,7 +20,7 @@ defineEmits<{
 
 <template>
   <PanelCard
-    eyebrow="Authorization"
+
     title="渠道账号授权矩阵"
     description="渠道账号按当前聚焦店铺的组织维度过滤，避免把不相关账号混进操作视野。授权刷新后统一回读真实到期时间和状态。"
   >
@@ -138,20 +138,20 @@ defineEmits<{
 
 .channel-panel__header-action {
   border: 0;
-  background: linear-gradient(135deg, #2e251d, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .channel-panel__item {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .channel-panel__item-action {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 

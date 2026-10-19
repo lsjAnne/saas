@@ -25,6 +25,26 @@ const props = withDefaults(defineProps<Props>(), {
   actionFeedback: null
 });
 
+function tenantStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    active: '正常',
+    suspended: '已停用',
+    trial: '试用',
+    expiring: '临期'
+  };
+  return (status && map[status]) || '未知';
+}
+
+function subscriptionStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    active: '生效',
+    unsubscribed: '未订阅',
+    trial: '试用',
+    past_due: '已逾期'
+  };
+  return (status && map[status]) || '未订阅';
+}
+
 const metricItems = computed(() => [
   {
     label: '租户总数',
@@ -34,7 +54,7 @@ const metricItems = computed(() => [
   {
     label: '活跃租户',
     value: formatCount(props.summary.activeTenantCount, ' 个'),
-    caption: '租户状态为 active'
+    caption: '租户状态为正常'
   },
   {
     label: '试用临期',
@@ -51,14 +71,12 @@ const metricItems = computed(() => [
 
 <template>
   <PanelCard
-    eyebrow="Tenant Operations Deck"
-    title="先看租户整体压力，再决定是开通、调套餐还是停复服"
+    title="租户整体概览"
     :description="
       selectedTenant
         ? `${selectedTenant.tenantName} 当前状态 ${selectedTenant.tenantStatus}，套餐 ${selectedTenant.planName || '未订阅'}，试用到期 ${formatDate(selectedTenant.trialEndAt)}。`
         : '先从左侧租户列表选定一个租户，再处理套餐、席位和生命周期动作。'
     "
-    dark
   >
     <div class="tenant-identity">
       <div class="tenant-identity__summary">
@@ -78,7 +96,7 @@ const metricItems = computed(() => [
 
       <div class="tenant-identity__focus">
         <div class="tenant-identity__focus-header">
-          <p class="tenant-identity__focus-eyebrow">Selected Tenant</p>
+          <p class="tenant-identity__focus-eyebrow">已选租户</p>
           <h4 class="tenant-identity__focus-title">
             {{ selectedTenant?.tenantName || '等待选择租户' }}
           </h4>
@@ -88,14 +106,14 @@ const metricItems = computed(() => [
           <div class="tenant-identity__focus-card">
             <p class="tenant-identity__focus-label">租户状态</p>
             <StatusPill
-              :label="selectedTenant.tenantStatus"
+              :label="tenantStatusLabel(selectedTenant.tenantStatus)"
               :tone="selectedTenant.tenantStatus === 'active' ? 'success' : 'warn'"
             />
           </div>
           <div class="tenant-identity__focus-card">
             <p class="tenant-identity__focus-label">订阅状态</p>
             <StatusPill
-              :label="selectedTenant.subscriptionStatus || 'unsubscribed'"
+              :label="subscriptionStatusLabel(selectedTenant.subscriptionStatus)"
               :tone="selectedTenant.subscriptionStatus === 'active' ? 'success' : 'neutral'"
             />
           </div>
@@ -139,10 +157,8 @@ const metricItems = computed(() => [
 .tenant-identity__focus,
 .tenant-identity__focus-card {
   border-radius: calc(var(--radius-xl) - 0.2rem);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background:
-    linear-gradient(165deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
-    rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .tenant-identity__metric-card,
@@ -168,28 +184,27 @@ const metricItems = computed(() => [
 .tenant-identity__metric-label,
 .tenant-identity__focus-eyebrow,
 .tenant-identity__focus-label {
-  color: rgba(255, 244, 236, 0.58);
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .tenant-identity__metric-value,
 .tenant-identity__focus-title,
 .tenant-identity__focus-value {
-  color: #fffaf4;
+  color: var(--color-ink-strong);
 }
 
 .tenant-identity__metric-value {
   margin-top: 0.4rem;
-  font-size: 1.9rem;
+  font-size: 1.5rem;
 }
 
 .tenant-identity__metric-caption,
 .tenant-identity__feedback {
   margin-top: 0.45rem;
-  color: rgba(255, 244, 236, 0.72);
-  line-height: 1.7;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
 }
 
 .tenant-identity__focus-grid {

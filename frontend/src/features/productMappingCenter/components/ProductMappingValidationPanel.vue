@@ -13,7 +13,7 @@ defineProps<Props>();
   <section class="mapping-validation">
     <div class="mapping-validation__head">
       <div>
-        <p class="mapping-validation__eyebrow">Validation</p>
+        <p class="mapping-validation__eyebrow">校验</p>
         <h4 class="mapping-validation__title">校验结果区</h4>
       </div>
       <p class="mapping-validation__hint">把主备映射、风险状态和候选池完整度统一翻译成可执行结论。</p>
@@ -45,8 +45,8 @@ defineProps<Props>();
 .mapping-validation {
   padding: 1.15rem;
   border-radius: var(--radius-shell);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
 }
 
@@ -66,17 +66,16 @@ defineProps<Props>();
 }
 
 .mapping-validation__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .mapping-validation__title {
   margin-top: 0.35rem;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.32rem;
+  font-weight: 600;
 }
 
 .mapping-validation__hint,
@@ -92,9 +91,8 @@ defineProps<Props>();
   align-items: start;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, 0.95), rgba(243, 238, 231, 0.94));
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .mapping-validation__item-title {
@@ -109,7 +107,7 @@ defineProps<Props>();
 .mapping-validation__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(91, 72, 54, 0.05);
+  background: var(--color-accent-soft);
   color: var(--color-ink-soft);
   line-height: 1.72;
 }

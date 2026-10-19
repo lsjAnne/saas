@@ -195,7 +195,7 @@ function submitDraftPublish() {
 
 <template>
   <PanelCard
-    eyebrow="Action Station"
+
     title="商品操作台"
     description="候选与草稿都在这里进入编辑态。路由页只编排，表单和动作入口都被集中收纳在这块操作台里。"
   >
@@ -423,13 +423,13 @@ function submitDraftPublish() {
 
 .product-composer__primary {
   border: 0;
-  background: linear-gradient(135deg, #2e251d, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .product-composer__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 
@@ -459,7 +459,7 @@ function submitDraftPublish() {
 .product-composer__field textarea,
 .product-composer__field select {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.14);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.78);
   padding: 0.9rem 1rem;

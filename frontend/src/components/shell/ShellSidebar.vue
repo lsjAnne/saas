@@ -3,31 +3,25 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { canAccessConsoleRoute, consoleRoutes } from '@/app/router';
+import { NAV_GROUPS } from '@/app/router/navGroups';
 import { useAuthStore } from '@/stores/authStore';
 
 const route = useRoute();
 const authStore = useAuthStore();
 
-const visibleItems = computed(() =>
-  consoleRoutes
-    .filter((item) => canAccessConsoleRoute(authStore, item))
-    .map((item) => ({
-      label: item.meta.navLabel,
-      description: item.meta.navDescription,
-      to: `/app/${item.path}`
-    }))
+const groupedItems = computed(() =>
+  NAV_GROUPS.map((group) => ({
+    ...group,
+    items: consoleRoutes
+      .filter((item) => item.meta.navGroup === group.key)
+      .filter((item) => canAccessConsoleRoute(authStore, item))
+      .map((item) => ({
+        label: item.meta.navLabel,
+        description: item.meta.navDescription,
+        to: `/app/${item.path}`
+      }))
+  })).filter((group) => group.items.length > 0)
 );
-
-const activeItem = computed(
-  () =>
-    visibleItems.value.find((item) => route.path.startsWith(item.to)) ??
-    visibleItems.value[0]
-);
-
-const focusItems = computed(() => {
-  const matched = consoleRoutes.find((item) => route.path.startsWith(`/app/${item.path}`));
-  return matched?.meta.focusItems ?? [];
-});
 
 function isActive(path: string) {
   return route.path.startsWith(path);
@@ -40,43 +34,33 @@ function isActive(path: string) {
       <span class="shell-sidebar__crest">A</span>
       <div class="shell-sidebar__brand-copy">
         <p class="shell-sidebar__eyebrow">Ark Commerce</p>
-        <h2 class="shell-sidebar__title">Tenant Suite</h2>
+        <h2 class="shell-sidebar__title">电商运营中台</h2>
       </div>
     </section>
 
-    <section class="shell-sidebar__group">
-      <p class="shell-sidebar__label">Navigation</p>
-      <nav class="shell-sidebar__nav">
-        <RouterLink
-          v-for="item in visibleItems"
-          :key="item.to"
-          :to="item.to"
-          :class="['shell-sidebar__item', { 'shell-sidebar__item--active': isActive(item.to) }]"
-        >
-          <span class="shell-sidebar__item-label">{{ item.label }}</span>
-          <span class="shell-sidebar__item-description">{{ item.description }}</span>
-        </RouterLink>
-      </nav>
-    </section>
-
-    <section class="shell-sidebar__group shell-sidebar__group--focus">
-      <p class="shell-sidebar__label">Focus</p>
-      <div v-if="activeItem" class="shell-sidebar__focus-card">
-        <p class="shell-sidebar__focus-title">{{ activeItem.label }}</p>
-        <div class="shell-sidebar__focus-list">
-          <span
-            v-for="item in focusItems"
-            :key="item"
-            class="shell-sidebar__focus-pill"
+    <nav class="shell-sidebar__nav">
+      <section
+        v-for="group in groupedItems"
+        :key="group.key"
+        class="shell-sidebar__group"
+      >
+        <p class="shell-sidebar__group-label">
+          <span class="shell-sidebar__group-dot" aria-hidden="true"></span>
+          {{ group.label }}
+        </p>
+        <div class="shell-sidebar__items">
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.to"
+            :to="item.to"
+            :class="['shell-sidebar__item', { 'shell-sidebar__item--active': isActive(item.to) }]"
           >
-            {{ item }}
-          </span>
+            <span class="shell-sidebar__item-label">{{ item.label }}</span>
+            <span class="shell-sidebar__item-description">{{ item.description }}</span>
+          </RouterLink>
         </div>
-      </div>
-      <div v-else class="shell-sidebar__focus-card">
-        <p class="shell-sidebar__focus-title">当前账号无可用模块</p>
-      </div>
-    </section>
+      </section>
+    </nav>
   </aside>
 </template>
 
@@ -84,141 +68,143 @@ function isActive(path: string) {
 .shell-sidebar {
   display: grid;
   align-content: start;
-  gap: 1.7rem;
-  padding: 1.4rem 1rem 1.2rem;
+  gap: 1.1rem;
+  padding: 1.1rem 0.9rem 1.4rem;
   min-height: 100%;
-  background:
-    radial-gradient(circle at top, rgba(219, 186, 145, 0.18), transparent 28%),
-    linear-gradient(180deg, var(--color-sidebar-top), var(--color-sidebar-bottom));
+  background: var(--color-sidebar-top);
+  border-right: 1px solid var(--color-line);
 }
 
 .shell-sidebar__brand {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.9rem;
+  gap: 0.75rem;
   align-items: center;
-  padding: 0.35rem 0.5rem 0.8rem;
+  padding: 0.3rem 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--color-line);
 }
 
 .shell-sidebar__crest {
-  width: 2.95rem;
-  height: 2.95rem;
-  border-radius: 1rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  color: #fff8f0;
-  background: linear-gradient(140deg, rgba(225, 202, 173, 0.42), rgba(255, 255, 255, 0.08));
-  border: 1px solid rgba(255, 244, 236, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(140deg, var(--color-accent), var(--color-accent-hover));
 }
 
-.shell-sidebar__brand-copy,
-.shell-sidebar__group {
+.shell-sidebar__brand-copy {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.1rem;
 }
 
-.shell-sidebar__eyebrow,
-.shell-sidebar__label {
+.shell-sidebar__eyebrow {
   margin: 0;
-  color: rgba(255, 244, 236, 0.46);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  color: var(--color-ink-faint);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .shell-sidebar__title {
-  margin: 0.1rem 0 0;
-  font-family: var(--font-display);
-  font-size: 1.32rem;
-  color: #fff5ea;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-ink-strong);
 }
 
-.shell-sidebar__nav,
-.shell-sidebar__focus-list {
+.shell-sidebar__nav {
   display: grid;
-  gap: 0.5rem;
+  gap: 1.15rem;
+}
+
+.shell-sidebar__group {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.shell-sidebar__group-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0 0.55rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-faint);
+}
+
+.shell-sidebar__group-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  border: 1px solid var(--color-accent);
+}
+
+.shell-sidebar__items {
+  display: grid;
+  gap: 0.22rem;
 }
 
 .shell-sidebar__item {
+  position: relative;
   display: grid;
-  gap: 0.32rem;
-  padding: 0.92rem 1rem;
-  border-radius: 1.2rem;
-  color: rgba(255, 244, 236, 0.9);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid transparent;
+  gap: 0.2rem;
+  padding: 0.62rem 0.7rem;
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
   transition:
-    transform var(--transition-fast),
     background var(--transition-fast),
-    border-color var(--transition-fast),
     color var(--transition-fast);
 }
 
 .shell-sidebar__item:hover {
-  transform: translateX(2px);
-  border-color: rgba(255, 244, 236, 0.12);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-surface-2);
+  color: var(--color-ink-strong);
 }
 
 .shell-sidebar__item--active {
-  background: linear-gradient(140deg, rgba(255, 249, 242, 0.98), rgba(225, 207, 186, 0.86));
-  color: var(--color-ink-strong);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 14px 34px rgba(0, 0, 0, 0.18);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.shell-sidebar__item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-accent);
 }
 
 .shell-sidebar__item-label {
+  font-size: 0.92rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
 }
 
 .shell-sidebar__item-description {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   line-height: 1.4;
-  color: inherit;
-  opacity: 0.72;
+  color: var(--color-ink-soft);
 }
 
-.shell-sidebar__group--focus {
-  margin-top: 0.15rem;
-}
-
-.shell-sidebar__focus-card {
-  display: grid;
-  gap: 0.9rem;
-  padding: 1rem;
-  border-radius: 1.35rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(255, 244, 236, 0.1);
-}
-
-.shell-sidebar__focus-title {
-  margin: 0;
-  color: #fff6ed;
-  font-weight: 600;
-}
-
-.shell-sidebar__focus-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.25rem;
-  padding: 0 0.85rem;
-  border-radius: var(--radius-pill);
-  color: rgba(255, 244, 236, 0.78);
-  background: rgba(255, 255, 255, 0.05);
-  font-size: 0.82rem;
+.shell-sidebar__item--active .shell-sidebar__item-description {
+  color: var(--color-accent);
 }
 
 @media (max-width: 960px) {
   .shell-sidebar {
-    gap: 1rem;
-    padding: 1rem;
+    padding: 0.8rem;
   }
 
-  .shell-sidebar__nav {
+  .shell-sidebar__items {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 }

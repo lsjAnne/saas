@@ -54,11 +54,33 @@ function toneFromStatus(status: string) {
 
   return 'neutral';
 }
+
+const severityLabelMap: Record<string, string> = {
+  critical: '紧急',
+  high: '高',
+  medium: '中',
+  low: '低'
+};
+
+const statusLabelMap: Record<string, string> = {
+  open: '待处理',
+  pending: '待处理',
+  escalated: '已升级',
+  resolved: '已解决',
+  ignored: '已忽略'
+};
+
+function resolveSeverityLabel(severity: string) {
+  return severityLabelMap[normalizeText(severity)] ?? severity;
+}
+
+function resolveStatusLabel(status: string) {
+  return statusLabelMap[normalizeText(status)] ?? status;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Exception Detail"
     title="异常详情与处理动作"
     description="在一个详情面板里看清关联对象、建议文本、推荐 SOP 和本次处理动作。"
   >
@@ -72,11 +94,11 @@ function toneFromStatus(status: string) {
         </div>
         <div class="exception-detail__pill-stack">
           <StatusPill
-            :label="selectedException.severity"
+            :label="resolveSeverityLabel(selectedException.severity)"
             :tone="toneFromSeverity(selectedException.severity)"
           />
           <StatusPill
-            :label="selectedException.status"
+            :label="resolveStatusLabel(selectedException.status)"
             :tone="toneFromStatus(selectedException.status)"
           />
         </div>
@@ -116,9 +138,9 @@ function toneFromStatus(status: string) {
             :value="actionChoice"
             @change="emit('updateActionChoice', ($event.target as HTMLSelectElement).value)"
           >
-            <option value="apply_sop">apply_sop</option>
-            <option value="manual_followup">manual_followup</option>
-            <option value="owner_callback">owner_callback</option>
+            <option value="apply_sop">执行推荐 SOP</option>
+            <option value="manual_followup">人工跟进</option>
+            <option value="owner_callback">责任人回访</option>
           </select>
         </label>
 
@@ -223,7 +245,8 @@ function toneFromStatus(status: string) {
   gap: 0.3rem;
   padding: 0.85rem 0.95rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 249, 243, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .exception-detail__fact--wide {
@@ -233,10 +256,9 @@ function toneFromStatus(status: string) {
 .exception-detail__fact dt,
 .exception-detail__section-eyebrow,
 .exception-detail__field-label {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .exception-detail__fact dd {
@@ -262,9 +284,9 @@ function toneFromStatus(status: string) {
 .exception-detail__select,
 .exception-detail__textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
   padding: 0.85rem 1rem;
   font: inherit;
@@ -285,23 +307,28 @@ function toneFromStatus(status: string) {
   min-height: 2.9rem;
   padding: 0 1.15rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.86);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
   font: inherit;
   font-weight: 600;
 }
 
 .exception-detail__action--primary {
   border: 0;
-  background: linear-gradient(135deg, #3b2a20, #8f6240);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.exception-detail__action--primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .exception-detail__action--warn {
-  border: 0;
-  background: linear-gradient(135deg, #8b4d2e, #5b2214);
-  color: #fff8f0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
 }
 
 @media (max-width: 820px) {

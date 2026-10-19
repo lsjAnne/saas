@@ -101,9 +101,8 @@ function handleSave() {
 
 <template>
   <PanelCard
-    eyebrow="Channel Routing"
     title="通知渠道配置"
-    description="直接切换每条通知通道当前绑定的 provider。这里保存的是运行时路由，适合原型验证与联调收口。"
+    description="切换各通知通道绑定的网关与运行时路由。"
   >
     <div class="channel-stats__topbar">
       <label class="channel-stats__toggle">
@@ -148,7 +147,7 @@ function handleSave() {
         </div>
 
         <label class="channel-stats__field">
-          <span class="channel-stats__field-label">绑定 provider</span>
+          <span class="channel-stats__field-label">绑定网关</span>
           <select v-model="draft.bindings[channel.notifyType]" class="channel-stats__select">
             <option
               v-for="provider in channel.availableProviders"
@@ -209,8 +208,8 @@ function handleSave() {
   border: none;
   border-radius: var(--radius-pill);
   padding: 0.72rem 1.15rem;
-  background: #8f5f3a;
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
   font: inherit;
   cursor: pointer;
 }
@@ -228,8 +227,8 @@ function handleSave() {
   gap: 0.75rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .channel-stats__head {
@@ -270,16 +269,16 @@ function handleSave() {
 
 .channel-stats__field-label {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
 .channel-stats__select {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.7rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: var(--color-surface);
   color: var(--color-ink-strong);
   font: inherit;
 }

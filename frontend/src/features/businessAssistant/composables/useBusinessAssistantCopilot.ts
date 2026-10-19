@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import { getCampaigns } from '@/features/campaignCenter/services/campaignCenterService';
 import { getExceptions } from '@/services/exceptionCenterService';
@@ -1207,7 +1207,7 @@ export function useBusinessAssistantCopilot() {
     draftQuestion.value = question;
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     overview,
     snapshot,
@@ -1227,5 +1227,5 @@ export function useBusinessAssistantCopilot() {
     askQuestion,
     replayHistory,
     formatDateTime
-  };
+  });
 }

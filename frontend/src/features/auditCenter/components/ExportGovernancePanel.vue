@@ -10,6 +10,14 @@ interface Props {
 
 defineProps<Props>();
 
+const exportStatusMap: Record<string, string> = {
+  pending: '待处理',
+  processing: '处理中',
+  completed: '已完成',
+  failed: '已失败',
+  expired: '已过期'
+};
+
 function exportTone(status: string) {
   if (status === 'completed') {
     return 'success';
@@ -25,9 +33,8 @@ function exportTone(status: string) {
 
 <template>
   <PanelCard
-    eyebrow="Exports"
     title="导出治理"
-    description="导出页不只看任务列表，还要看导出范围、脱敏策略和到期时间。"
+    description="导出范围、脱敏策略与到期时间一览。"
   >
     <div class="export-governance">
       <article v-for="task in exportTasks.slice(0, 5)" :key="task.exportTaskId" class="export-governance__item">
@@ -38,7 +45,7 @@ function exportTone(status: string) {
               {{ task.fileName || '待生成文件' }} · {{ task.maskingStrategy }}
             </p>
           </div>
-          <StatusPill :label="task.status" :tone="exportTone(task.status)" />
+          <StatusPill :label="exportStatusMap[task.status] || task.status" :tone="exportTone(task.status)" />
         </div>
         <p class="export-governance__time">
           创建 {{ formatDateTime(task.createdAt) }} · 到期 {{ formatDateTime(task.downloadExpiresAt) }}
@@ -61,8 +68,8 @@ function exportTone(status: string) {
 .export-governance__item {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.74);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .export-governance__head {

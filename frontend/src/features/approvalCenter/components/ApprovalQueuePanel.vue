@@ -26,6 +26,15 @@ interface Emits {
 defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const approvalStatusMap: Record<string, string> = {
+  pending: '待处理',
+  approved: '已通过',
+  rejected: '已驳回',
+  transferred: '已转交',
+  canceled: '已撤销',
+  done: '已办结'
+};
+
 function normalizeText(value: string | null | undefined) {
   return (value ?? '').trim().toLowerCase();
 }
@@ -47,9 +56,8 @@ function toneFromStatus(status: string) {
 
 <template>
   <PanelCard
-    eyebrow="Approval Queue"
     title="待处理审批队列"
-    description="左侧看队列，右侧直接执行通过、驳回或转交，不用跳到别的页面。"
+    description="队列中直接执行通过、驳回或转交。"
   >
     <div class="approval-queue">
       <div class="approval-queue__list">
@@ -70,7 +78,7 @@ function toneFromStatus(status: string) {
                 {{ approval.relatedType }} · {{ approval.relatedId }}
               </p>
             </div>
-            <StatusPill :label="approval.status" :tone="toneFromStatus(approval.status)" />
+            <StatusPill :label="approvalStatusMap[approval.status] || approval.status" :tone="toneFromStatus(approval.status)" />
           </div>
           <p class="approval-queue__item-detail">
             当前处理人 {{ approval.currentHandlerId || '--' }} · {{ formatDateTime(approval.createdAt) }}
@@ -87,7 +95,7 @@ function toneFromStatus(status: string) {
                 {{ selectedApproval.relatedType }} · {{ selectedApproval.relatedId }}
               </p>
             </div>
-            <StatusPill :label="selectedApproval.status" :tone="toneFromStatus(selectedApproval.status)" />
+            <StatusPill :label="approvalStatusMap[selectedApproval.status] || selectedApproval.status" :tone="toneFromStatus(selectedApproval.status)" />
           </div>
 
           <dl class="approval-queue__facts">
@@ -191,8 +199,8 @@ function toneFromStatus(status: string) {
   padding: 0.95rem 1rem;
   text-align: left;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   transition:
     transform var(--transition-fast),
     border-color var(--transition-fast),
@@ -201,12 +209,12 @@ function toneFromStatus(status: string) {
 
 .approval-queue__item:hover {
   transform: translateY(-1px);
-  border-color: rgba(156, 113, 71, 0.24);
+  border-color: var(--color-accent);
 }
 
 .approval-queue__item--active {
-  border-color: rgba(156, 113, 71, 0.32);
-  box-shadow: 0 14px 30px rgba(112, 84, 55, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .approval-queue__item-head,
@@ -246,10 +254,8 @@ function toneFromStatus(status: string) {
 .approval-queue__action-card {
   padding: 1rem;
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    radial-gradient(circle at top right, rgba(198, 172, 140, 0.12), transparent 36%),
-    rgba(255, 252, 248, 0.92);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .approval-queue__facts {
@@ -265,8 +271,7 @@ function toneFromStatus(status: string) {
 
 .approval-queue__fact dt {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  color: var(--color-ink-faint);
 }
 
 .approval-queue__fact dd {
@@ -282,17 +287,16 @@ function toneFromStatus(status: string) {
 
 .approval-queue__field-label {
   font-size: 0.8rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-ink-faint);
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 .approval-queue__textarea,
 .approval-queue__input {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--color-surface);
   color: var(--color-ink-strong);
   padding: 0.85rem 1rem;
   font: inherit;
@@ -313,8 +317,8 @@ function toneFromStatus(status: string) {
   min-height: 2.9rem;
   padding: 0 1.15rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
   font: inherit;
   font-weight: 600;
@@ -322,12 +326,17 @@ function toneFromStatus(status: string) {
 
 .approval-queue__action--primary {
   border: 0;
-  background: linear-gradient(135deg, rgba(59, 117, 86, 0.98), rgba(89, 148, 115, 0.92));
-  color: #fffaf4;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.approval-queue__action--primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .approval-queue__action--warn {
-  border-color: rgba(183, 117, 47, 0.18);
+  border-color: var(--color-line);
   color: var(--color-warning);
 }
 

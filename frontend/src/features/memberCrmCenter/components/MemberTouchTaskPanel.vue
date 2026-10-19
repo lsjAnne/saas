@@ -102,11 +102,30 @@ function resolveTone(status: string) {
 
   return 'neutral';
 }
+
+const labelMap: Record<string, string> = {
+  recall: '召回',
+  repurchase: '复购',
+  care: '关怀',
+  manual: '手工',
+  segment_rule: '分群规则',
+  system: '系统',
+  site_message: '站内信',
+  sms: '短信',
+  wechat: '微信',
+  planned: '计划中',
+  in_progress: '进行中',
+  done: '已完成',
+  canceled: '已取消'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Touch Tasks"
     title="触达任务与召回轨道"
     description="围绕当前会员创建 recall / repurchase / care 任务，并看最近触达队列。"
   >
@@ -115,25 +134,25 @@ function resolveTone(status: string) {
         <label class="member-touch__field">
           <span>任务类型</span>
           <select v-model="form.taskType">
-            <option value="recall">recall</option>
-            <option value="repurchase">repurchase</option>
-            <option value="care">care</option>
+            <option value="recall">召回</option>
+            <option value="repurchase">复购</option>
+            <option value="care">关怀</option>
           </select>
         </label>
         <label class="member-touch__field">
           <span>触发类型</span>
           <select v-model="form.triggerType">
-            <option value="manual">manual</option>
-            <option value="segment_rule">segment_rule</option>
-            <option value="system">system</option>
+            <option value="manual">手工</option>
+            <option value="segment_rule">分群规则</option>
+            <option value="system">系统</option>
           </select>
         </label>
         <label class="member-touch__field">
           <span>渠道</span>
           <select v-model="form.channel">
-            <option value="site_message">site_message</option>
-            <option value="sms">sms</option>
-            <option value="wechat">wechat</option>
+            <option value="site_message">站内信</option>
+            <option value="sms">短信</option>
+            <option value="wechat">微信</option>
           </select>
         </label>
         <label class="member-touch__field">
@@ -169,12 +188,12 @@ function resolveTone(status: string) {
         <article v-for="task in touchTasks" :key="task.taskId" class="member-touch__item">
           <div class="member-touch__item-head">
             <div>
-              <h4 class="member-touch__item-title">{{ task.taskType }}</h4>
+              <h4 class="member-touch__item-title">{{ labelOf(task.taskType) }}</h4>
               <p class="member-touch__item-meta">
-                {{ task.channel }} / {{ task.triggerType }}
+                {{ labelOf(task.channel) }} / {{ labelOf(task.triggerType) }}
               </p>
             </div>
-            <StatusPill :label="task.status" :tone="resolveTone(task.status)" />
+            <StatusPill :label="labelOf(task.status)" :tone="resolveTone(task.status)" />
           </div>
           <p class="member-touch__item-body">{{ task.remark || '暂无备注' }}</p>
           <p class="member-touch__item-meta">计划时间 {{ formatDateTime(task.scheduledAt) }}</p>
@@ -227,8 +246,8 @@ function resolveTone(status: string) {
   min-height: 2.8rem;
   padding: 0.75rem 0.9rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -236,10 +255,14 @@ function resolveTone(status: string) {
 .member-touch__primary {
   min-height: 2.7rem;
   padding: 0 1rem;
-  border: 0;
+  border: 1px solid var(--color-accent);
   border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, #30525a, #6b8d8b);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.member-touch__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .member-touch__item {
@@ -247,8 +270,8 @@ function resolveTone(status: string) {
   gap: 0.6rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .member-touch__item-head {
@@ -282,7 +305,8 @@ function resolveTone(status: string) {
 .member-touch__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 @media (max-width: 1080px) {

@@ -62,9 +62,8 @@ function handleSave() {
 
 <template>
   <PanelCard
-    eyebrow="Provider Controls"
-    title="网关 Provider 管理"
-    description="集中维护 provider 的启用状态、Mock 标识、回执能力与目标地址。这里保存后，新的通知会按最新网关状态派发。"
+    title="网关供应商管理"
+    description="维护网关启用状态、Mock 标识、回执能力与目标地址。"
   >
     <div class="provider-matrix__topbar">
       <button
@@ -73,7 +72,7 @@ function handleSave() {
         :disabled="isSubmitting"
         @click="handleSave"
       >
-        {{ isSubmitting ? '保存中...' : '保存 Provider 配置' }}
+        {{ isSubmitting ? '保存中...' : '保存供应商配置' }}
       </button>
     </div>
 
@@ -94,7 +93,7 @@ function handleSave() {
               :tone="provider.draft.enabled ? 'success' : 'neutral'"
             />
             <StatusPill
-              :label="provider.draft.mockMode ? 'Mock' : 'Live'"
+              :label="provider.draft.mockMode ? 'Mock 模式' : '正式'"
               :tone="provider.draft.mockMode ? 'warn' : 'success'"
             />
           </div>
@@ -103,7 +102,7 @@ function handleSave() {
         <div class="provider-matrix__toggles">
           <label class="provider-matrix__toggle">
             <input v-model="provider.draft.enabled" type="checkbox" />
-            <span>启用 provider</span>
+            <span>启用供应商</span>
           </label>
           <label class="provider-matrix__toggle">
             <input v-model="provider.draft.mockMode" type="checkbox" />
@@ -121,7 +120,7 @@ function handleSave() {
         </label>
 
         <label class="provider-matrix__field">
-          <span class="provider-matrix__field-label">Receipt Callback Path</span>
+          <span class="provider-matrix__field-label">回执回调路径</span>
           <input
             v-model="provider.draft.receiptCallbackPath"
             class="provider-matrix__input"
@@ -130,7 +129,7 @@ function handleSave() {
         </label>
 
         <label class="provider-matrix__field">
-          <span class="provider-matrix__field-label">Description</span>
+          <span class="provider-matrix__field-label">描述</span>
           <textarea
             v-model="provider.draft.description"
             class="provider-matrix__textarea"
@@ -161,7 +160,7 @@ function handleSave() {
       </article>
     </div>
 
-    <p v-else class="provider-matrix__empty">当前没有可维护的通知 provider。</p>
+    <p v-else class="provider-matrix__empty">当前没有可维护的通知供应商。</p>
   </PanelCard>
 </template>
 
@@ -177,8 +176,8 @@ function handleSave() {
   border: none;
   border-radius: var(--radius-pill);
   padding: 0.72rem 1.15rem;
-  background: #8f5f3a;
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
   font: inherit;
   cursor: pointer;
 }
@@ -198,10 +197,8 @@ function handleSave() {
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    radial-gradient(circle at top right, rgba(197, 170, 137, 0.14), transparent 42%),
-    rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .provider-matrix__header {
@@ -261,17 +258,17 @@ function handleSave() {
 
 .provider-matrix__field-label {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
 .provider-matrix__input,
 .provider-matrix__textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.7rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: var(--color-surface);
   color: var(--color-ink-strong);
   font: inherit;
   box-sizing: border-box;
@@ -290,15 +287,13 @@ function handleSave() {
 .provider-matrix__metric {
   padding: 0.8rem;
   border-radius: calc(var(--radius-lg) - 0.25rem);
-  background: rgba(255, 251, 247, 0.86);
-  border: 1px solid rgba(91, 72, 54, 0.06);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .provider-matrix__metric-label {
   color: var(--color-ink-faint);
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
 }
 
 .provider-matrix__metric-value {

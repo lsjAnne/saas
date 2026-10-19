@@ -34,7 +34,7 @@ defineEmits<{
     <div class="mapping-workspace__section">
       <div class="mapping-workspace__head">
         <div>
-          <p class="mapping-workspace__eyebrow">Candidate Sources</p>
+          <p class="mapping-workspace__eyebrow">候选货源</p>
           <h4 class="mapping-workspace__title">货源候选区</h4>
         </div>
         <p class="mapping-workspace__hint">
@@ -118,7 +118,7 @@ defineEmits<{
       <div class="mapping-workspace__section">
         <div class="mapping-workspace__head">
           <div>
-            <p class="mapping-workspace__eyebrow">SKU Map</p>
+            <p class="mapping-workspace__eyebrow">SKU 映射</p>
             <h4 class="mapping-workspace__title">SKU 映射区</h4>
           </div>
           <p class="mapping-workspace__hint">
@@ -144,7 +144,7 @@ defineEmits<{
       <div class="mapping-workspace__section">
         <div class="mapping-workspace__head">
           <div>
-            <p class="mapping-workspace__eyebrow">Backup Pool</p>
+            <p class="mapping-workspace__eyebrow">备用货源</p>
             <h4 class="mapping-workspace__title">备用货源区</h4>
           </div>
           <p class="mapping-workspace__hint">主货源出现风险时，这里决定你能否无缝切换。</p>
@@ -202,8 +202,8 @@ defineEmits<{
 .mapping-workspace__section {
   padding: 1.15rem;
   border-radius: var(--radius-shell);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
 }
 
@@ -232,17 +232,16 @@ defineEmits<{
 }
 
 .mapping-workspace__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .mapping-workspace__title {
   margin-top: 0.35rem;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.32rem;
+  font-weight: 600;
 }
 
 .mapping-workspace__hint,
@@ -264,9 +263,8 @@ defineEmits<{
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    linear-gradient(155deg, rgba(255, 255, 255, 0.95), rgba(244, 239, 233, 0.94));
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .mapping-workspace__supplier-head,
@@ -294,8 +292,8 @@ defineEmits<{
   align-items: center;
   padding: 0 0.75rem;
   border-radius: var(--radius-pill);
-  background: rgba(91, 72, 54, 0.08);
-  color: var(--color-ink-soft);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.8rem;
 }
 
@@ -303,22 +301,20 @@ defineEmits<{
   min-height: 2.5rem;
   padding: 0 0.95rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
 }
 
 .mapping-workspace__button--solid {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fff8f0;
+  color: #ffffff;
 }
 
 .mapping-workspace__sku-label {
-  color: var(--color-ink-faint);
+  color: var(--color-ink-soft);
   font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .mapping-workspace__sku-title {
@@ -330,7 +326,7 @@ defineEmits<{
 .mapping-workspace__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(91, 72, 54, 0.05);
+  background: var(--color-accent-soft);
   color: var(--color-ink-soft);
   line-height: 1.72;
 }

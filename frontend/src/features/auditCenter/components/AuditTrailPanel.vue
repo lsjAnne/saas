@@ -17,9 +17,8 @@ const uniqueTraceCount = computed(() => new Set(props.auditLogs.map((log) => log
 
 <template>
   <PanelCard
-    eyebrow="Audit Trail"
     title="审计轨迹"
-    description="审计中心要先回答谁在什么时候做了什么，再把导出动作和合规审计串起来。"
+    description="记录谁在何时执行了何种操作，支持链路追溯。"
   >
     <div class="audit-trail">
       <div class="audit-trail__metrics">
@@ -60,8 +59,8 @@ const uniqueTraceCount = computed(() => new Set(props.auditLogs.map((log) => log
 .audit-trail__item {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.74);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .audit-trail__title,

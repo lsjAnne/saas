@@ -101,12 +101,10 @@ onMounted(() => {
 <template>
   <section class="finance-center-page">
     <header class="finance-center-page__header">
-      <p class="finance-center-page__eyebrow">Finance & Settlement</p>
-      <h2 class="finance-center-page__title">
-        把账单生成、应收回款、利润洞察、发票凭证和期间关账收成一张真正可执行的财务首页
-      </h2>
+      <p class="finance-center-page__eyebrow">财务结算</p>
+      <h2 class="finance-center-page__title">财务结算</h2>
       <p class="finance-center-page__subtitle">
-        这页不再停留在财务规划骨架，而是直接围绕账单、回款、利润、票据和关账五条真实主链搭起一套可看、可追、可操作的结算控制台。
+        账单、收支、凭证与利润洞察。
       </p>
     </header>
 
@@ -225,18 +223,16 @@ onMounted(() => {
 }
 
 .finance-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .finance-center-page__title {
-  max-width: 14ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .finance-center-page__subtitle,

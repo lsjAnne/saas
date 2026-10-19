@@ -23,11 +23,11 @@ authStore.hydrate();
 
 const readinessMap = computed<Record<string, IntegrationReadinessDescriptor>>(() =>
   Object.fromEntries(
-    integrationPreferences.options.value.map((option) => [
+    integrationPreferences.options.map((option) => [
       option.systemCode,
       observabilityReadiness.describeSystem(
         option.systemCode,
-        integrationPreferences.selectedSystemCodes.value
+        integrationPreferences.selectedSystemCodes
       )
     ])
   )
@@ -92,10 +92,10 @@ onMounted(() => {
 <template>
   <section class="system-settings-page">
     <header class="system-settings-page__header">
-      <p class="system-settings-page__eyebrow">System Settings</p>
-      <h2 class="system-settings-page__title">把高级配置、readiness 门禁和合规版本放到同一条设置语义里</h2>
+      <p class="system-settings-page__eyebrow">偏好配置</p>
+      <h2 class="system-settings-page__title">系统设置</h2>
       <p class="system-settings-page__subtitle">
-        这里不是堆技术术语，而是帮助租户管理员看清楚哪些外部能力被选择、哪些已经具备交付条件。
+        合规文档、就绪度与外部集成配置
       </p>
     </header>
 
@@ -145,7 +145,7 @@ onMounted(() => {
 
 .system-settings-page__header {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.35rem;
 }
 
 .system-settings-page__eyebrow,
@@ -156,25 +156,21 @@ onMounted(() => {
 }
 
 .system-settings-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .system-settings-page__title {
-  max-width: 18ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 3.8vw, 3.6rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .system-settings-page__subtitle,
 .system-settings-page__note {
-  max-width: 56rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .system-settings-page__grid {

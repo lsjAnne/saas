@@ -43,6 +43,23 @@ function formatReadyFlag(value: boolean) {
   return value ? '已就绪' : '未就绪';
 }
 
+const planStatusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  scheduled: '已排期',
+  ready: '待开播',
+  running: '直播中',
+  live: '直播中',
+  paused: '已暂停',
+  cancelled: '已取消',
+  failed: '开播失败',
+  finished: '已结束',
+  completed: '已结束'
+};
+
+function resolvePlanStatusLabel(status: string) {
+  return planStatusLabelMap[status.toLowerCase()] ?? status;
+}
+
 const concurrencyGateSummary = computed(() => {
   const check = props.concurrencyCheck;
   if (!check) {
@@ -60,7 +77,6 @@ const concurrencyGateSummary = computed(() => {
 
 <template>
   <PanelCard
-    eyebrow="Plan Runway"
     title="直播计划跑道"
     description="先看排期、主账号和占用，再做并发校验、到点开播或批量运行。"
   >
@@ -83,7 +99,7 @@ const concurrencyGateSummary = computed(() => {
                 店铺 {{ plan.storeId }} / 主播 {{ plan.anchorProfileName || '--' }}
               </p>
             </div>
-            <StatusPill :label="plan.planStatus" :tone="toneFromStatus(plan.planStatus)" />
+            <StatusPill :label="resolvePlanStatusLabel(plan.planStatus)" :tone="toneFromStatus(plan.planStatus)" />
           </div>
           <p class="live-plan-runway__item-time">
             {{ formatDateTime(plan.scheduledStartAt) }} - {{ formatDateTime(plan.scheduledEndAt) }}
@@ -100,7 +116,7 @@ const concurrencyGateSummary = computed(() => {
                 账号 {{ selectedPlan.liveAccountId || '--' }} / 创建于 {{ formatDateTime(selectedPlan.createdAt) }}
               </p>
             </div>
-            <StatusPill :label="selectedPlan.planStatus" :tone="toneFromStatus(selectedPlan.planStatus)" />
+            <StatusPill :label="resolvePlanStatusLabel(selectedPlan.planStatus)" :tone="toneFromStatus(selectedPlan.planStatus)" />
           </div>
 
           <dl class="live-plan-runway__facts">
@@ -124,7 +140,7 @@ const concurrencyGateSummary = computed(() => {
 
             <dl class="live-plan-runway__check-grid">
               <div class="live-plan-runway__check-fact">
-                <dt>Runtime Provider</dt>
+                <dt>Runtime 服务商</dt>
                 <dd>{{ concurrencyCheck.runtimeProvider || '--' }}</dd>
               </div>
               <div class="live-plan-runway__check-fact">
@@ -210,13 +226,13 @@ const concurrencyGateSummary = computed(() => {
   padding: 0.95rem 1rem;
   text-align: left;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .live-plan-runway__item--active {
-  border-color: rgba(156, 113, 71, 0.3);
-  box-shadow: 0 14px 30px rgba(112, 84, 55, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .live-plan-runway__item-head,
@@ -261,11 +277,9 @@ const concurrencyGateSummary = computed(() => {
 
 .live-plan-runway__detail-card {
   padding: 1rem;
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    radial-gradient(circle at top right, rgba(198, 172, 140, 0.12), transparent 36%),
-    rgba(255, 252, 248, 0.92);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .live-plan-runway__facts,
@@ -288,8 +302,7 @@ const concurrencyGateSummary = computed(() => {
 .live-plan-runway__fact dt,
 .live-plan-runway__check-fact dt {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  color: var(--color-ink-faint);
 }
 
 .live-plan-runway__fact dd,
@@ -303,8 +316,8 @@ const concurrencyGateSummary = computed(() => {
   gap: 0.55rem;
   padding: 0.85rem 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(250, 245, 239, 0.82);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .live-plan-runway__check-title {
@@ -321,17 +334,22 @@ const concurrencyGateSummary = computed(() => {
   min-height: 2.9rem;
   padding: 0 1.1rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.86);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
   font: inherit;
   font-weight: 600;
 }
 
 .live-plan-runway__action--primary {
   border: 0;
-  background: linear-gradient(135deg, rgba(131, 79, 36, 0.98), rgba(186, 125, 74, 0.92));
-  color: #fffaf4;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.live-plan-runway__action--primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 @media (max-width: 1080px) {

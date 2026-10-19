@@ -67,12 +67,10 @@ onMounted(() => {
 <template>
   <section class="store-channel-page">
     <header class="store-channel-page__header">
-      <p class="store-channel-page__eyebrow">Store & Channel Center</p>
-      <h2 class="store-channel-page__title">
-        把店铺接入、渠道授权与店铺阈值配置收进同一张运营中枢页
-      </h2>
+      <p class="store-channel-page__eyebrow">渠道接入</p>
+      <h2 class="store-channel-page__title">店铺与渠道</h2>
       <p class="store-channel-page__subtitle">
-        这不是单纯的“建档页面”。它直接决定哪些店铺真正接入、哪些渠道账号还可用，以及默认发货与阈值策略是否已经进入当前租户的交付边界。
+        管理店铺接入、渠道账号授权与店铺策略配置。
       </p>
     </header>
 
@@ -152,25 +150,21 @@ onMounted(() => {
 }
 
 .store-channel-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .store-channel-page__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.55rem;
+  font-weight: 600;
 }
 
 .store-channel-page__subtitle,
 .store-channel-page__footer-note {
-  max-width: 62rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .store-channel-page__grid {

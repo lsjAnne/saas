@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import { getCampaigns } from '@/features/campaignCenter/services/campaignCenterService';
 import {
@@ -418,7 +418,7 @@ export function useMemberCrmCenterOverview() {
     });
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     members,
     memberList: sortedMembers,
@@ -462,5 +462,5 @@ export function useMemberCrmCenterOverview() {
     runSegmentRule,
     submitTouchTask,
     submitExportGroup
-  };
+  });
 }

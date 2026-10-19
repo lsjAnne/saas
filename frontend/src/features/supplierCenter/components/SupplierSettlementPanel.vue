@@ -56,6 +56,19 @@ function toneFromStatus(status: string) {
   return 'neutral';
 }
 
+const settlementStatusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  pending: '待结算',
+  approved: '已核准',
+  settled: '已结算',
+  paid: '已付款',
+  cancelled: '已取消'
+};
+
+function resolveSettlementStatusLabel(status: string) {
+  return settlementStatusLabelMap[status.toLowerCase()] ?? status;
+}
+
 function handleSubmit() {
   if (!props.selectedSupplier) {
     return;
@@ -74,7 +87,6 @@ function handleSubmit() {
 
 <template>
   <PanelCard
-    eyebrow="Settlement & Summary"
     title="结算单与对账摘要"
     description="先把结算单主链打通，让采购与财务至少能在供应商页看到真实对账状态。"
   >
@@ -116,7 +128,7 @@ function handleSubmit() {
                 到期 {{ formatDate(statement.dueDate) }} · 创建 {{ formatDateTime(statement.createdAt) }}
               </p>
             </div>
-            <StatusPill :label="statement.settlementStatus" :tone="toneFromStatus(statement.settlementStatus)" />
+            <StatusPill :label="resolveSettlementStatusLabel(statement.settlementStatus)" :tone="toneFromStatus(statement.settlementStatus)" />
           </div>
           <p class="supplier-settlement__item-amount">
             {{ formatCurrency(statement.payableAmount) }}
@@ -157,9 +169,9 @@ function handleSubmit() {
 .supplier-settlement__field input {
   min-height: 2.75rem;
   padding: 0 0.9rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.78);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
 }
 
@@ -167,16 +179,21 @@ function handleSubmit() {
   min-height: 2.75rem;
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-success);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.supplier-settlement__submit:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .supplier-settlement__item,
 .supplier-settlement__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .supplier-settlement__item-head {

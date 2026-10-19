@@ -47,23 +47,55 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   actionFeedback: null
 });
+
+function tenantStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    active: '正常',
+    suspended: '已停用',
+    trial: '试用',
+    expiring: '临期'
+  };
+  return (status && map[status]) || '待命中';
+}
+
+function subscriptionStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    active: '生效',
+    unsubscribed: '未订阅',
+    trial: '试用',
+    past_due: '已逾期'
+  };
+  return (status && map[status]) || '--';
+}
+
+const monthLabelMap: Record<string, string> = {
+  Jan: '1月',
+  Feb: '2月',
+  Mar: '3月',
+  Apr: '4月',
+  May: '5月',
+  Jun: '6月',
+  Jul: '7月',
+  Aug: '8月',
+  Sep: '9月',
+  Oct: '10月',
+  Nov: '11月',
+  Dec: '12月'
+};
 </script>
 
 <template>
   <PanelCard
-    eyebrow="SaaS Operations"
-    title="Commercial health, conversion, and churn in one view"
-    description="The hero section turns the platform page into an operations cockpit by putting commercial metrics, growth, and conversion signals ahead of governance details."
-    dark
+    title="经营健康与转化概览"
+    description="商业指标、增长与转化信号一览，治理细节置于下方。"
   >
     <div class="admin-hero">
       <div class="admin-hero__copy">
-        <p class="admin-hero__eyebrow">Current focus tenant</p>
-        <h4 class="admin-hero__title">{{ selectedTenant?.tenantName || 'Select a tenant to inspect' }}</h4>
+        <p class="admin-hero__eyebrow">当前关注租户</p>
+        <h4 class="admin-hero__title">{{ selectedTenant?.tenantName || '请选择租户查看' }}</h4>
         <p class="admin-hero__summary">
-          Current portfolio: {{ summary.totalTenantCount }} tenants, {{ summary.payingTenantCount }}
-          paying, {{ summary.trialTenantCount }} in trial, and {{ summary.atRiskTenantCount }} at
-          risk.
+          当前组合共 {{ summary.totalTenantCount }} 个租户，其中付费 {{ summary.payingTenantCount }}
+          个、试用 {{ summary.trialTenantCount }} 个、风险 {{ summary.atRiskTenantCount }} 个。
         </p>
         <p v-if="actionFeedback" class="admin-hero__feedback">{{ actionFeedback }}</p>
       </div>
@@ -71,53 +103,53 @@ withDefaults(defineProps<Props>(), {
       <div class="admin-hero__focus">
         <div class="admin-hero__focus-row">
           <div>
-            <p class="admin-hero__eyebrow">Automation pulse</p>
+            <p class="admin-hero__eyebrow">自动化执行</p>
             <h5 class="admin-hero__focus-title">
               {{ formatDateTime(subscriptionAutomationSummary?.executedAt) }}
             </h5>
           </div>
           <StatusPill
-            :label="selectedTenant?.tenantStatus || 'idle'"
+            :label="tenantStatusLabel(selectedTenant?.tenantStatus)"
             :tone="selectedTenant?.tenantStatus === 'active' ? 'success' : 'warn'"
           />
         </div>
         <p class="admin-hero__focus-text">
-          Selected tenant: {{ selectedTenant?.planName || '--' }} / {{ selectedTenant?.subscriptionStatus || '--' }}
-          / {{ selectedTenant?.seatCount ?? '--' }} seats
+          当前租户：{{ selectedTenant?.planName || '--' }} / {{ subscriptionStatusLabel(selectedTenant?.subscriptionStatus) }}
+          / {{ selectedTenant?.seatCount ?? '--' }} 席
         </p>
         <p class="admin-hero__focus-text">
-          Last automation run: renewed {{ subscriptionAutomationSummary?.autoRenewedCount ?? 0 }},
-          suspended {{ subscriptionAutomationSummary?.autoSuspendedCount ?? 0 }}, charge failed
-          {{ subscriptionAutomationSummary?.autoChargeFailedCount ?? 0 }}.
+          上次自动化执行：自动续费 {{ subscriptionAutomationSummary?.autoRenewedCount ?? 0 }} 个、
+          自动停用 {{ subscriptionAutomationSummary?.autoSuspendedCount ?? 0 }} 个、扣费失败
+          {{ subscriptionAutomationSummary?.autoChargeFailedCount ?? 0 }} 个。
         </p>
       </div>
     </div>
 
     <div class="admin-hero__metrics">
-      <MetricCard label="Tenants" :value="formatCount(summary.totalTenantCount)" caption="Total portfolio size" />
-      <MetricCard label="Paying" :value="formatCount(summary.payingTenantCount)" caption="Subscribed tenants" />
-      <MetricCard label="New 30d" :value="formatCount(summary.newTenantCount30d)" caption="New tenants in the last 30 days" />
-      <MetricCard label="Est. MRR" :value="formatCurrency(summary.estimatedMonthlyRevenue)" caption="Base recurring revenue estimate" />
-      <MetricCard label="Trial conv." :value="formatPercent(trialConversion.conversionRate, 0)" caption="Current conversion snapshot" />
-      <MetricCard label="At risk" :value="formatCount(summary.atRiskTenantCount)" caption="Overdue, suspended, expiring, or hot capacity" />
+      <MetricCard label="租户数" :value="formatCount(summary.totalTenantCount)" caption="当前组合整体规模" />
+      <MetricCard label="付费租户" :value="formatCount(summary.payingTenantCount)" caption="已订阅的租户数" />
+      <MetricCard label="近30天新增" :value="formatCount(summary.newTenantCount30d)" caption="最近 30 天新开租户" />
+      <MetricCard label="预计月收入" :value="formatCurrency(summary.estimatedMonthlyRevenue)" caption="经常性基础收入预估" />
+      <MetricCard label="试用转化率" :value="formatPercent(trialConversion.conversionRate, 0)" caption="当前转化快照" />
+      <MetricCard label="风险租户" :value="formatCount(summary.atRiskTenantCount)" caption="逾期、停用、临期或容量紧张" />
     </div>
 
     <div class="admin-hero__business-grid">
       <div class="admin-hero__business-card">
         <div class="admin-hero__focus-row">
           <div>
-            <p class="admin-hero__eyebrow">Growth trend</p>
-            <h5 class="admin-hero__focus-title">Recent tenant creation</h5>
+            <p class="admin-hero__eyebrow">增长趋势</p>
+            <h5 class="admin-hero__focus-title">近期租户创建</h5>
           </div>
-          <StatusPill label="6 months" tone="neutral" />
+          <StatusPill label="近 6 个月" tone="neutral" />
         </div>
         <div class="admin-hero__trend-list">
           <article v-for="point in growthTrend" :key="point.label" class="admin-hero__trend-item">
             <div class="admin-hero__focus-row">
-              <strong>{{ point.label }}</strong>
-              <span>{{ point.newTenantCount }} new</span>
+              <strong>{{ monthLabelMap[point.label] ?? point.label }}</strong>
+              <span>新增 {{ point.newTenantCount }}</span>
             </div>
-            <p class="admin-hero__focus-text">{{ point.payingTenantCount }} of them are paying tenants.</p>
+            <p class="admin-hero__focus-text">其中 {{ point.payingTenantCount }} 家已转为付费租户。</p>
           </article>
         </div>
       </div>
@@ -125,35 +157,35 @@ withDefaults(defineProps<Props>(), {
       <div class="admin-hero__business-card">
         <div class="admin-hero__focus-row">
           <div>
-            <p class="admin-hero__eyebrow">Trial conversion</p>
-            <h5 class="admin-hero__focus-title">Current funnel snapshot</h5>
+            <p class="admin-hero__eyebrow">试用转化</p>
+            <h5 class="admin-hero__focus-title">当前漏斗快照</h5>
           </div>
           <StatusPill
-            :label="trialConversion.expiringSoonCount > 0 ? 'follow-up needed' : 'stable'"
+            :label="trialConversion.expiringSoonCount > 0 ? '需跟进' : '稳定'"
             :tone="trialConversion.expiringSoonCount > 0 ? 'warn' : 'success'"
           />
         </div>
         <div class="admin-hero__trend-list">
           <article class="admin-hero__trend-item">
             <div class="admin-hero__focus-row">
-              <strong>Active trials</strong>
+              <strong>进行中试用</strong>
               <span>{{ trialConversion.trialTenantCount }}</span>
             </div>
-            <p class="admin-hero__focus-text">Tenants still inside trial or not yet converted.</p>
+            <p class="admin-hero__focus-text">仍在试用期或尚未转化的租户。</p>
           </article>
           <article class="admin-hero__trend-item">
             <div class="admin-hero__focus-row">
-              <strong>Converted tenants</strong>
+              <strong>已转化租户</strong>
               <span>{{ trialConversion.convertedTenantCount }}</span>
             </div>
-            <p class="admin-hero__focus-text">Tenants already on active paid subscriptions.</p>
+            <p class="admin-hero__focus-text">已转为有效付费订阅的租户。</p>
           </article>
           <article class="admin-hero__trend-item">
             <div class="admin-hero__focus-row">
-              <strong>Expiring soon</strong>
+              <strong>临期试用</strong>
               <span>{{ trialConversion.expiringSoonCount }}</span>
             </div>
-            <p class="admin-hero__focus-text">Trials ending within 7 days need direct follow-up.</p>
+            <p class="admin-hero__focus-text">7 天内到期的试用需直接跟进。</p>
           </article>
         </div>
       </div>
@@ -180,16 +212,16 @@ withDefaults(defineProps<Props>(), {
 .admin-hero__business-card {
   padding: 1.05rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 244, 236, 0.08);
+  border: 1px solid var(--color-line);
 }
 
 .admin-hero__copy {
-  background: linear-gradient(145deg, rgba(255, 244, 233, 0.12), rgba(255, 255, 255, 0.04));
+  background: var(--color-accent-soft);
 }
 
 .admin-hero__focus,
 .admin-hero__business-card {
-  background: rgba(255, 248, 240, 0.1);
+  background: var(--color-surface);
 }
 
 .admin-hero__eyebrow,
@@ -202,33 +234,32 @@ withDefaults(defineProps<Props>(), {
 }
 
 .admin-hero__eyebrow {
-  color: rgba(255, 244, 236, 0.7);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .admin-hero__title,
 .admin-hero__focus-title {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .admin-hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.7rem);
-  line-height: 1.02;
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .admin-hero__summary,
 .admin-hero__feedback,
 .admin-hero__focus-text,
 .admin-hero__trend-item span {
-  color: rgba(255, 244, 236, 0.78);
-  line-height: 1.7;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
 }
 
 .admin-hero__feedback {
-  color: #f6d8b5;
+  color: var(--color-accent);
 }
 
 .admin-hero__focus-row {
@@ -257,11 +288,12 @@ withDefaults(defineProps<Props>(), {
   gap: 0.35rem;
   padding: 0.85rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .admin-hero__trend-item strong {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 @media (max-width: 1180px) {

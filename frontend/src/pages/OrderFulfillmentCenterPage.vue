@@ -164,12 +164,10 @@ onMounted(() => {
 <template>
   <section class="order-fulfillment-page">
     <header class="order-fulfillment-page__header">
-      <p class="order-fulfillment-page__eyebrow">Order & Fulfillment Center</p>
-      <h2 class="order-fulfillment-page__title">
-        把审单、拆合单、路由、履约推进和物流登记压进同一张订单指挥台
-      </h2>
+      <p class="order-fulfillment-page__eyebrow">订单履约</p>
+      <h2 class="order-fulfillment-page__title">订单与履约</h2>
       <p class="order-fulfillment-page__subtitle">
-        这页优先服务真实订单闭环：先同步平台单生成订单与履约任务，再在一个视角里完成 OMS 审核、履约推进、物流记录和逆向状态回读。
+        订单同步、审单、履约推进、物流登记与逆向处理在同一工作台完成。
       </p>
     </header>
 
@@ -255,25 +253,21 @@ onMounted(() => {
 }
 
 .order-fulfillment-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .order-fulfillment-page__title {
-  max-width: 15ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.15rem, 3.8vw, 3.7rem);
-  line-height: 1.05;
+  font-size: 1.55rem;
+  font-weight: 600;
 }
 
 .order-fulfillment-page__subtitle,
 .order-fulfillment-page__footer-note {
-  max-width: 64rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .order-fulfillment-page__grid {

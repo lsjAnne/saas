@@ -58,6 +58,22 @@ function canPublish(campaign: CampaignActivity | null) {
   return (campaign?.status ?? '').toLowerCase() === 'approved';
 }
 
+const labelMap: Record<string, string> = {
+  draft: '草稿',
+  pending_review: '待审批',
+  approved: '已通过',
+  rejected: '已驳回',
+  published: '已发布',
+  full_reduction: '满减',
+  discount: '折扣',
+  coupon: '优惠券',
+  gift: '赠品'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
+
 function formatRule(campaign: CampaignActivity | null) {
   if (!campaign) {
     return '--';
@@ -80,7 +96,6 @@ function formatRule(campaign: CampaignActivity | null) {
 
 <template>
   <PanelCard
-    eyebrow="Campaign Board"
     title="活动看板与审批轨道"
     description="左侧先按店铺和活动状态锁定对象，右侧直接处理活动详情、审批提交与发布动作。"
   >
@@ -120,10 +135,10 @@ function formatRule(campaign: CampaignActivity | null) {
           <div class="campaign-board__item-copy">
             <strong class="campaign-board__item-title">{{ campaign.activityName }}</strong>
             <span class="campaign-board__item-meta">
-              {{ campaign.activityType }} / {{ formatDate(campaign.startAt) }}
+              {{ labelOf(campaign.activityType) }} / {{ formatDate(campaign.startAt) }}
             </span>
           </div>
-          <StatusPill :label="campaign.status" :tone="resolveTone(campaign.status)" />
+          <StatusPill :label="labelOf(campaign.status)" :tone="resolveTone(campaign.status)" />
         </button>
 
         <p v-if="!campaigns.length" class="campaign-board__empty">
@@ -135,7 +150,7 @@ function formatRule(campaign: CampaignActivity | null) {
         <template v-if="selectedCampaign">
           <div class="campaign-board__detail-head">
             <div>
-              <p class="campaign-board__label">Selected Campaign</p>
+              <p class="campaign-board__label">当前选中活动</p>
               <h4 class="campaign-board__detail-title">{{ selectedCampaign.activityName }}</h4>
             </div>
             <div class="campaign-board__detail-actions">
@@ -164,7 +179,7 @@ function formatRule(campaign: CampaignActivity | null) {
           <dl class="campaign-board__facts">
             <div class="campaign-board__fact">
               <dt>活动类型</dt>
-              <dd>{{ selectedCampaign.activityType }}</dd>
+              <dd>{{ labelOf(selectedCampaign.activityType) }}</dd>
             </div>
             <div class="campaign-board__fact">
               <dt>活动窗口</dt>
@@ -240,22 +255,35 @@ function formatRule(campaign: CampaignActivity | null) {
 }
 
 .campaign-board__primary {
-  border: 0;
-  background: linear-gradient(135deg, #5b241d, #a1543d);
-  color: #fff8f0;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.campaign-board__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .campaign-board__ghost,
 .campaign-board__store-chip {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.campaign-board__ghost:hover,
+.campaign-board__store-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .campaign-board__store-chip--active {
-  border-color: rgba(161, 84, 61, 0.3);
-  background: rgba(250, 238, 231, 0.96);
-  color: #6d3428;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .campaign-board__primary:disabled,
@@ -271,14 +299,14 @@ function formatRule(campaign: CampaignActivity | null) {
   gap: 0.85rem;
   padding: 0.9rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
 }
 
 .campaign-board__item--active {
-  border-color: rgba(161, 84, 61, 0.32);
-  background: linear-gradient(135deg, rgba(252, 240, 236, 0.96), rgba(246, 228, 220, 0.88));
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .campaign-board__item-copy,
@@ -299,8 +327,8 @@ function formatRule(campaign: CampaignActivity | null) {
 .campaign-board__detail {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(250, 245, 241, 0.84);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .campaign-board__item-title,
@@ -316,15 +344,15 @@ function formatRule(campaign: CampaignActivity | null) {
 }
 
 .campaign-board__label {
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .campaign-board__detail-title {
   margin-top: 0.35rem;
-  font-family: var(--font-display);
-  font-size: 1.55rem;
+  color: var(--color-ink-strong);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .campaign-board__facts {
@@ -339,7 +367,8 @@ function formatRule(campaign: CampaignActivity | null) {
   gap: 0.35rem;
   padding: 0.8rem 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .campaign-board__fact dt {

@@ -38,11 +38,30 @@ const visibleTenants = computed(() => {
 function usageRate(tenant: AdminTenantOverview) {
   return tenant.totalUsedAmount / Math.max(tenant.totalQuotaLimit, 1);
 }
+
+function tenantStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    active: '正常',
+    suspended: '已停用',
+    trial: '试用',
+    expiring: '临期'
+  };
+  return (status && map[status]) || '未知';
+}
+
+function subscriptionStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    active: '生效',
+    unsubscribed: '未订阅',
+    trial: '试用',
+    past_due: '已逾期'
+  };
+  return (status && map[status]) || '--';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Tenant List"
     title="租户列表区"
     description="按租户状态、套餐和试用到期快速定位当前需要运营动作的租户。"
   >
@@ -68,13 +87,13 @@ function usageRate(tenant: AdminTenantOverview) {
             <p class="tenant-list__code">{{ tenant.tenantCode }}</p>
           </div>
           <StatusPill
-            :label="tenant.tenantStatus"
+            :label="tenantStatusLabel(tenant.tenantStatus)"
             :tone="tenant.tenantStatus === 'active' ? 'success' : 'warn'"
           />
         </div>
 
         <div class="tenant-list__facts">
-          <span>{{ tenant.planName || '未订阅' }} / {{ tenant.subscriptionStatus || '--' }}</span>
+          <span>{{ tenant.planName || '未订阅' }} / {{ subscriptionStatusLabel(tenant.subscriptionStatus) }}</span>
           <span>席位 {{ tenant.seatCount }}</span>
           <span>试用到期 {{ formatDate(tenant.trialEndAt) }}</span>
           <span>配额使用 {{ formatPercent(usageRate(tenant), 0) }}</span>
@@ -113,17 +132,16 @@ function usageRate(tenant: AdminTenantOverview) {
 
 .tenant-list__search-label {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .tenant-list__search-input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.72rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: #fff;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -134,15 +152,18 @@ function usageRate(tenant: AdminTenantOverview) {
   width: 100%;
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.1);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .tenant-list__item--active {
-  border-color: rgba(113, 87, 62, 0.44);
-  background: rgba(252, 246, 239, 0.96);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .tenant-list__head {

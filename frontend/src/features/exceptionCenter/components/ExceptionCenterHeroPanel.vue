@@ -58,19 +58,17 @@ const headline = computed(() => {
 
 <template>
   <PanelCard
-    eyebrow="Exception Command"
-    title="把异常分类、责任动作和推荐 SOP 压进同一张风险操作台"
+    title="异常概览"
     :description="headline"
-    dark
   >
     <div class="exception-hero">
       <div class="exception-hero__lead">
-        <p class="exception-hero__badge">Risk Operations</p>
+        <p class="exception-hero__badge">风险处置</p>
         <h4 class="exception-hero__headline">
-          异常中心的重点不是展示告警，而是让团队在一屏内判断、执行、留痕。
+          在一屏内判断、执行并留痕异常处理动作
         </h4>
         <p class="exception-hero__subline">
-          当前版本先围绕异常分类导航、详情回读、推荐 SOP 和处理动作形成真实操作入口，避免异常问题继续散落在订单、库存和履约页面中。
+          围绕异常分类导航、详情回读、推荐 SOP 和处理动作，形成可执行的异常处理链路。
         </p>
       </div>
 
@@ -107,25 +105,25 @@ const headline = computed(() => {
 .exception-hero__badge {
   width: fit-content;
   padding: 0.42rem 0.78rem;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 244, 236, 0.76);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .exception-hero__headline {
-  max-width: 20ch;
-  color: #fff8f0;
-  font-size: clamp(1.9rem, 3vw, 2.8rem);
-  line-height: 1.08;
+  max-width: 34ch;
+  color: var(--color-ink-strong);
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .exception-hero__subline {
-  max-width: 62rem;
-  color: rgba(255, 244, 236, 0.72);
-  line-height: 1.72;
+  max-width: 56rem;
+  color: var(--color-ink-soft);
+  line-height: 1.7;
 }
 
 .exception-hero__metrics {

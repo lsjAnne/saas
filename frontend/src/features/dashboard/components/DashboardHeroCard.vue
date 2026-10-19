@@ -33,10 +33,8 @@ const metricItems = computed(() => [
 
 <template>
   <PanelCard
-    eyebrow="Daily Command Deck"
-    title="把今日经营脉搏、待处理压力和下一步动作压缩到一个视图里"
-    description="首页先讲结果，再讲风险，再给动作。这里不是统计墙，而是租户登录后的日常指挥台。"
-    dark
+    title="今日经营概览"
+    description="销售额、订单量与预计毛利的最新汇总，以及今日最值得优先推进的建议动作。"
   >
     <div class="dashboard-hero">
       <div class="dashboard-hero__lead">
@@ -45,7 +43,7 @@ const metricItems = computed(() => [
           {{ summary?.topSuggestion || '正在整理今日建议动作' }}
         </h4>
         <p class="dashboard-hero__subline">
-          异常、库存与履约压力会直接反映在下方卡片里，避免用户在多个模块之间来回寻找优先级。
+          今日建议动作与快捷入口，帮助直接进入高频处理页。
         </p>
         <div class="dashboard-hero__actions">
           <RouterLink
@@ -90,52 +88,66 @@ const metricItems = computed(() => [
 .dashboard-hero__badge {
   margin: 0;
   width: fit-content;
-  padding: 0.45rem 0.8rem;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 244, 236, 0.78);
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .dashboard-hero__headline {
   margin: 0;
-  max-width: 18ch;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
-  line-height: 1.08;
-  color: #fff8f0;
+  max-width: 34ch;
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+  line-height: 1.25;
+  color: var(--color-ink-strong);
 }
 
 .dashboard-hero__subline {
   margin: 0;
   max-width: 56rem;
-  color: rgba(255, 244, 236, 0.72);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 
 .dashboard-hero__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .dashboard-hero__action {
-  min-height: 3rem;
-  padding: 0 1.1rem;
-  border-radius: var(--radius-pill);
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8f0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+  font-size: 0.88rem;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.dashboard-hero__action:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .dashboard-hero__action--solid {
   border: 0;
-  background: linear-gradient(135deg, rgba(255, 249, 242, 0.98), rgba(225, 207, 186, 0.84));
-  color: var(--color-ink-strong);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.dashboard-hero__action--solid:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .dashboard-hero__metrics {

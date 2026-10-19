@@ -1,4 +1,4 @@
-import { shallowRef } from 'vue';
+import { shallowRef, reactive } from 'vue';;
 
 import {
   getNotificationGatewayOverview,
@@ -52,7 +52,7 @@ export function useSupportWorkbenchOverview() {
     }
   }
 
-  return {
+  return reactive({
     tickets,
     ticketSlaOverview,
     supportSessions,
@@ -61,5 +61,5 @@ export function useSupportWorkbenchOverview() {
     isLoading,
     errorMessage,
     load
-  };
+  });
 }

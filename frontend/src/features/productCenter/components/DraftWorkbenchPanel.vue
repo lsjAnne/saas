@@ -37,7 +37,7 @@ function resolveTone(status: string | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Draft Workbench"
+
     title="草稿工位"
     description="草稿区只承接可发布前的最后一轮整理：标题、卖点、详情、FAQ 和建议价格。"
   >
@@ -70,7 +70,7 @@ function resolveTone(status: string | null | undefined) {
         <template v-if="selectedDraft">
           <div class="draft-workbench__detail-head">
             <div>
-              <p class="draft-workbench__label">Selected Draft</p>
+              <p class="draft-workbench__label">已选草稿</p>
               <h4 class="draft-workbench__detail-title">{{ selectedDraft.title }}</h4>
             </div>
             <div class="draft-workbench__detail-actions">
@@ -161,13 +161,13 @@ function resolveTone(status: string | null | undefined) {
   gap: 0.85rem;
   padding: 0.9rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .draft-workbench__item--active {
-  border-color: rgba(133, 98, 67, 0.34);
-  background: linear-gradient(135deg, rgba(250, 242, 233, 0.94), rgba(245, 232, 213, 0.88));
+  border-color: var(--color-accent);
+  background: var(--color-surface);
 }
 
 .draft-workbench__item-copy,
@@ -189,8 +189,8 @@ function resolveTone(status: string | null | undefined) {
 .draft-workbench__detail {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(248, 244, 238, 0.8);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .draft-workbench__item-title,
@@ -230,7 +230,7 @@ function resolveTone(status: string | null | undefined) {
   gap: 0.35rem;
   padding: 0.8rem 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--color-surface);
 }
 
 .draft-workbench__fact dt {
@@ -252,13 +252,13 @@ function resolveTone(status: string | null | undefined) {
 
 .draft-workbench__primary {
   border: 0;
-  background: linear-gradient(135deg, #2e251d, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .draft-workbench__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 

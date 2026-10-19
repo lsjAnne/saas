@@ -62,7 +62,6 @@ function submitPublish() {
 
 <template>
   <PanelCard
-    eyebrow="Reference Links"
     title="引用来源与发布回写"
     description="既追踪当前素材被哪些链路复用，也把视频发布动作直接写回同一条素材记录。"
   >
@@ -160,15 +159,23 @@ function submitPublish() {
 }
 
 .reference-panel__button {
-  border: 1px solid rgba(41, 101, 88, 0.16);
-  background: rgba(41, 101, 88, 0.12);
-  color: var(--color-success);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.reference-panel__button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .reference-panel__publish-button {
-  border: 1px solid rgba(121, 74, 40, 0.14);
+  border: 1px solid var(--color-accent);
   background: var(--color-accent);
-  color: #fff7f0;
+  color: #ffffff;
 }
 
 .reference-panel__button:disabled,
@@ -183,14 +190,14 @@ function submitPublish() {
   margin-top: 0.9rem;
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .reference-panel__publish-title {
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .reference-panel__publish-grid {
@@ -209,10 +216,9 @@ function submitPublish() {
 }
 
 .reference-panel__field span {
-  color: var(--color-ink-faint);
+  color: var(--color-ink-soft);
   font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .reference-panel__field input {
@@ -220,8 +226,8 @@ function submitPublish() {
   min-height: 2.9rem;
   padding: 0 0.95rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
   font: inherit;
   box-sizing: border-box;
@@ -236,15 +242,15 @@ function submitPublish() {
   margin-top: 0.9rem;
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background: linear-gradient(145deg, rgba(31, 39, 43, 0.98), rgba(18, 27, 31, 0.98));
-  color: #fff7f1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-strong);
 }
 
 .reference-panel__copy-label {
-  color: rgba(244, 247, 247, 0.74);
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .reference-panel__copy-content {
@@ -263,8 +269,8 @@ function submitPublish() {
 .reference-panel__item {
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .reference-panel__item-head {
@@ -276,8 +282,8 @@ function submitPublish() {
 
 .reference-panel__name {
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.15rem;
+  font-weight: 600;
 }
 
 .reference-panel__meta,
@@ -295,7 +301,8 @@ function submitPublish() {
   margin-top: 0.9rem;
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.56);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-line);
 }
 
 @media (max-width: 720px) {

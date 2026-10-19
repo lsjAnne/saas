@@ -35,12 +35,12 @@ defineEmits<{
 <template>
   <section class="mapping-hero">
     <div class="mapping-hero__copy">
-      <p class="mapping-hero__eyebrow">Source Mapping Atelier</p>
+      <p class="mapping-hero__eyebrow">货源映射</p>
       <h3 class="mapping-hero__title">
-        把平台商品、主备货源和映射校验压进同一张可执行的选品编排台
+        主备货源与映射校验一屏编排
       </h3>
       <p class="mapping-hero__subtitle">
-        当前聚焦店铺：{{ selectedStoreName || '待选择商品' }}。这里不把映射当配置表处理，而是把主货源落位、备用兜底和风险复核放在同一条操作链里。
+        当前聚焦店铺：{{ selectedStoreName || '待选择商品' }}，主货源落位、备用兜底与风险复核在同一操作链完成。
       </p>
 
       <div class="mapping-hero__actions">
@@ -70,10 +70,10 @@ defineEmits<{
         <StatusPill
           :label="
             selectedProduct?.productMissing
-              ? 'product missing'
+              ? '主数据缺失'
               : activePrimarySupplier
-                ? 'primary ready'
-                : 'pending primary'
+                ? '主货源就绪'
+                : '待建主货源'
           "
           :tone="selectedProduct?.productMissing ? 'warn' : activePrimarySupplier ? 'success' : 'warn'"
         />
@@ -166,19 +166,16 @@ defineEmits<{
 }
 
 .mapping-hero__copy {
-  background:
-    radial-gradient(circle at top left, rgba(181, 77, 37, 0.2), transparent 34%),
-    linear-gradient(145deg, rgba(255, 249, 239, 0.96), rgba(248, 236, 221, 0.95));
-  border: 1px solid rgba(121, 74, 40, 0.12);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .mapping-hero__focus {
   display: grid;
   gap: 1rem;
-  background:
-    linear-gradient(160deg, rgba(31, 46, 53, 0.98), rgba(14, 25, 29, 0.98)),
-    radial-gradient(circle at top right, rgba(145, 208, 197, 0.16), transparent 36%);
-  color: #f5f7f8;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
 }
 
 .mapping-hero__eyebrow,
@@ -192,24 +189,23 @@ defineEmits<{
   margin: 0;
 }
 
-.mapping-hero__eyebrow,
-.mapping-hero__focus-label {
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+.mapping-hero__eyebrow {
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
-.mapping-hero__eyebrow {
-  color: var(--color-ink-faint);
+.mapping-hero__focus-label {
+  color: var(--color-ink-soft);
 }
 
 .mapping-hero__title {
   margin-top: 0.55rem;
   max-width: 15ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.4rem);
-  line-height: 1.04;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
 .mapping-hero__subtitle,
@@ -235,15 +231,20 @@ defineEmits<{
   min-height: 2.8rem;
   padding: 0 1.05rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(121, 74, 40, 0.14);
-  background: rgba(255, 255, 255, 0.56);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
 }
 
 .mapping-hero__button--solid {
-  background: #a94f2d;
-  border-color: #a94f2d;
-  color: #fff6ef;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.mapping-hero__button--solid:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .mapping-hero__focus-head {
@@ -254,20 +255,21 @@ defineEmits<{
 }
 
 .mapping-hero__focus-label {
-  color: rgba(235, 242, 244, 0.62);
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
 }
 
 .mapping-hero__focus-title {
   margin-top: 0.45rem;
-  font-family: var(--font-display);
-  font-size: 1.52rem;
+  color: var(--color-ink-strong);
+  font-size: 1.32rem;
 }
 
 .mapping-hero__focus-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
-  color: rgba(235, 242, 244, 0.82);
+  color: var(--color-ink-soft);
   font-size: 0.86rem;
 }
 
@@ -277,7 +279,8 @@ defineEmits<{
   align-items: center;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .mapping-hero__focus-grid {
@@ -289,16 +292,18 @@ defineEmits<{
 .mapping-hero__focus-item {
   padding: 0.92rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .mapping-hero__focus-item-label {
-  color: rgba(235, 242, 244, 0.62);
+  color: var(--color-ink-soft);
   font-size: 0.78rem;
 }
 
 .mapping-hero__focus-item-value {
   margin-top: 0.55rem;
+  color: var(--color-ink-strong);
   font-size: 1.18rem;
   font-weight: 600;
 }

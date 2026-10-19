@@ -37,7 +37,7 @@ const metricItems = computed(() => [
   {
     label: '送达率',
     value: deliveryRate.value,
-    caption: '按 delivered / total 粗略计算'
+    caption: '已送达 / 总任务粗略计算'
   },
   {
     label: '异常积压',
@@ -71,6 +71,15 @@ function normalizeText(value: string | null | undefined) {
   return (value ?? '').trim().toLowerCase();
 }
 
+const sendStatusMap: Record<string, string> = {
+  pending: '待发送',
+  sent: '已发送',
+  delivered: '已送达',
+  failed: '发送失败',
+  dead_letter: '死信',
+  'dead-letter': '死信'
+};
+
 function toneFromStatus(status: string) {
   const normalized = normalizeText(status);
 
@@ -88,20 +97,18 @@ function toneFromStatus(status: string) {
 
 <template>
   <PanelCard
-    eyebrow="Notifications Command Deck"
-    title="先看通知压力，再决定是调渠道、改模板还是补回放"
-    :description="commandHeadline"
-    dark
+    title="通知网关总览"
+    description="任务池、送达率与异常积压一览。"
   >
     <div class="notification-hero">
       <div class="notification-hero__lead">
-        <p class="notification-hero__badge">Gateway Posture</p>
+        <p class="notification-hero__badge">网关状态</p>
         <h4 class="notification-hero__headline">
-          已启用 {{ formatCount(overview?.enabledGatewayCount) }} / {{ formatCount(overview?.configuredGatewayCount) }}
-          个网关，Mock {{ formatCount(overview?.mockGatewayCount) }} 个。
+          {{ commandHeadline }}
         </h4>
         <p class="notification-hero__subline">
-          这里明确区分“已配置”“已启用”“仍待回执”和“已经失败”，避免把监控总量误当成链路可操作状态。
+          已启用 {{ formatCount(overview?.enabledGatewayCount) }} / {{ formatCount(overview?.configuredGatewayCount) }}
+          个网关，Mock {{ formatCount(overview?.mockGatewayCount) }} 个。
         </p>
 
         <div class="notification-hero__signals">
@@ -119,7 +126,7 @@ function toneFromStatus(status: string) {
 
       <div class="notification-hero__focus">
         <div class="notification-hero__focus-header">
-          <p class="notification-hero__focus-eyebrow">Immediate Attention</p>
+          <p class="notification-hero__focus-eyebrow">重点关注</p>
           <h5 class="notification-hero__focus-title">优先盯住这些任务</h5>
         </div>
 
@@ -136,7 +143,7 @@ function toneFromStatus(status: string) {
                   {{ task.notifyType }} · {{ task.targetReceiver }}
                 </p>
               </div>
-              <StatusPill :label="task.sendStatus" :tone="toneFromStatus(task.sendStatus)" />
+              <StatusPill :label="sendStatusMap[task.sendStatus] || task.sendStatus" :tone="toneFromStatus(task.sendStatus)" />
             </div>
             <p class="notification-hero__focus-note">
               优先级 {{ task.priority || '--' }} · 重试 {{ formatCount(task.retryCount, ' 次') }}
@@ -145,7 +152,7 @@ function toneFromStatus(status: string) {
         </div>
 
         <p v-else class="notification-hero__empty">
-          当前没有 urgent / failed / dead-letter 任务，通知盘面相对平稳。
+          当前没有紧急/失败/死信任务，通知盘面平稳。
         </p>
       </div>
     </div>
@@ -185,22 +192,21 @@ function toneFromStatus(status: string) {
   width: fit-content;
   padding: 0.42rem 0.78rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 244, 236, 0.76);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .notification-hero__headline,
 .notification-hero__focus-title {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .notification-hero__headline {
   max-width: 20ch;
-  font-size: clamp(1.8rem, 3vw, 2.7rem);
-  line-height: 1.08;
+  font-size: clamp(1.35rem, 2.2vw, 1.6rem);
+  line-height: 1.25;
 }
 
 .notification-hero__subline,
@@ -208,8 +214,8 @@ function toneFromStatus(status: string) {
 .notification-hero__focus-meta,
 .notification-hero__focus-note,
 .notification-hero__signal-caption {
-  color: rgba(255, 244, 236, 0.72);
-  line-height: 1.7;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
 }
 
 .notification-hero__signals {
@@ -221,10 +227,8 @@ function toneFromStatus(status: string) {
 .notification-hero__signal-card,
 .notification-hero__focus {
   border-radius: calc(var(--radius-xl) - 0.2rem);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background:
-    linear-gradient(165deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
-    rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .notification-hero__signal-card {
@@ -232,16 +236,15 @@ function toneFromStatus(status: string) {
 }
 
 .notification-hero__signal-label {
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(255, 244, 236, 0.58);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
 .notification-hero__signal-value {
   margin-top: 0.45rem;
-  font-size: 1.9rem;
-  color: #fffaf4;
+  font-size: 1.6rem;
+  color: var(--color-ink-strong);
 }
 
 .notification-hero__signal-caption {
@@ -268,8 +271,8 @@ function toneFromStatus(status: string) {
   gap: 0.45rem;
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(17, 10, 6, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .notification-hero__focus-main {
@@ -280,7 +283,7 @@ function toneFromStatus(status: string) {
 }
 
 .notification-hero__focus-template {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
   font-size: 1rem;
 }
 

@@ -33,11 +33,21 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
 
   return 'neutral';
 }
+
+const ticketStatusMap: Record<string, string> = {
+  pending: '待处理',
+  processing: '处理中',
+  closed: '已关闭',
+  resolved: '已解决'
+};
+
+function labelOf(value: string) {
+  return ticketStatusMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Ticket Queue"
     title="工单队列与筛选"
     description="先按店铺和状态压缩视野，再从高风险和待处理工单中挑出当前要落动作的一张。"
   >
@@ -83,7 +93,7 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
             ]"
             @click="emit('selectStatus', status)"
           >
-            {{ status }}
+            {{ labelOf(status) }}
           </button>
         </div>
       </div>
@@ -106,7 +116,7 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
                 订单 {{ ticket.orderId }} / 客户 {{ ticket.customerId }}
               </p>
             </div>
-            <StatusPill :label="ticket.ticketStatus" :tone="resolveTone(ticket)" />
+            <StatusPill :label="labelOf(ticket.ticketStatus)" :tone="resolveTone(ticket)" />
           </div>
           <div class="ticket-queue__item-tags">
             <span class="ticket-queue__tag">{{ ticket.storeId }}</span>
@@ -143,8 +153,8 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
 
 .ticket-queue__filter,
 .ticket-queue__item {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .ticket-queue__filter {
@@ -156,9 +166,9 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
 }
 
 .ticket-queue__filter--active {
-  background: linear-gradient(135deg, rgba(130, 73, 59, 0.94), rgba(53, 31, 26, 0.94));
-  border-color: transparent;
-  color: #fff8f0;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
 }
 
 .ticket-queue__list {
@@ -175,8 +185,8 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
 }
 
 .ticket-queue__item--active {
-  border-color: rgba(130, 73, 59, 0.38);
-  box-shadow: 0 18px 36px rgba(81, 52, 44, 0.12);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .ticket-queue__item-top {
@@ -217,8 +227,8 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
   min-height: 2rem;
   padding: 0 0.75rem;
   border-radius: var(--radius-pill);
-  background: rgba(132, 108, 85, 0.1);
-  color: var(--color-ink);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.78rem;
 }
 
@@ -230,6 +240,6 @@ function resolveTone(ticket: CustomerServiceTicket): 'neutral' | 'warn' | 'succe
 .ticket-queue__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--color-surface);
 }
 </style>

@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   approveApproval,
@@ -228,7 +228,7 @@ export function useApprovalCenterOverview() {
     }
   }
 
-  return {
+  return reactive({
     approvals: sortedApprovals,
     templates: sortedTemplates,
     governanceRequests: sortedGovernanceRequests,
@@ -246,5 +246,5 @@ export function useApprovalCenterOverview() {
     approveSelected,
     rejectSelected,
     transferSelected
-  };
+  });
 }

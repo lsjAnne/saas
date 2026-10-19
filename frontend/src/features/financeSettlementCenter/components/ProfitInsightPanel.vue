@@ -63,11 +63,28 @@ function submitPeriod() {
     periodEnd: periodForm.periodEnd
   });
 }
+
+const labelMap: Record<string, string> = {
+  idle: '待评估',
+  healthy: '健康',
+  warning: '预警',
+  alert: '异常',
+  pass: '通过',
+  ready: '可关账',
+  blocked: '有阻塞',
+  pending: '待处理',
+  done: '已完成',
+  closed: '已关账',
+  settled: '已结算'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Profit & Ledger"
     title="利润洞察、总账摘要与关账检查"
     description="这一块负责让财务先看到利润面和总账面，再决定是否具备真正的关账条件。"
   >
@@ -127,7 +144,7 @@ function submitPeriod() {
               <h4>利润表细项</h4>
             </div>
             <StatusPill
-              :label="profitStatement?.thresholdStatus || 'idle'"
+              :label="labelOf(profitStatement?.thresholdStatus || 'idle')"
               :tone="statusTone(profitStatement?.thresholdStatus)"
             />
           </div>
@@ -160,7 +177,7 @@ function submitPeriod() {
             >
               <div class="profit-panel__list-row">
                 <strong>{{ report.shopName }}</strong>
-                <StatusPill :label="report.thresholdStatus" :tone="statusTone(report.thresholdStatus)" />
+                <StatusPill :label="labelOf(report.thresholdStatus)" :tone="statusTone(report.thresholdStatus)" />
               </div>
               <p>净利润 {{ formatCurrency(report.netProfitAmount) }}</p>
               <p>毛利 {{ formatCurrency(report.grossProfitAmount) }}</p>
@@ -187,7 +204,7 @@ function submitPeriod() {
             >
               <div class="profit-panel__list-row">
                 <strong>{{ ledger.shopName }}</strong>
-                <StatusPill :label="ledger.closingStatus" :tone="statusTone(ledger.closingStatus)" />
+                <StatusPill :label="labelOf(ledger.closingStatus)" :tone="statusTone(ledger.closingStatus)" />
               </div>
               <p>结算 {{ ledger.settledFinanceBillCount }} / {{ ledger.financeBillCount }}</p>
               <p>回款 {{ formatCurrency(ledger.receivableCollectedAmount) }}</p>
@@ -204,7 +221,7 @@ function submitPeriod() {
               <h4>{{ financeClosingCheck?.shopName || selectedStoreName }}</h4>
             </div>
             <StatusPill
-              :label="financeClosingCheck?.readyToClose ? 'ready' : 'blocked'"
+              :label="labelOf(financeClosingCheck?.readyToClose ? 'ready' : 'blocked')"
               :tone="financeClosingCheck?.readyToClose ? 'success' : 'warn'"
             />
           </div>
@@ -216,7 +233,7 @@ function submitPeriod() {
             >
               <div class="profit-panel__list-row">
                 <strong>{{ item.checkName }}</strong>
-                <StatusPill :label="item.checkStatus" :tone="statusTone(item.checkStatus)" />
+                <StatusPill :label="labelOf(item.checkStatus)" :tone="statusTone(item.checkStatus)" />
               </div>
               <p>待处理 {{ item.pendingCount }}</p>
               <p>{{ item.detail }}</p>
@@ -248,8 +265,8 @@ function submitPeriod() {
 .profit-panel__card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 251, 247, 0.78);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .profit-panel__hero-copy h4,
@@ -265,10 +282,9 @@ function submitPeriod() {
 
 .profit-panel__eyebrow,
 .profit-panel__field span {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .profit-panel__hero-text {
@@ -294,18 +310,22 @@ function submitPeriod() {
 
 .profit-panel__control {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   padding: 0 0.85rem;
 }
 
 .profit-panel__primary {
   grid-column: span 2;
-  border: 0;
-  background: linear-gradient(135deg, #485f3f, #1d2818);
-  color: #fffaf4;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
   font-weight: 600;
   cursor: pointer;
+}
+
+.profit-panel__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .profit-panel__metrics,
@@ -335,7 +355,8 @@ function submitPeriod() {
   gap: 0.35rem;
   padding: 0.85rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 @media (max-width: 1180px) {

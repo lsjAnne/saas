@@ -27,7 +27,6 @@ const visibleTrends = computed(() =>
 
 <template>
   <PanelCard
-    eyebrow="Sales Trend"
     title="销售趋势"
     description="直接看最近经营节奏，不先跳进复杂 BI 图表。"
   >
@@ -65,13 +64,13 @@ const visibleTrends = computed(() =>
 .sales-trend__summary {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .sales-trend__summary strong {
   color: var(--color-ink-strong);
-  font-size: 1.85rem;
+  font-size: 1.5rem;
 }
 
 .sales-trend__summary span,
@@ -92,14 +91,13 @@ const visibleTrends = computed(() =>
   height: 0.82rem;
   overflow: hidden;
   border-radius: var(--radius-pill);
-  background: rgba(133, 98, 67, 0.08);
+  background: var(--color-surface);
 }
 
 .sales-trend__bar {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #dcc2a4, #835f42);
-  box-shadow: 0 8px 18px rgba(133, 98, 67, 0.2);
+  background: var(--color-accent);
 }
 
 .sales-trend__value {

@@ -20,7 +20,6 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="WMS Linkage"
     title="WMS 联动与收货差异"
     description="这里不做复杂库位图，先把仓库、波次、锁批次、盘点和逆向入库的关键状态集中呈现。"
   >
@@ -45,9 +44,9 @@ defineProps<Props>();
       </div>
 
       <div class="wms-linkage__status">
-        <StatusPill :label="`OMS ${linkage?.omsSyncStatus || 'unknown'}`" tone="success" />
-        <StatusPill :label="`ERP ${linkage?.erpSyncStatus || 'unknown'}`" tone="neutral" />
-        <StatusPill :label="`TMS ${linkage?.tmsHandoverStatus || 'unknown'}`" tone="warn" />
+        <StatusPill :label="`OMS ${linkage?.omsSyncStatus || '未知'}`" tone="success" />
+        <StatusPill :label="`ERP ${linkage?.erpSyncStatus || '未知'}`" tone="neutral" />
+        <StatusPill :label="`TMS ${linkage?.tmsHandoverStatus || '未知'}`" tone="warn" />
         <p class="wms-linkage__status-copy">当前焦点店铺：{{ selectedStoreName }}</p>
       </div>
 
@@ -108,7 +107,8 @@ defineProps<Props>();
 .wms-linkage__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .wms-linkage__metric-label,

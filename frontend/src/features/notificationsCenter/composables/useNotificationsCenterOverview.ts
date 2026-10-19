@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   getNotificationGatewayConfig,
@@ -322,7 +322,7 @@ export function useNotificationsCenterOverview() {
     }
   }
 
-  return {
+  return reactive({
     gatewayConfig,
     gatewayOverview,
     providerStats,
@@ -348,5 +348,5 @@ export function useNotificationsCenterOverview() {
     saveTemplate,
     retryFailedTask,
     replayDeadLetterTask
-  };
+  });
 }

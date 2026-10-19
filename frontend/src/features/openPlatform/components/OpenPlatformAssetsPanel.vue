@@ -41,11 +41,11 @@ const emit = defineEmits<{
 
 const appTypeOptions = [
   { label: 'ERP', value: 'erp' },
-  { label: 'Plugin', value: 'plugin' },
+  { label: '插件', value: 'plugin' },
   { label: 'WMS', value: 'wms' },
   { label: 'TMS', value: 'tms' },
   { label: 'BI', value: 'bi' },
-  { label: 'Messaging', value: 'messaging' }
+  { label: '消息推送', value: 'messaging' }
 ];
 
 const permissionOptions = [
@@ -83,6 +83,20 @@ function toneFromStatus(status: string) {
   return normalized === 'active' || normalized === 'enabled' ? 'success' : 'neutral';
 }
 
+const appStatusMap: Record<string, string> = {
+  active: '启用',
+  inactive: '停用',
+  disabled: '停用',
+  enabled: '已启用',
+  revoked: '已吊销'
+};
+
+const credentialStatusMap: Record<string, string> = {
+  active: '生效',
+  revoked: '已吊销',
+  'not issued': '未下发'
+};
+
 function togglePermissionScope(scope: string) {
   const exists = appForm.permissionScope.includes(scope);
   appForm.permissionScope = exists
@@ -118,9 +132,8 @@ function latestIssuedCredential(appId: string) {
 
 <template>
   <PanelCard
-    eyebrow="Control Desk"
-    title="统一管理应用、凭证、Scope 与 Webhook"
-    description="把开放平台真正需要操作的事项留在同一个控制面板里，不再只停在 apps 和 webhooks 的静态展示。"
+    title="应用与凭证管理"
+    description="应用、凭证、调用范围与回调订阅同屏管理。"
   >
     <div class="open-platform-assets">
       <p v-if="actionFeedback" class="open-platform-assets__feedback">{{ actionFeedback }}</p>
@@ -128,7 +141,7 @@ function latestIssuedCredential(appId: string) {
       <section class="open-platform-assets__block">
         <div class="open-platform-assets__section-head">
           <div>
-            <p class="open-platform-assets__label">Create App</p>
+            <p class="open-platform-assets__label">创建应用</p>
             <h4 class="open-platform-assets__section-title">创建应用并声明 Scope</h4>
             <p class="open-platform-assets__section-copy">
               新应用创建后即可继续下发凭证，前端这里同步暴露和后端一致的读取类 Scope。
@@ -165,7 +178,7 @@ function latestIssuedCredential(appId: string) {
         </div>
 
         <div class="open-platform-assets__scope-box">
-          <p class="open-platform-assets__label">Permission Scope</p>
+          <p class="open-platform-assets__label">调用范围</p>
           <div class="open-platform-assets__chips">
             <button
               v-for="option in permissionOptions"
@@ -186,7 +199,7 @@ function latestIssuedCredential(appId: string) {
       </section>
 
       <section class="open-platform-assets__block">
-        <p class="open-platform-assets__label">Apps</p>
+        <p class="open-platform-assets__label">应用列表</p>
         <article v-for="app in apps" :key="app.appId" class="open-platform-assets__item">
           <div class="open-platform-assets__head">
             <div>
@@ -194,7 +207,7 @@ function latestIssuedCredential(appId: string) {
               <p class="open-platform-assets__meta">{{ app.appType }} · {{ formatDate(app.createdAt) }}</p>
             </div>
             <div class="open-platform-assets__head-actions">
-              <StatusPill :label="app.status" :tone="toneFromStatus(app.status)" />
+              <StatusPill :label="appStatusMap[app.status] || app.status" :tone="toneFromStatus(app.status)" />
               <button
                 type="button"
                 class="open-platform-assets__secondary"
@@ -225,30 +238,28 @@ function latestIssuedCredential(appId: string) {
 
           <div class="open-platform-assets__facts">
             <p class="open-platform-assets__fact">
-              <strong>Credential Status</strong>
+              <strong>凭证状态</strong>
               <span>
                 {{
                   currentCredential(app.appId)
-                    ? currentCredential(app.appId)?.active
-                      ? 'active'
-                      : 'revoked'
-                    : 'not issued'
+                    ? credentialStatusMap[currentCredential(app.appId)?.active ? 'active' : 'revoked']
+                    : credentialStatusMap['not issued']
                 }}
               </span>
             </p>
             <p class="open-platform-assets__fact">
-              <strong>Expires At</strong>
+              <strong>到期时间</strong>
               <span>{{ currentCredential(app.appId)?.expiresAt || '--' }}</span>
             </p>
           </div>
 
           <div v-if="latestIssuedCredential(app.appId)" class="open-platform-assets__facts">
             <p class="open-platform-assets__fact">
-              <strong>Latest Secret</strong>
+              <strong>最新密钥</strong>
               <span>{{ latestIssuedCredential(app.appId)?.secret }}</span>
             </p>
             <p class="open-platform-assets__fact">
-              <strong>Masked</strong>
+              <strong>掩码</strong>
               <span>{{ latestIssuedCredential(app.appId)?.secretMasked }}</span>
             </p>
           </div>
@@ -291,7 +302,7 @@ function latestIssuedCredential(appId: string) {
       <section class="open-platform-assets__block">
         <div class="open-platform-assets__section-head">
           <div>
-            <p class="open-platform-assets__label">Webhook</p>
+            <p class="open-platform-assets__label">回调订阅</p>
             <h4 class="open-platform-assets__section-title">新增回调订阅</h4>
             <p class="open-platform-assets__section-copy">
               新订阅会立即生成 Secret Token，后续可直接轮换密钥并观察回调编排结果。
@@ -329,7 +340,7 @@ function latestIssuedCredential(appId: string) {
       </section>
 
       <section class="open-platform-assets__block">
-        <p class="open-platform-assets__label">Webhook Subscriptions</p>
+        <p class="open-platform-assets__label">回调订阅列表</p>
         <article
           v-for="webhook in webhooks"
           :key="webhook.subscriptionId"
@@ -341,7 +352,7 @@ function latestIssuedCredential(appId: string) {
               <p class="open-platform-assets__meta">{{ webhook.callbackUrl }}</p>
             </div>
             <div class="open-platform-assets__head-actions">
-              <StatusPill :label="webhook.status" :tone="toneFromStatus(webhook.status)" />
+              <StatusPill :label="appStatusMap[webhook.status] || webhook.status" :tone="toneFromStatus(webhook.status)" />
               <button
                 type="button"
                 class="open-platform-assets__secondary"
@@ -370,7 +381,7 @@ function latestIssuedCredential(appId: string) {
               <span>{{ webhook.secretToken }}</span>
             </p>
             <p class="open-platform-assets__fact">
-              <strong>Created At</strong>
+              <strong>创建时间</strong>
               <span>{{ formatDate(webhook.createdAt) }}</span>
             </p>
           </div>
@@ -382,7 +393,7 @@ function latestIssuedCredential(appId: string) {
               :disabled="isRunningAction && activeWebhookId === webhook.subscriptionId"
               @click="emit('rotateWebhookSecret', webhook.subscriptionId)"
             >
-              {{ isRunningAction && activeWebhookId === webhook.subscriptionId ? '处理中..' : '轮换 Secret' }}
+              {{ isRunningAction && activeWebhookId === webhook.subscriptionId ? '处理中..' : '轮换密钥' }}
             </button>
           </div>
         </article>
@@ -405,8 +416,8 @@ function latestIssuedCredential(appId: string) {
 .open-platform-assets__block {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .open-platform-assets__section-head,
@@ -441,10 +452,9 @@ function latestIssuedCredential(appId: string) {
 }
 
 .open-platform-assets__label {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .open-platform-assets__section-title,
@@ -465,8 +475,8 @@ function latestIssuedCredential(appId: string) {
   gap: 0.85rem;
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 252, 248, 0.88);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .open-platform-assets__form-grid,
@@ -487,8 +497,8 @@ function latestIssuedCredential(appId: string) {
   width: 100%;
   padding: 0.7rem 0.85rem;
   border-radius: 0.9rem;
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   color: var(--color-ink-strong);
 }
 
@@ -513,13 +523,14 @@ function latestIssuedCredential(appId: string) {
 .open-platform-assets__chip {
   padding: 0.6rem 0.75rem;
   border-radius: 999px;
-  background: rgba(193, 162, 126, 0.14);
+  background: var(--color-accent-soft);
   color: var(--color-ink-strong);
 }
 
 .open-platform-assets__chip--active {
-  background: rgba(162, 95, 47, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(162, 95, 47, 0.24);
+  background: var(--color-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  color: var(--color-accent);
 }
 
 .open-platform-assets__chip--readonly {
@@ -538,8 +549,9 @@ function latestIssuedCredential(appId: string) {
 }
 
 .open-platform-assets__secondary {
-  background: rgba(91, 72, 54, 0.08);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
 }
 
 .open-platform-assets__primary:disabled,

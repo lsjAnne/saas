@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   getCampaignRecommendations,
@@ -119,7 +119,7 @@ export function useBusinessAssistantOverview() {
     await refreshRecommendations(token);
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     overview,
     productRecommendations,
@@ -135,5 +135,5 @@ export function useBusinessAssistantOverview() {
     errorMessage,
     load,
     selectStore
-  };
+  });
 }

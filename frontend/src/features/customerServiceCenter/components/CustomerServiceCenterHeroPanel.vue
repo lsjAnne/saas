@@ -57,14 +57,24 @@ function formatScore(value: number) {
 
   return `${value.toFixed(1)} / 5`;
 }
+
+const ticketStatusMap: Record<string, string> = {
+  idle: '待选择',
+  pending: '待处理',
+  processing: '处理中',
+  closed: '已关闭',
+  resolved: '已解决'
+};
+
+function labelOf(value: string) {
+  return ticketStatusMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Customer Service Center"
-    title="把工单响应、满意度回收和售后审批收进同一条客服主链"
-    description="这页不再承担会话聊天辅助，而是把售后主链最关键的响应面、动作面和审批面并排放进一个控制台。"
-    dark
+    title="客服售后主链"
+    description="工单响应、满意度回收与售后审批的统一控制台。"
   >
     <div class="customer-service-hero">
       <div class="customer-service-hero__copy">
@@ -86,7 +96,7 @@ function formatScore(value: number) {
             </h5>
           </div>
           <StatusPill
-            :label="selectedTicket?.ticketStatus || 'idle'"
+            :label="labelOf(selectedTicket?.ticketStatus || 'idle')"
             :tone="focusTone"
           />
         </div>
@@ -152,15 +162,15 @@ function formatScore(value: number) {
 .customer-service-hero__copy {
   padding: 1.05rem;
   border-radius: var(--radius-lg);
-  background: linear-gradient(145deg, rgba(255, 244, 233, 0.12), rgba(255, 255, 255, 0.04));
-  border: 1px solid rgba(255, 241, 231, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .customer-service-hero__focus {
   padding: 1.05rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 248, 240, 0.1);
-  border: 1px solid rgba(255, 244, 236, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .customer-service-hero__eyebrow,
@@ -177,21 +187,20 @@ function formatScore(value: number) {
 
 .customer-service-hero__eyebrow,
 .customer-service-hero__focus-eyebrow {
-  color: rgba(255, 244, 236, 0.7);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .customer-service-hero__title,
 .customer-service-hero__focus-title {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .customer-service-hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.7rem);
-  line-height: 1.02;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .customer-service-hero__summary,
@@ -199,12 +208,12 @@ function formatScore(value: number) {
 .customer-service-hero__focus-meta,
 .customer-service-hero__focus-note,
 .customer-service-hero__tail {
-  color: rgba(255, 244, 236, 0.78);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 
 .customer-service-hero__feedback {
-  color: #f6d8b5;
+  color: var(--color-success);
 }
 
 .customer-service-hero__focus-header {

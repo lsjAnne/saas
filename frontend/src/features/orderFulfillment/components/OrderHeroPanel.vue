@@ -79,19 +79,17 @@ const headline = computed(() => {
 
 <template>
   <PanelCard
-    eyebrow="Order & Fulfillment Deck"
-    title="把订单审单、履约推进、物流登记与逆向处理压进同一张运营指挥台"
+    title="订单履约概览"
     :description="headline"
-    dark
   >
     <div class="order-hero">
       <div class="order-hero__lead">
-        <p class="order-hero__badge">OMS Control Tower</p>
+        <p class="order-hero__badge">当前焦点</p>
         <h4 class="order-hero__headline">
-          这页不做静态订单总表，而是让运营、客服、履约在一个视角里连续下动作。
+          订单队列、履约任务与物流记录在同一视角连续处理
         </h4>
         <p class="order-hero__subline">
-          先同步平台单形成真实订单，再回读 OMS 摘要、履约任务和物流记录。所有高风险动作做完都回读真相源，不在前端手补状态。
+          同步平台单生成订单与履约任务，所有处理动作完成后回读后端真实状态。
         </p>
 
         <div v-if="selectedOrder" class="order-hero__focus-card">
@@ -180,25 +178,22 @@ const headline = computed(() => {
 
 .order-hero__badge {
   width: fit-content;
-  padding: 0.42rem 0.78rem;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 244, 236, 0.76);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .order-hero__headline {
-  max-width: 18ch;
-  color: #fff8f0;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
-  line-height: 1.08;
+  color: var(--color-ink-strong);
+  font-size: 1.35rem;
+  line-height: 1.3;
 }
 
 .order-hero__subline {
-  max-width: 60rem;
-  color: rgba(255, 244, 236, 0.72);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 
@@ -206,9 +201,9 @@ const headline = computed(() => {
   display: grid;
   gap: 0.9rem;
   padding: 1rem;
-  border-radius: var(--radius-xl);
-  background: rgba(255, 249, 242, 0.1);
-  border: 1px solid rgba(255, 244, 236, 0.12);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .order-hero__focus-head {
@@ -219,15 +214,15 @@ const headline = computed(() => {
 }
 
 .order-hero__focus-title {
-  color: #fff8f0;
-  font-size: 1.15rem;
+  color: var(--color-ink-strong);
+  font-size: 1.05rem;
   font-weight: 700;
 }
 
 .order-hero__focus-meta,
 .order-hero__feedback,
 .order-hero__fact dt {
-  color: rgba(255, 244, 236, 0.72);
+  color: var(--color-ink-soft);
 }
 
 .order-hero__focus-pills {
@@ -257,7 +252,7 @@ const headline = computed(() => {
 
 .order-hero__fact dd {
   margin: 0;
-  color: #fff8f0;
+  color: var(--color-ink-strong);
   line-height: 1.65;
 }
 

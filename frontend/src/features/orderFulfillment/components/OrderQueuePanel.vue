@@ -62,7 +62,7 @@ function toneFromStatus(status: string | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Queue Radar"
+
     title="订单与履约队列"
     description="先在队列里定位订单和履约任务，再进入详情和动作区，不把状态判断分散到多个页面。"
   >
@@ -204,14 +204,12 @@ function toneFromStatus(status: string | null | undefined) {
   padding: 0.95rem 1rem;
   text-align: left;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    radial-gradient(circle at top right, rgba(198, 172, 140, 0.12), transparent 34%),
-    rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .order-queue__item--active {
-  border-color: rgba(156, 113, 71, 0.3);
+  border-color: var(--color-accent);
   box-shadow: 0 14px 30px rgba(112, 84, 55, 0.12);
 }
 
@@ -237,8 +235,8 @@ function toneFromStatus(status: string | null | undefined) {
 .order-queue__empty {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px dashed rgba(91, 72, 54, 0.14);
-  background: rgba(255, 252, 248, 0.7);
+  border: 1px dashed var(--color-line);
+  background: var(--color-surface);
   line-height: 1.7;
 }
 

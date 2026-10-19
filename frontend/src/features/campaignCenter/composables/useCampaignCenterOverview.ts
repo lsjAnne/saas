@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   createCampaign,
@@ -352,7 +352,7 @@ export function useCampaignCenterOverview() {
     });
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     campaigns: sortedCampaigns,
     filteredCampaigns,
@@ -380,5 +380,5 @@ export function useCampaignCenterOverview() {
     submitApproval,
     submitPublish,
     submitCouponTemplate
-  };
+  });
 }

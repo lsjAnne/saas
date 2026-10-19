@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   generateConversationReplySuggestion,
@@ -207,7 +207,7 @@ export function useCustomerServiceAssistant() {
     }
   }
 
-  return {
+  return reactive({
     conversations,
     supportSessions,
     messages,
@@ -229,5 +229,5 @@ export function useCustomerServiceAssistant() {
     generateSuggestion,
     sendReply,
     transferManual
-  };
+  });
 }

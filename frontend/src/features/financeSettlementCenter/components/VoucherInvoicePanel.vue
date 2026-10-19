@@ -180,11 +180,29 @@ function submitClosePeriod() {
     remark: closeForm.remark || undefined
   });
 }
+
+const labelMap: Record<string, string> = {
+  pending: '待开具',
+  issued: '已开具',
+  archived: '已归档',
+  voided: '已作废',
+  red_flushed: '已红冲',
+  closed: '已关账',
+  FINANCE_BILL: '财务账单',
+  ORDER: '订单',
+  PAYMENT: '回款',
+  SETTLEMENT: '结算凭证',
+  RECEIVABLE: '应收凭证',
+  PROFIT: '利润凭证'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Invoice / Voucher / Closing"
     title="发票、凭证与关账治理"
     description="先把票据和凭证入口做成可操作面板，再把期间关账作为同页的最后一道动作门禁。"
   >
@@ -209,8 +227,8 @@ function submitClosePeriod() {
             <label class="voucher-panel__field">
               <span>引用类型</span>
               <select v-model="invoiceForm.referenceType" class="voucher-panel__control">
-                <option value="FINANCE_BILL">FINANCE_BILL</option>
-                <option value="ORDER">ORDER</option>
+                <option value="FINANCE_BILL">财务账单</option>
+                <option value="ORDER">订单</option>
               </select>
             </label>
             <label class="voucher-panel__field">
@@ -258,9 +276,9 @@ function submitClosePeriod() {
             <label class="voucher-panel__field">
               <span>引用类型</span>
               <select v-model="voucherForm.referenceType" class="voucher-panel__control">
-                <option value="FINANCE_BILL">FINANCE_BILL</option>
-                <option value="ORDER">ORDER</option>
-                <option value="PAYMENT">PAYMENT</option>
+                <option value="FINANCE_BILL">财务账单</option>
+                <option value="ORDER">订单</option>
+                <option value="PAYMENT">回款</option>
               </select>
             </label>
             <label class="voucher-panel__field">
@@ -270,9 +288,9 @@ function submitClosePeriod() {
             <label class="voucher-panel__field">
               <span>凭证类型</span>
               <select v-model="voucherForm.voucherType" class="voucher-panel__control">
-                <option value="SETTLEMENT">SETTLEMENT</option>
-                <option value="RECEIVABLE">RECEIVABLE</option>
-                <option value="PROFIT">PROFIT</option>
+                <option value="SETTLEMENT">结算凭证</option>
+                <option value="RECEIVABLE">应收凭证</option>
+                <option value="PROFIT">利润凭证</option>
               </select>
             </label>
             <label class="voucher-panel__field">
@@ -345,7 +363,7 @@ function submitClosePeriod() {
             >
               <div class="voucher-panel__list-row">
                 <strong>{{ invoice.invoiceNo }}</strong>
-                <StatusPill :label="invoice.invoiceStatus" :tone="statusTone(invoice.invoiceStatus)" />
+                <StatusPill :label="labelOf(invoice.invoiceStatus)" :tone="statusTone(invoice.invoiceStatus)" />
               </div>
               <p>{{ invoice.invoiceTitle }}</p>
               <p>{{ formatCurrency(invoice.invoiceAmount) }}</p>
@@ -391,9 +409,9 @@ function submitClosePeriod() {
             >
               <div class="voucher-panel__list-row">
                 <strong>{{ voucher.voucherNo }}</strong>
-                <StatusPill :label="voucher.archiveStatus" :tone="statusTone(voucher.archiveStatus)" />
+                <StatusPill :label="labelOf(voucher.archiveStatus)" :tone="statusTone(voucher.archiveStatus)" />
               </div>
-              <p>{{ voucher.referenceType }} / {{ voucher.referenceId }}</p>
+              <p>{{ labelOf(voucher.referenceType) }} / {{ voucher.referenceId }}</p>
               <p>{{ formatCurrency(voucher.voucherAmount) }}</p>
               <p>{{ formatDateTime(voucher.archivedAt) }}</p>
             </button>
@@ -407,7 +425,7 @@ function submitClosePeriod() {
             >
               <div class="voucher-panel__list-row">
                 <strong>{{ closing.closingNo }}</strong>
-                <StatusPill :label="closing.closingStatus" :tone="statusTone(closing.closingStatus)" />
+                <StatusPill :label="labelOf(closing.closingStatus)" :tone="statusTone(closing.closingStatus)" />
               </div>
               <p>{{ formatDate(closing.periodStart) }} - {{ formatDate(closing.periodEnd) }}</p>
               <p>账单 {{ closing.linkedFinanceBillCount }} / 凭证 {{ closing.archivedVoucherCount }}</p>
@@ -439,8 +457,8 @@ function submitClosePeriod() {
 .voucher-panel__card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 251, 247, 0.78);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .voucher-panel__section-head,
@@ -483,10 +501,9 @@ function submitClosePeriod() {
 
 .voucher-panel__eyebrow,
 .voucher-panel__field span {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .voucher-panel__control,
@@ -498,8 +515,8 @@ function submitClosePeriod() {
 
 .voucher-panel__control {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   padding: 0 0.85rem;
 }
 
@@ -512,13 +529,26 @@ function submitClosePeriod() {
 }
 
 .voucher-panel__primary {
-  background: linear-gradient(135deg, #3f5f55, #1f2c28);
-  color: #fffaf4;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.voucher-panel__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .voucher-panel__secondary {
-  background: rgba(61, 46, 36, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
   color: var(--color-ink-strong);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.voucher-panel__secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .voucher-panel__list-card,
@@ -527,8 +557,8 @@ function submitClosePeriod() {
   gap: 0.35rem;
   padding: 0.85rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
   text-align: left;
 }
 
@@ -537,11 +567,12 @@ function submitClosePeriod() {
 }
 
 .voucher-panel__list-card--active {
-  border-color: rgba(113, 87, 62, 0.44);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .voucher-panel__error {
-  color: #b55d2f;
+  color: var(--color-danger);
   line-height: 1.6;
 }
 

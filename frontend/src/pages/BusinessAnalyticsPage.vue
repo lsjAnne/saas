@@ -41,12 +41,10 @@ onMounted(() => {
 <template>
   <section class="business-analytics-page">
     <header class="business-analytics-page__header">
-      <p class="business-analytics-page__eyebrow">Business Analytics</p>
-      <h2 class="business-analytics-page__title">
-        让销售趋势、毛利趋势、商品排行、异常分布、活动效果和会员复购在同一页互相解释
-      </h2>
+      <p class="business-analytics-page__eyebrow">数据看板</p>
+      <h2 class="business-analytics-page__title">经营分析</h2>
       <p class="business-analytics-page__subtitle">
-        这页严格对应需求原型里的经营分析页，不再把分析能力拆散在首页、财务和活动页面里。
+        经营结果、商品、活动与会员的多维数据总览
       </p>
     </header>
 
@@ -126,18 +124,16 @@ onMounted(() => {
 }
 
 .business-analytics-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .business-analytics-page__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .business-analytics-page__subtitle,

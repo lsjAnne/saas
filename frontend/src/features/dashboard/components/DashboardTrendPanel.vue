@@ -13,9 +13,8 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Pending Queue"
-    title="待处理事项区"
-    description="先把今天真正需要推进的队列排清楚，再决定去哪个中心页继续处理。"
+    title="待处理事项"
+    description="今日需要推进的队列汇总，点击即可进入对应处理页。"
   >
     <div class="pending-panel">
       <RouterLink
@@ -49,7 +48,7 @@ defineProps<Props>();
 .pending-panel__item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  border: 1px solid var(--color-line);
   background: rgba(255, 255, 255, 0.76);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }

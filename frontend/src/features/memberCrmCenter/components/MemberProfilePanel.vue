@@ -112,11 +112,35 @@ function resolveTone() {
 
   return 'neutral';
 }
+
+const labelMap: Record<string, string> = {
+  standard: '普通客户',
+  vip: 'VIP客户',
+  strategic: '战略客户',
+  key_account: '重点客户',
+  normal: '普通会员',
+  gold: '黄金会员',
+  svip: '超级VIP',
+  new: '新客',
+  active: '活跃',
+  dormant: '沉默',
+  silent: '静默',
+  churn_risk: '流失风险',
+  low: '低风险',
+  medium: '中风险',
+  high: '高风险',
+  manual: '手工',
+  rule: '规则',
+  ai: 'AI'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="CRM Profile"
     title="会员档案与标签治理"
     description="CRM 档案、手工标签和会员联动摘要放在一个面板里，避免来回切页。"
   >
@@ -126,7 +150,7 @@ function resolveTone() {
           <p class="member-profile__summary-eyebrow">当前 CRM 档案</p>
           <h4 class="member-profile__summary-title">{{ visibleCustomerName }}</h4>
           <p class="member-profile__summary-meta">
-            {{ member.levelCode }} / {{ member.lifecycleStage }} / {{ formatCurrency(member.totalPaidAmount) }}
+            {{ labelOf(member.levelCode) }} / {{ labelOf(member.lifecycleStage) }} / {{ formatCurrency(member.totalPaidAmount) }}
           </p>
           <p class="member-profile__summary-time">
             最近联动 {{ formatDateTime(crmProfile?.updatedAt || member.lastOrderAt) }}
@@ -134,12 +158,12 @@ function resolveTone() {
         </div>
         <div class="member-profile__summary-tags">
           <StatusPill
-            :label="crmLinkage?.customerTier || member.levelCode"
+            :label="labelOf(crmLinkage?.customerTier || member.levelCode)"
             :tone="resolveTone()"
           />
           <StatusPill
             v-if="crmLinkage?.churnWarningLevel && crmLinkage.churnWarningLevel !== 'none'"
-            :label="crmLinkage.churnWarningLevel"
+            :label="labelOf(crmLinkage.churnWarningLevel)"
             tone="warn"
           />
         </div>
@@ -172,10 +196,10 @@ function resolveTone() {
         <label class="member-profile__field">
           <span>客户层级</span>
           <select v-model="profileForm.customerTier" :disabled="isSubmitting">
-            <option value="standard">standard</option>
-            <option value="vip">vip</option>
-            <option value="strategic">strategic</option>
-            <option value="key_account">key_account</option>
+            <option value="standard">普通客户</option>
+            <option value="vip">VIP客户</option>
+            <option value="strategic">战略客户</option>
+            <option value="key_account">重点客户</option>
           </select>
         </label>
         <label class="member-profile__field">
@@ -215,7 +239,7 @@ function resolveTone() {
             class="member-profile__tag-chip"
             @click="emit('removeTag', tag.memberTagId)"
           >
-            {{ tag.tagName }} / {{ tag.sourceType }}
+            {{ tag.tagName }} / {{ labelOf(tag.sourceType) }}
           </button>
         </div>
 
@@ -231,9 +255,9 @@ function resolveTone() {
           <label class="member-profile__field">
             <span>来源类型</span>
             <select v-model="tagForm.sourceType" :disabled="isSubmitting">
-              <option value="manual">manual</option>
-              <option value="rule">rule</option>
-              <option value="ai">ai</option>
+              <option value="manual">手工</option>
+              <option value="rule">规则</option>
+              <option value="ai">AI</option>
             </select>
           </label>
           <button class="member-profile__ghost" type="submit" :disabled="isSubmitting">
@@ -264,7 +288,8 @@ function resolveTone() {
   grid-template-columns: 1fr auto;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .member-profile__summary-eyebrow,
@@ -276,10 +301,9 @@ function resolveTone() {
 }
 
 .member-profile__summary-eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .member-profile__summary-title {
@@ -302,7 +326,8 @@ function resolveTone() {
 .member-profile__metric {
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(235, 243, 242, 0.82);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .member-profile__metric-label,
@@ -350,8 +375,8 @@ function resolveTone() {
   min-height: 2.8rem;
   padding: 0.75rem 0.9rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -364,16 +389,29 @@ function resolveTone() {
 }
 
 .member-profile__submit {
-  border: 0;
-  background: linear-gradient(135deg, #30525a, #6b8d8b);
-  color: #fff8f0;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.member-profile__submit:hover {
+  background: var(--color-accent-hover);
 }
 
 .member-profile__ghost,
 .member-profile__tag-chip {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.member-profile__ghost:hover,
+.member-profile__tag-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .member-profile__tag-list {
@@ -399,7 +437,8 @@ function resolveTone() {
 .member-profile__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
   color: var(--color-ink-soft);
   line-height: 1.7;
 }

@@ -456,7 +456,7 @@ export function useBusinessAnalyticsOverview() {
     }
   }
 
-  return {
+  return reactive({
     trends,
     campaignAnalysis,
     memberAnalysis,
@@ -476,5 +476,5 @@ export function useBusinessAnalyticsOverview() {
     load,
     selectStore,
     updatePeriod
-  };
+  });
 }

@@ -20,7 +20,6 @@ defineEmits<{
 
 <template>
   <PanelCard
-    eyebrow="Category Deck"
     title="素材分类视角"
     description="先切换商品、直播或客服素材，再决定右侧要继续深挖哪一段资产链路。"
   >
@@ -54,15 +53,17 @@ defineEmits<{
 .category-panel__item {
   padding: 1rem;
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(91, 72, 54, 0.09);
-  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .category-panel__item--active {
-  border-color: rgba(169, 84, 52, 0.36);
-  background: linear-gradient(145deg, rgba(255, 247, 240, 0.98), rgba(244, 231, 220, 0.92));
-  box-shadow: 0 18px 40px rgba(143, 92, 58, 0.12);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .category-panel__head {
@@ -79,17 +80,16 @@ defineEmits<{
 }
 
 .category-panel__label {
-  color: var(--color-ink-faint);
+  color: var(--color-ink-soft);
   font-size: 0.78rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .category-panel__count {
   margin-top: 0.45rem;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.58rem;
+  font-weight: 600;
 }
 
 .category-panel__description {

@@ -93,12 +93,10 @@ onMounted(() => {
 <template>
   <section class="member-crm-page">
     <header class="member-crm-page__header">
-      <p class="member-crm-page__eyebrow">Member & CRM Center</p>
-      <h2 class="member-crm-page__title">
-        把会员池、CRM 档案、标签分群和召回动作收拢到同一张经营控制台
-      </h2>
+      <p class="member-crm-page__eyebrow">会员经营</p>
+      <h2 class="member-crm-page__title">会员CRM</h2>
       <p class="member-crm-page__subtitle">
-        这页不再让“组织与成员”代替 CRM 主入口。会员列表、CRM 档案、标签分群、触达任务和导出动作都直接接上真实后端。
+        会员分层、画像与触达任务管理。
       </p>
     </header>
 
@@ -199,18 +197,16 @@ onMounted(() => {
 }
 
 .member-crm-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .member-crm-page__title {
-  max-width: 15ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .member-crm-page__subtitle,

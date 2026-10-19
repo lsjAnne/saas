@@ -47,7 +47,7 @@ function toneFromStatus(status: string | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Detail Surface"
+
     title="订单详情与编排态"
     description="订单主信息、商品行、编排摘要、审单结果和物流记录都在这块统一展示。"
   >
@@ -327,15 +327,15 @@ function toneFromStatus(status: string | null | undefined) {
   gap: 0.42rem;
   padding: 0.92rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 252, 248, 0.84);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .order-detail__empty {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px dashed rgba(91, 72, 54, 0.14);
-  background: rgba(255, 252, 248, 0.7);
+  border: 1px dashed var(--color-line);
+  background: var(--color-surface);
   line-height: 1.7;
 }
 

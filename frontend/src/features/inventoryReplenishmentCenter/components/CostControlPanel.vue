@@ -18,7 +18,6 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Cost & Reconciliation"
     title="成本归集与对账摘要"
     description="先把应付台账、供应商对账和采购成本归集做成一个高密度摘要面，不把财务面提前拆得太散。"
   >
@@ -97,7 +96,8 @@ defineProps<Props>();
 .cost-control__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .cost-control__block-title,

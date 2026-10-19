@@ -17,19 +17,28 @@ defineEmits<{
   generate: [];
   applySuggestion: [suggestedReply: string];
 }>();
+
+const sourceLabelMap: Record<string, string> = {
+  pending: '待生成',
+  faq: 'FAQ 命中',
+  policy: '政策规则',
+  general: '通用回复'
+};
+
+function labelOf(value: string) {
+  return sourceLabelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="AI Suggestion"
     title="回复建议与风险说明"
     description="展示 AI 回复建议、FAQ 命中、置信度和人工接管线索，避免把建议误当成已执行结果。"
-    :dark="true"
   >
     <div class="conversation-suggestion">
       <div class="conversation-suggestion__head">
         <StatusPill
-          :label="suggestion?.sourceType || 'pending'"
+          :label="labelOf(suggestion?.sourceType || 'pending')"
           :tone="suggestion ? 'success' : 'neutral'"
         />
         <button
@@ -125,14 +134,14 @@ defineEmits<{
 }
 
 .conversation-suggestion__copy {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
   line-height: 1.8;
   font-size: 1rem;
 }
 
 .conversation-suggestion__meta,
 .conversation-suggestion__placeholder {
-  color: rgba(255, 244, 236, 0.74);
+  color: var(--color-ink-soft);
   line-height: 1.65;
 }
 
@@ -140,14 +149,28 @@ defineEmits<{
   min-height: 2.85rem;
   padding: 0 1.05rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8f0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.conversation-suggestion__button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .conversation-suggestion__button--secondary {
-  background: linear-gradient(135deg, rgba(255, 248, 240, 0.92), rgba(229, 206, 181, 0.92));
-  color: var(--color-ink-strong);
-  border: 0;
+  background: var(--color-accent);
+  color: #ffffff;
+  border: 1px solid var(--color-accent);
+}
+
+.conversation-suggestion__button--secondary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
+  border-color: var(--color-accent-hover);
 }
 </style>

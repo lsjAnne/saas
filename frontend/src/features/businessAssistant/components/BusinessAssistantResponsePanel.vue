@@ -21,7 +21,7 @@ const emit = defineEmits<{
 
 const intentLabel = computed(() => {
   if (!props.response) {
-    return 'waiting';
+    return '等待中';
   }
 
   return props.response.intentLabel;
@@ -58,7 +58,6 @@ const confidenceTone = computed(() => {
 
 <template>
   <PanelCard
-    eyebrow="Assistant Response"
     title="建议输出与下一步动作"
     :description="
       response
@@ -213,8 +212,6 @@ const confidenceTone = computed(() => {
 .assistant-response__column-title {
   color: var(--color-ink-faint);
   font-size: 0.82rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .assistant-response__question,
@@ -226,7 +223,7 @@ const confidenceTone = computed(() => {
   padding: 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-line);
-  background: rgba(132, 108, 85, 0.06);
+  background: var(--color-surface);
 }
 
 .assistant-response__question-copy,
@@ -274,7 +271,7 @@ const confidenceTone = computed(() => {
   padding: 0 1rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-line);
-  background: transparent;
+  background: var(--color-panel-strong);
   color: var(--color-ink);
   font: inherit;
   text-align: left;
@@ -285,17 +282,15 @@ const confidenceTone = computed(() => {
   padding: 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(249, 242, 235, 0.96));
+  background: var(--color-surface);
   display: grid;
   gap: 0.35rem;
   text-align: left;
 }
 
 .assistant-response__action span {
-  color: var(--color-ink-faint);
+  color: var(--color-ink-soft);
   font-size: 0.8rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .assistant-response__action strong {

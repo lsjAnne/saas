@@ -13,7 +13,6 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Campaign Effect"
     title="活动效果"
     description="活动页不只看数量，更要看审批积压和最终发布成功率。"
   >
@@ -56,8 +55,8 @@ defineProps<Props>();
 .campaign-effect__copy {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .campaign-effect__eyebrow,
@@ -66,10 +65,9 @@ defineProps<Props>();
 }
 
 .campaign-effect__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .campaign-effect__headline {

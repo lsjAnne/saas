@@ -234,7 +234,7 @@ function submitLogisticsRecord() {
     />
 
     <PanelCard
-      eyebrow="Seed Sync"
+
       title="同步真实订单"
       description="这里直接生成真实订单与履约任务。第一次同步新平台单时，请明确填写 storeId、productId 和 skuId。"
     >
@@ -301,7 +301,7 @@ function submitLogisticsRecord() {
     </PanelCard>
 
     <PanelCard
-      eyebrow="Order Actions"
+
       title="订单动作编排"
       description="审单、拆单、合单、路由和逆向动作集中在这里，所有动作完成后都会回读订单详情与 OMS 摘要。"
     >
@@ -441,7 +441,7 @@ function submitLogisticsRecord() {
 
     <PanelCard
       v-if="canManageFulfillment"
-      eyebrow="Fulfillment Actions"
+
       title="履约推进与物流登记"
       description="这里处理确认、重试、异常回放和物流录入，只对有履约权限的账号开放。"
     >
@@ -515,10 +515,8 @@ function submitLogisticsRecord() {
 .order-actions__form {
   padding: 1rem;
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    radial-gradient(circle at top right, rgba(198, 172, 140, 0.12), transparent 36%),
-    rgba(255, 252, 248, 0.92);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .order-actions__form-head,
@@ -580,7 +578,7 @@ function submitLogisticsRecord() {
   min-height: 2.9rem;
   padding: 0.75rem 0.9rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   background: rgba(255, 255, 255, 0.88);
   color: var(--color-ink-strong);
   font: inherit;
@@ -603,20 +601,20 @@ function submitLogisticsRecord() {
 
 .order-actions__submit {
   width: fit-content;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
 }
 
 .order-actions__submit--primary {
   border: 0;
-  background: linear-gradient(135deg, rgba(131, 79, 36, 0.98), rgba(186, 125, 74, 0.92));
-  color: #fffaf4;
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .order-actions__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
 }
 
@@ -633,8 +631,8 @@ function submitLogisticsRecord() {
 .order-actions__empty {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px dashed rgba(91, 72, 54, 0.14);
-  background: rgba(255, 252, 248, 0.7);
+  border: 1px dashed var(--color-line);
+  background: var(--color-surface);
 }
 
 @media (max-width: 1080px) {

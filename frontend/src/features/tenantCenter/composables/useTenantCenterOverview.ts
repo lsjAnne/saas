@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import { getSubscriptionPlans, registerTenant } from '@/services/onboardingService';
 import {
@@ -285,7 +285,7 @@ export function useTenantCenterOverview() {
     }
   }
 
-  return {
+  return reactive({
     tenants: sortedTenants,
     plans,
     selectedTenantId,
@@ -306,5 +306,5 @@ export function useTenantCenterOverview() {
     resumeTenant,
     submitPlanChange,
     purchaseSeats
-  };
+  });
 }

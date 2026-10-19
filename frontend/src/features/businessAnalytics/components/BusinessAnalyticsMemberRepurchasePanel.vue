@@ -13,7 +13,6 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Member Repurchase"
     title="会员复购"
     description="复购率、客单价和沉睡人群一起看，才知道会员经营有没有起作用。"
   >
@@ -56,8 +55,8 @@ defineProps<Props>();
 .member-repurchase__copy {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .member-repurchase__eyebrow,
@@ -66,10 +65,9 @@ defineProps<Props>();
 }
 
 .member-repurchase__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .member-repurchase__headline {

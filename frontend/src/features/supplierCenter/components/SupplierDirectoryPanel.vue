@@ -21,11 +21,22 @@ defineEmits<{
 function toneFromRiskLevel(riskLevel: string | null | undefined) {
   return (riskLevel ?? '').toLowerCase().includes('high') ? 'warn' : 'neutral';
 }
+
+const riskLevelLabelMap: Record<string, string> = {
+  normal: '正常',
+  low: '低风险',
+  medium: '中风险',
+  high: '高风险',
+  critical: '紧急'
+};
+
+function resolveRiskLevelLabel(level: string | null | undefined) {
+  return riskLevelLabelMap[(level ?? '').toLowerCase()] ?? level ?? '正常';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Supplier Directory"
     title="供应商主档"
     description="先选店铺，再在当前店铺下切换供应商，右侧所有流程与摘要都跟随主档变化。"
   >
@@ -63,7 +74,7 @@ function toneFromRiskLevel(riskLevel: string | null | undefined) {
                 {{ supplier.supplierPlatformType }} · {{ supplier.supplierPlatformId }}
               </p>
             </div>
-            <StatusPill :label="supplier.riskLevel || 'normal'" :tone="toneFromRiskLevel(supplier.riskLevel)" />
+            <StatusPill :label="resolveRiskLevelLabel(supplier.riskLevel)" :tone="toneFromRiskLevel(supplier.riskLevel)" />
           </div>
 
           <div class="supplier-directory__item-tags">
@@ -107,15 +118,15 @@ function toneFromRiskLevel(riskLevel: string | null | undefined) {
   min-height: 2.2rem;
   padding: 0 0.95rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 
 .supplier-directory__filter--active {
-  background: rgba(133, 98, 67, 0.12);
-  border-color: rgba(133, 98, 67, 0.22);
-  color: var(--color-ink-strong);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .supplier-directory__item {
@@ -123,8 +134,8 @@ function toneFromRiskLevel(riskLevel: string | null | undefined) {
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   cursor: pointer;
   transition:
     transform var(--transition-fast),
@@ -134,12 +145,12 @@ function toneFromRiskLevel(riskLevel: string | null | undefined) {
 
 .supplier-directory__item:hover {
   transform: translateY(-1px);
-  border-color: rgba(133, 98, 67, 0.18);
+  border-color: var(--color-accent);
 }
 
 .supplier-directory__item--active {
-  border-color: rgba(133, 98, 67, 0.32);
-  box-shadow: inset 0 0 0 1px rgba(133, 98, 67, 0.14);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .supplier-directory__item-head {
@@ -180,7 +191,7 @@ function toneFromRiskLevel(riskLevel: string | null | undefined) {
   min-height: 2rem;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(217, 192, 163, 0.18);
+  background: var(--color-accent-soft);
   color: var(--color-ink);
   font-size: 0.8rem;
 }
@@ -188,7 +199,7 @@ function toneFromRiskLevel(riskLevel: string | null | undefined) {
 .supplier-directory__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--color-surface);
   color: var(--color-ink-soft);
   line-height: 1.7;
 }

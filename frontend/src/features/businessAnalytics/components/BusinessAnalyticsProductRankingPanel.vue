@@ -13,7 +13,6 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Product Ranking"
     title="商品排行"
     description="按发布状态、健康分和发布时间把最值得优先看的商品压到前面。"
   >
@@ -52,8 +51,8 @@ defineProps<Props>();
 .product-ranking__card {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .product-ranking__row,
@@ -74,10 +73,9 @@ defineProps<Props>();
 }
 
 .product-ranking__rank {
-  color: var(--color-ink-faint);
+  color: var(--color-accent);
   font-size: 0.74rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .product-ranking__title,

@@ -73,11 +73,26 @@ function submitRule() {
     tagName: form.tagName.trim()
   });
 }
+
+const labelMap: Record<string, string> = {
+  manual: '手工',
+  rule: '规则',
+  ai: 'AI',
+  new: '新客',
+  active: '活跃',
+  dormant: '沉默',
+  silent: '静默',
+  churn_risk: '流失风险',
+  all: '全部'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Segments & Tags"
     title="标签热度、分群规则与导出"
     description="这里聚合标签统计、规则创建、规则执行和当前口径导出，不把 CRM 域拆散。"
   >
@@ -88,7 +103,7 @@ function submitRule() {
             <p class="member-segment__tag-code">{{ tag.tagCode }}</p>
             <h4 class="member-segment__tag-name">{{ tag.tagName }}</h4>
           </div>
-          <StatusPill :label="tag.sourceType" :tone="tag.sourceType === 'rule' ? 'success' : 'neutral'" />
+          <StatusPill :label="labelOf(tag.sourceType)" :tone="tag.sourceType === 'rule' ? 'success' : 'neutral'" />
           <p class="member-segment__tag-count">{{ formatCount(tag.memberCount) }} 人</p>
         </article>
       </div>
@@ -143,7 +158,7 @@ function submitRule() {
           <div>
             <h4 class="member-segment__rule-title">{{ rule.ruleName }}</h4>
             <p class="member-segment__rule-meta">
-              {{ rule.tagName }} / {{ rule.lifecycleStage || 'all' }} / {{ formatCurrency(rule.minTotalPaidAmount) }}
+              {{ rule.tagName }} / {{ labelOf(rule.lifecycleStage || 'all') }} / {{ formatCurrency(rule.minTotalPaidAmount) }}
             </p>
             <p class="member-segment__rule-meta">{{ formatDateTime(rule.createdAt) }}</p>
           </div>
@@ -212,8 +227,8 @@ function submitRule() {
 .member-segment__export {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .member-segment__tag-card,
@@ -240,10 +255,9 @@ function submitRule() {
 
 .member-segment__tag-code,
 .member-segment__export-label {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .member-segment__tag-name,
@@ -288,8 +302,8 @@ function submitRule() {
   min-height: 2.8rem;
   padding: 0 0.9rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
 }
 
@@ -301,15 +315,27 @@ function submitRule() {
 }
 
 .member-segment__primary {
-  border: 0;
-  background: linear-gradient(135deg, #30525a, #6b8d8b);
-  color: #fff8f0;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.member-segment__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .member-segment__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.member-segment__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .member-segment__error {

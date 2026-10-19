@@ -10,6 +10,14 @@ interface Props {
 
 defineProps<Props>();
 
+const requestStatusMap: Record<string, string> = {
+  pending: '待处理',
+  approved: '已通过',
+  rejected: '已驳回',
+  canceled: '已撤销',
+  done: '已办结'
+};
+
 function normalizeText(value: string | null | undefined) {
   return (value ?? '').trim().toLowerCase();
 }
@@ -31,9 +39,8 @@ function toneFromStatus(status: string) {
 
 <template>
   <PanelCard
-    eyebrow="Governance Requests"
     title="治理审批请求"
-    description="把制度化审批请求单独拉出来，方便识别文档号、金额、当前阶段与责任人。"
+    description="文档号、金额、当前阶段与责任人一览。"
   >
     <div v-if="requests.length" class="governance-requests">
       <article
@@ -48,7 +55,7 @@ function toneFromStatus(status: string) {
               {{ request.documentNo }} · {{ request.templateCode }} · {{ request.counterparty }}
             </p>
           </div>
-          <StatusPill :label="request.requestStatus" :tone="toneFromStatus(request.requestStatus)" />
+          <StatusPill :label="requestStatusMap[request.requestStatus] || request.requestStatus" :tone="toneFromStatus(request.requestStatus)" />
         </div>
 
         <div class="governance-requests__facts">
@@ -82,9 +89,8 @@ function toneFromStatus(status: string) {
   gap: 0.7rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(249, 243, 235, 0.76));
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .governance-requests__head {

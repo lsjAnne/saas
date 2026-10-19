@@ -26,11 +26,20 @@ function toneFromConversation(conversation: CustomerConversation) {
 
   return 'success';
 }
+
+const statusLabelMap: Record<string, string> = {
+  waiting_manual: '待人工接管',
+  closed: '已结束',
+  pending: '待处理'
+};
+
+function labelOf(value: string) {
+  return statusLabelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Inbox"
     title="会话列表"
     description="按平台、客户、风险和当前状态聚合待处理会话，优先把高风险和待人工接管项排到前面。"
   >
@@ -56,7 +65,7 @@ function toneFromConversation(conversation: CustomerConversation) {
             </p>
           </div>
           <StatusPill
-            :label="conversation.conversationStatus"
+            :label="labelOf(conversation.conversationStatus)"
             :tone="toneFromConversation(conversation)"
           />
         </div>
@@ -84,8 +93,8 @@ function toneFromConversation(conversation: CustomerConversation) {
   gap: 0.7rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
   transition:
     transform var(--transition-fast),
@@ -95,12 +104,12 @@ function toneFromConversation(conversation: CustomerConversation) {
 
 .conversation-inbox__item:hover {
   transform: translateY(-1px);
-  border-color: rgba(133, 98, 67, 0.22);
+  border-color: var(--color-accent);
 }
 
 .conversation-inbox__item--active {
-  border-color: rgba(133, 98, 67, 0.26);
-  box-shadow: 0 16px 26px rgba(58, 43, 28, 0.08);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .conversation-inbox__head {

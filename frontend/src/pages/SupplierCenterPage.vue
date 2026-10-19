@@ -130,12 +130,10 @@ onMounted(() => {
 <template>
   <section class="supplier-center-page">
     <header class="supplier-center-page__header">
-      <p class="supplier-center-page__eyebrow">Supplier Center</p>
-      <h2 class="supplier-center-page__title">
-        让供应商主档、准入与结算在一张高密度 SRM 页面里闭环
-      </h2>
+      <p class="supplier-center-page__eyebrow">SRM 管理</p>
+      <h2 class="supplier-center-page__title">供应商</h2>
       <p class="supplier-center-page__subtitle">
-        这不是纯展示页。当前版本已经把主档、主备切换、准入评审、评分卡、到货预约、风险事件和结算单接进真实接口，后续再逐步扩询价和趋势分析。
+        供应商目录、执行与结算的全链路管理
       </p>
     </header>
 
@@ -232,18 +230,16 @@ onMounted(() => {
 }
 
 .supplier-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .supplier-center-page__title {
-  max-width: 15ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .supplier-center-page__subtitle,

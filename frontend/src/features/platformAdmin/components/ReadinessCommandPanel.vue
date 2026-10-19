@@ -22,23 +22,34 @@ defineProps<Props>();
 function toneByBoolean(value: boolean | null | undefined) {
   return value ? 'success' : 'warn';
 }
+
+const readinessLabelMap: Record<string, string> = {
+  ready: '就绪',
+  passed: '通过',
+  blocked: '阻塞',
+  idle: '待命中',
+  failed: '失败'
+};
+
+function readinessLabel(status?: string | null) {
+  return (status && readinessLabelMap[status]) || '待命中';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Readiness Trio"
-    title="Release / Delivery / Observability 三联"
-    description="平台治理动作必须把发布、交付和可观测性放在同一视图里，否则风险切换成本会非常高。"
+    title="发布、交付与就绪度"
+    description="平台治理把发布、交付和可观测性放在同一视图，降低风险切换成本。"
   >
     <div class="readiness-panel">
       <div class="readiness-panel__card">
         <div class="readiness-panel__row">
           <div>
-            <p class="readiness-panel__eyebrow">Release</p>
+            <p class="readiness-panel__eyebrow">发布</p>
             <h4>{{ selectedTenant?.tenantName || '等待选择租户' }}</h4>
           </div>
           <StatusPill
-            :label="releaseReadiness?.conclusion || 'idle'"
+            :label="readinessLabel(releaseReadiness?.conclusion)"
             :tone="toneByBoolean((releaseReadiness?.blockingReasons?.length ?? 1) === 0)"
           />
         </div>
@@ -55,7 +66,7 @@ function toneByBoolean(value: boolean | null | undefined) {
             <div class="readiness-panel__row">
               <strong>{{ item.itemCode }}</strong>
               <StatusPill
-                :label="item.status"
+                :label="readinessLabel(item.status)"
                 :tone="toneByBoolean(item.status === 'ready' || item.status === 'passed')"
               />
             </div>
@@ -67,11 +78,11 @@ function toneByBoolean(value: boolean | null | undefined) {
       <div class="readiness-panel__card">
         <div class="readiness-panel__row">
           <div>
-            <p class="readiness-panel__eyebrow">Delivery</p>
+            <p class="readiness-panel__eyebrow">交付</p>
             <h4>{{ deliveryReadiness?.pipeline.repository || '等待回读' }}</h4>
           </div>
           <StatusPill
-            :label="deliveryReadiness?.pipeline.ready ? 'ready' : 'blocked'"
+            :label="readinessLabel(deliveryReadiness?.pipeline.ready ? 'ready' : 'blocked')"
             :tone="toneByBoolean(deliveryReadiness?.pipeline.ready)"
           />
         </div>
@@ -95,11 +106,11 @@ function toneByBoolean(value: boolean | null | undefined) {
       <div class="readiness-panel__card">
         <div class="readiness-panel__row">
           <div>
-            <p class="readiness-panel__eyebrow">Observability</p>
+            <p class="readiness-panel__eyebrow">可观测</p>
             <h4>{{ observabilityReadiness?.tenantId || selectedTenant?.tenantId || '等待回读' }}</h4>
           </div>
           <StatusPill
-            :label="observabilityReadiness?.stack.ready ? 'ready' : 'blocked'"
+            :label="readinessLabel(observabilityReadiness?.stack.ready ? 'ready' : 'blocked')"
             :tone="toneByBoolean(observabilityReadiness?.stack.ready)"
           />
         </div>
@@ -142,8 +153,8 @@ function toneByBoolean(value: boolean | null | undefined) {
 .readiness-panel__card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 251, 247, 0.78);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .readiness-panel__row {
@@ -162,10 +173,9 @@ function toneByBoolean(value: boolean | null | undefined) {
 }
 
 .readiness-panel__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .readiness-panel__text {
@@ -178,7 +188,8 @@ function toneByBoolean(value: boolean | null | undefined) {
   gap: 0.35rem;
   padding: 0.8rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 @media (max-width: 1180px) {

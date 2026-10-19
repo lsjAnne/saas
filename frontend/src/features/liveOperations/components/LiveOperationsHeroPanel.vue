@@ -95,19 +95,17 @@ const runtimeSummary = computed(() => {
 
 <template>
   <PanelCard
-    eyebrow="Live Operations Deck"
-    title="把开播计划、数字人互动、强控接管和风险闭环压进同一个直播总控台"
+    title="直播总控"
     :description="headline"
-    dark
   >
     <div class="live-hero">
       <div class="live-hero__lead">
-        <p class="live-hero__badge">Broadcast Control</p>
+        <p class="live-hero__badge">直播指挥</p>
         <h4 class="live-hero__headline">
-          这一页不是普通数据看板，而是给直播运营负责人直接下判断和下动作的指挥页。
+          给直播运营负责人直接下判断、下动作的指挥页
         </h4>
         <p class="live-hero__subline">
-          页面同时展示运行态、数字人治理状态、并发占用、承诺审核和风险压力，避免在多个模块之间来回跳转确认直播是否真正可控。
+          运行态、数字人治理、并发占用、承诺审核与风险压力一屏联动，避免多模块来回跳转。
         </p>
       </div>
 
@@ -127,7 +125,7 @@ const runtimeSummary = computed(() => {
 
         <dl class="live-hero__runtime-grid">
           <div class="live-hero__runtime-fact">
-            <dt>Runtime Provider</dt>
+            <dt>Runtime 服务商</dt>
             <dd>{{ runtimeSummary.provider }}</dd>
           </div>
           <div class="live-hero__runtime-fact">
@@ -183,24 +181,24 @@ const runtimeSummary = computed(() => {
 .live-hero__badge {
   width: fit-content;
   padding: 0.42rem 0.78rem;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 244, 236, 0.76);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .live-hero__headline {
-  max-width: 22ch;
-  color: #fff8f0;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
-  line-height: 1.08;
+  max-width: 40ch;
+  color: var(--color-ink-strong);
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .live-hero__subline {
-  max-width: 60rem;
-  color: rgba(255, 244, 236, 0.72);
+  max-width: 56rem;
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 
@@ -208,9 +206,9 @@ const runtimeSummary = computed(() => {
   display: grid;
   gap: 0.85rem;
   padding: 1rem;
-  border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .live-hero__runtime-head {
@@ -221,7 +219,7 @@ const runtimeSummary = computed(() => {
 }
 
 .live-hero__runtime-title {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
   font-size: 1rem;
   font-weight: 600;
 }
@@ -230,7 +228,7 @@ const runtimeSummary = computed(() => {
 .live-hero__runtime-note,
 .live-hero__runtime-fact dt,
 .live-hero__room-pill-label {
-  color: rgba(255, 244, 236, 0.72);
+  color: var(--color-ink-soft);
 }
 
 .live-hero__runtime-copy,
@@ -244,18 +242,17 @@ const runtimeSummary = computed(() => {
   gap: 0.2rem;
   padding: 0.8rem 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .live-hero__room-pill-label {
   font-size: 0.76rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .live-hero__room-pill-value,
 .live-hero__runtime-fact dd {
-  color: #fffdf9;
+  color: var(--color-ink-strong);
 }
 
 .live-hero__room-pill-value {
@@ -277,8 +274,6 @@ const runtimeSummary = computed(() => {
 
 .live-hero__runtime-fact dt {
   font-size: 0.76rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .live-hero__runtime-fact dd {

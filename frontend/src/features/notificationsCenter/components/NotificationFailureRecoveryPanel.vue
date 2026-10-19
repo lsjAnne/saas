@@ -59,6 +59,15 @@ function normalizeText(value: string | null | undefined) {
   return (value ?? '').trim().toLowerCase();
 }
 
+const sendStatusMap: Record<string, string> = {
+  pending: '待发送',
+  sent: '已发送',
+  delivered: '已送达',
+  failed: '发送失败',
+  dead_letter: '死信',
+  'dead-letter': '死信'
+};
+
 function toneFromStatus(status: string) {
   const normalized = normalizeText(status);
 
@@ -105,9 +114,8 @@ function handleReplay(notificationTaskId: string) {
 
 <template>
   <PanelCard
-    eyebrow="Failure Recovery"
     title="失败与死信恢复"
-    description="失败任务可直接重试，死信任务允许改接收人、改 payload 或重新排期后再回放。"
+    description="失败任务重试，死信任务改接收人或重新排期后回放。"
   >
     <div v-if="taskRows.length" class="failure-recovery">
       <article
@@ -123,7 +131,7 @@ function handleReplay(notificationTaskId: string) {
               {{ formatDateTime(task.createdAt) }}
             </p>
           </div>
-          <StatusPill :label="task.sendStatus" :tone="toneFromStatus(task.sendStatus)" />
+          <StatusPill :label="sendStatusMap[task.sendStatus] || task.sendStatus" :tone="toneFromStatus(task.sendStatus)" />
         </div>
 
         <p class="failure-recovery__reason">
@@ -194,8 +202,8 @@ function handleReplay(notificationTaskId: string) {
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .failure-recovery__head,
@@ -247,17 +255,17 @@ function handleReplay(notificationTaskId: string) {
 
 .failure-recovery__field-label {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
 .failure-recovery__input,
 .failure-recovery__textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.7rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: var(--color-surface);
   color: var(--color-ink-strong);
   font: inherit;
   box-sizing: border-box;
@@ -272,8 +280,8 @@ function handleReplay(notificationTaskId: string) {
   border: none;
   border-radius: var(--radius-pill);
   padding: 0.72rem 1.15rem;
-  background: #8f5f3a;
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
   font: inherit;
   cursor: pointer;
 }

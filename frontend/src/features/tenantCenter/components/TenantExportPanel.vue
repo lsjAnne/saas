@@ -83,7 +83,6 @@ function submitSeatPurchase() {
 
 <template>
   <PanelCard
-    eyebrow="Package & Quota"
     title="套餐与配额区"
     description="这里直接调整套餐和席位，并同步查看当前配额压力。"
   >
@@ -118,7 +117,7 @@ function submitSeatPurchase() {
       <div class="tenant-package__forms">
         <div class="tenant-package__card">
           <div>
-            <p class="tenant-package__card-eyebrow">Plan Operation</p>
+            <p class="tenant-package__card-eyebrow">套餐操作</p>
             <h4 class="tenant-package__card-title">
               {{ hasSubscription ? '调整套餐' : '开通订阅' }}
             </h4>
@@ -150,7 +149,7 @@ function submitSeatPurchase() {
 
         <div class="tenant-package__card">
           <div>
-            <p class="tenant-package__card-eyebrow">Seat Operation</p>
+            <p class="tenant-package__card-eyebrow">席位操作</p>
             <h4 class="tenant-package__card-title">调整席位</h4>
           </div>
 
@@ -202,8 +201,8 @@ function submitSeatPurchase() {
 .tenant-package__card {
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.1);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .tenant-package__card,
@@ -225,10 +224,9 @@ function submitSeatPurchase() {
 .tenant-package__metric-label,
 .tenant-package__card-eyebrow,
 .tenant-package__field-label {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .tenant-package__metric-value,
@@ -244,10 +242,10 @@ function submitSeatPurchase() {
 .tenant-package__input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.72rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: #fff;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -261,22 +259,38 @@ function submitSeatPurchase() {
 
 .tenant-package__primary,
 .tenant-package__secondary {
-  min-height: 2.8rem;
+  min-height: 2.5rem;
   border-radius: var(--radius-md);
-  border: 0;
-  padding: 0 1rem;
+  padding: 0 0.95rem;
+  font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .tenant-package__primary {
-  background: linear-gradient(135deg, #3f5f55, #1f2c28);
-  color: #fffaf4;
+  border: 0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.tenant-package__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .tenant-package__secondary {
-  background: rgba(61, 46, 36, 0.08);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+}
+
+.tenant-package__secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .tenant-package__error {

@@ -10,6 +10,22 @@ interface Props {
 
 defineProps<Props>();
 
+const sendStatusMap: Record<string, string> = {
+  pending: '待发送',
+  sent: '已发送',
+  delivered: '已送达',
+  failed: '发送失败',
+  dead_letter: '死信',
+  'dead-letter': '死信'
+};
+
+const priorityMap: Record<string, string> = {
+  low: '低',
+  normal: '普通',
+  high: '高',
+  urgent: '紧急'
+};
+
 function normalizeText(value: string | null | undefined) {
   return (value ?? '').trim().toLowerCase();
 }
@@ -35,9 +51,8 @@ function toneFromPriority(priority: string) {
 
 <template>
   <PanelCard
-    eyebrow="Recent Activity"
     title="最近通知任务"
-    description="保留最近派发记录，方便从配置动作回跳到真实任务与死信原因。"
+    description="最近派发记录与死信原因回查。"
   >
     <div v-if="notifications.length" class="task-timeline">
       <article
@@ -53,8 +68,8 @@ function toneFromPriority(priority: string) {
             </p>
           </div>
           <div class="task-timeline__pills">
-            <StatusPill :label="notification.sendStatus" :tone="toneFromStatus(notification.sendStatus)" />
-            <StatusPill :label="notification.priority || 'normal'" :tone="toneFromPriority(notification.priority)" />
+            <StatusPill :label="sendStatusMap[notification.sendStatus] || notification.sendStatus" :tone="toneFromStatus(notification.sendStatus)" />
+            <StatusPill :label="priorityMap[notification.priority || 'normal'] || notification.priority || '普通'" :tone="toneFromPriority(notification.priority)" />
           </div>
         </div>
 
@@ -86,9 +101,8 @@ function toneFromPriority(priority: string) {
   gap: 0.65rem;
   padding: 1rem 1.05rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(250, 244, 236, 0.7));
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .task-timeline__head {
@@ -138,8 +152,8 @@ function toneFromPriority(priority: string) {
 .task-timeline__dead-letter {
   padding: 0.75rem 0.85rem;
   border-radius: calc(var(--radius-lg) - 0.25rem);
-  background: rgba(145, 96, 54, 0.08);
-  color: #7a4d28;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   line-height: 1.65;
 }
 

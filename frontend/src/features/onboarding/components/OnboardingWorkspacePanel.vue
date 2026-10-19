@@ -87,17 +87,26 @@ function isPlanDisabled(planCode: string) {
 
   return planCode.toLowerCase() === 'trial';
 }
+
+function subscriptionStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    trialing: '试用中',
+    active: '生效',
+    unsubscribed: '未订阅',
+    past_due: '已逾期'
+  };
+  return (status && map[status]) || '试用中';
+}
 </script>
 
 <template>
   <section class="onboarding-workspace">
     <header class="onboarding-workspace__header">
       <div>
-        <p class="onboarding-workspace__eyebrow">Onboarding Workspace</p>
-        <h2 class="onboarding-workspace__title">登录后不要立刻跳控制台，先把租户接入闭环做完整</h2>
+        <p class="onboarding-workspace__eyebrow">接入闭环</p>
+        <h2 class="onboarding-workspace__title">工作台概览</h2>
         <p class="onboarding-workspace__subtitle">
-          这里展示默认组织建立结果、当前订阅状态、店铺授权状态和初始化阈值，让 `/login`
-          变成真正的接入工作台。
+          默认组织、订阅、店铺授权与初始化阈值一屏完成。
         </p>
       </div>
       <div class="onboarding-workspace__actions">
@@ -125,7 +134,6 @@ function isPlanDisabled(planCode: string) {
 
     <div class="onboarding-workspace__top-grid">
       <PanelCard
-        eyebrow="Organization"
         title="组织创建结果"
         description="当前后端没有独立的组织创建接口，所以这里直接展示 register 后自动建立的默认组织与租户上下文。"
       >
@@ -150,7 +158,6 @@ function isPlanDisabled(planCode: string) {
       </PanelCard>
 
       <PanelCard
-        eyebrow="Subscription"
         title="当前套餐与配额"
         description="套餐动作走真实订阅接口，配额直接回读后端额度，避免页面只停留在展示层。"
       >
@@ -160,7 +167,7 @@ function isPlanDisabled(planCode: string) {
               {{ subscription?.planName || '试用版' }}
             </p>
             <p class="onboarding-workspace__plan-copy">
-              状态 {{ subscription?.subscriptionStatus || 'trialing' }} · 席位
+              状态 {{ subscriptionStatusLabel(subscription?.subscriptionStatus) }} · 席位
               {{ subscription?.seatCount ?? 1 }}
             </p>
           </div>
@@ -181,7 +188,6 @@ function isPlanDisabled(planCode: string) {
     </div>
 
     <PanelCard
-      eyebrow="Plan Switch"
       title="套餐选择区"
       description="试用态会自动走 subscribe，正式套餐之间会根据目标等级走 upgrade 或 downgrade。"
     >
@@ -267,24 +273,21 @@ function isPlanDisabled(planCode: string) {
 }
 
 .onboarding-workspace__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .onboarding-workspace__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.4rem);
-  line-height: 1.02;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .onboarding-workspace__subtitle,
 .onboarding-workspace__plan-note {
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .onboarding-workspace__actions {
@@ -297,23 +300,40 @@ function isPlanDisabled(planCode: string) {
 .onboarding-workspace__primary,
 .onboarding-workspace__ghost,
 .onboarding-workspace__plan-button {
-  min-height: 2.95rem;
-  padding: 0 1rem;
-  border-radius: var(--radius-pill);
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  border-radius: var(--radius-md);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .onboarding-workspace__primary,
 .onboarding-workspace__plan-button {
   border: 0;
-  background: linear-gradient(135deg, #2d241c, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
   font-weight: 700;
 }
 
+.onboarding-workspace__primary:hover,
+.onboarding-workspace__plan-button:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
+}
+
 .onboarding-workspace__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+}
+
+.onboarding-workspace__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .onboarding-workspace__banner {
@@ -391,13 +411,13 @@ function isPlanDisabled(planCode: string) {
   gap: 0.5rem;
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .onboarding-workspace__plan-card--active {
-  border-color: rgba(133, 98, 67, 0.42);
-  box-shadow: 0 14px 28px rgba(33, 24, 16, 0.08);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .onboarding-workspace__plan-button:disabled {

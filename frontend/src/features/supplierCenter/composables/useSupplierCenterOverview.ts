@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   createSupplier,
@@ -415,7 +415,7 @@ export function useSupplierCenterOverview() {
     });
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     suppliers: sortedSuppliers,
     filteredSuppliers,
@@ -451,5 +451,5 @@ export function useSupplierCenterOverview() {
     submitDeliveryAppointment,
     submitRiskEvent,
     submitSettlementStatement
-  };
+  });
 }

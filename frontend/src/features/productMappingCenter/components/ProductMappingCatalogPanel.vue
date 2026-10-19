@@ -19,7 +19,7 @@ defineEmits<{
   <section class="mapping-catalog">
     <div class="mapping-catalog__head">
       <div>
-        <p class="mapping-catalog__eyebrow">Platform Products</p>
+        <p class="mapping-catalog__eyebrow">平台商品</p>
         <h4 class="mapping-catalog__title">平台商品列表</h4>
       </div>
       <p class="mapping-catalog__hint">优先处理缺主货源、缺备用兜底或主数据异常的商品。</p>
@@ -87,8 +87,8 @@ defineEmits<{
 .mapping-catalog {
   padding: 1.15rem;
   border-radius: var(--radius-shell);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
 }
 
@@ -109,17 +109,16 @@ defineEmits<{
 }
 
 .mapping-catalog__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .mapping-catalog__title {
   margin-top: 0.35rem;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.35rem;
+  font-weight: 600;
 }
 
 .mapping-catalog__hint,
@@ -134,15 +133,14 @@ defineEmits<{
   gap: 0.85rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(247, 241, 232, 0.9));
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
 }
 
 .mapping-catalog__item--active {
-  border-color: rgba(169, 79, 45, 0.4);
-  box-shadow: 0 18px 34px rgba(169, 79, 45, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
   transform: translateY(-1px);
 }
 
@@ -170,15 +168,15 @@ defineEmits<{
   align-items: center;
   padding: 0 0.75rem;
   border-radius: var(--radius-pill);
-  background: rgba(91, 72, 54, 0.08);
-  color: var(--color-ink-soft);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.82rem;
 }
 
 .mapping-catalog__empty {
   padding: 1.05rem;
   border-radius: var(--radius-lg);
-  background: rgba(91, 72, 54, 0.05);
+  background: var(--color-accent-soft);
   color: var(--color-ink-soft);
   line-height: 1.7;
 }

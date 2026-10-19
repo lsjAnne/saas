@@ -1,4 +1,4 @@
-import { shallowRef } from 'vue';
+import { shallowRef, reactive } from 'vue';;
 
 import {
   createOpenPlatformApp,
@@ -266,7 +266,7 @@ export function useOpenPlatformOverview() {
     }
   }
 
-  return {
+  return reactive({
     overview,
     governance,
     audit,
@@ -290,5 +290,5 @@ export function useOpenPlatformOverview() {
     submitCreateWebhook,
     toggleWebhook,
     rotateWebhookSecret
-  };
+  });
 }

@@ -20,7 +20,7 @@ defineEmits<{
 
 <template>
   <PanelCard
-    eyebrow="Directory"
+
     title="店铺目录与阈值详情"
     description="左侧保持店铺目录，右侧只展示当前选中的利润阈值、风险阈值与默认发货配置。高频切换在同一屏内完成，不打断主链路。"
   >
@@ -57,7 +57,7 @@ defineEmits<{
         <template v-if="selectedStore">
           <div class="store-directory__detail-header">
             <div>
-              <p class="store-directory__detail-label">Selected Store</p>
+              <p class="store-directory__detail-label">已选店铺</p>
               <h4 class="store-directory__detail-title">{{ selectedStore.shopName }}</h4>
             </div>
             <button type="button" class="store-directory__detail-action" @click="$emit('edit')">
@@ -85,7 +85,7 @@ defineEmits<{
           </dl>
 
           <div class="store-directory__config">
-            <p class="store-directory__detail-label">Default Ship Config</p>
+            <p class="store-directory__detail-label">默认发货配置</p>
             <pre class="store-directory__config-code">{{
               JSON.stringify(selectedStore.defaultShipConfig ?? {}, null, 2)
             }}</pre>
@@ -120,8 +120,8 @@ defineEmits<{
   gap: 0.9rem;
   padding: 0.9rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
   transition:
     transform var(--transition-fast),
@@ -135,8 +135,8 @@ defineEmits<{
 }
 
 .store-directory__item--active {
-  border-color: rgba(133, 98, 67, 0.34);
-  background: linear-gradient(135deg, rgba(250, 242, 233, 0.94), rgba(245, 232, 213, 0.88));
+  border-color: var(--color-accent);
+  background: var(--color-surface);
 }
 
 .store-directory__item-copy {
@@ -168,8 +168,8 @@ defineEmits<{
 .store-directory__detail {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(248, 244, 238, 0.8);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .store-directory__detail-header {
@@ -195,8 +195,8 @@ defineEmits<{
   min-height: 2.8rem;
   padding: 0 1rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 
@@ -234,8 +234,9 @@ defineEmits<{
   margin: 0;
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  background: #2f261e;
-  color: #fff8f0;
+  background: var(--color-surface);
+  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
   overflow: auto;
   font-size: 0.8rem;
   line-height: 1.6;

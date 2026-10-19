@@ -25,7 +25,6 @@ const renderedRecommendations = computed(() =>
 
 <template>
   <PanelCard
-    eyebrow="Campaign Suggestions"
     title="活动联动建议"
     description="这一组建议强调商品与会员段的联动，不单独停留在活动标题，而是给出规则口径和建议动作。"
   >
@@ -74,7 +73,8 @@ const renderedRecommendations = computed(() =>
 .campaign-recommendation__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   display: grid;
   gap: 0.7rem;
 }
@@ -113,9 +113,9 @@ const renderedRecommendations = computed(() =>
 
 .campaign-recommendation__route {
   min-height: 2.8rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.66);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
   font: inherit;
 }

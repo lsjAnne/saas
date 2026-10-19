@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import { ApiError } from '@/services/http/apiClient';
 import type {
@@ -568,7 +568,7 @@ export function useLiveOperationsOverview() {
     }
   }
 
-  return {
+  return reactive({
     livePlans: sortedPlans,
     liveSessions: sortedSessions,
     concurrencyOverview,
@@ -612,5 +612,5 @@ export function useLiveOperationsOverview() {
     configureSelectedPlanCommitmentWhitelist,
     replySelectedSession,
     simulateSelectedSessionCallback
-  };
+  });
 }

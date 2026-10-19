@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   escalateException,
@@ -329,7 +329,7 @@ export function useExceptionCenterOverview() {
     }
   }
 
-  return {
+  return reactive({
     exceptions: filteredExceptions,
     categories,
     selectedExceptionId,
@@ -352,5 +352,5 @@ export function useExceptionCenterOverview() {
     processSelected,
     ignoreSelected,
     escalateSelected
-  };
+  });
 }

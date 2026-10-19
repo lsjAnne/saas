@@ -92,7 +92,6 @@ function submitTask() {
 
 <template>
   <PanelCard
-    eyebrow="Inventory Snapshot"
     title="库存快照与补货起点"
     description="先看低库存与冻结状态，再从当前快照直接调安全库存或发起补货任务。"
   >
@@ -138,7 +137,7 @@ function submitTask() {
               </p>
             </div>
             <StatusPill
-              :label="snapshot.availableStock <= snapshot.safetyStock ? 'low stock' : 'healthy'"
+              :label="snapshot.availableStock <= snapshot.safetyStock ? '低库存' : '正常'"
               :tone="resolveTone(snapshot)"
             />
           </div>
@@ -204,8 +203,8 @@ function submitTask() {
 .inventory-snapshot__filter,
 .inventory-snapshot__item,
 .inventory-snapshot__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
 }
 
 .inventory-snapshot__filter {
@@ -217,9 +216,9 @@ function submitTask() {
 }
 
 .inventory-snapshot__filter--active {
-  background: linear-gradient(135deg, rgba(106, 67, 39, 0.94), rgba(43, 31, 23, 0.94));
-  border-color: transparent;
-  color: #fff8f0;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
 }
 
 .inventory-snapshot__list {
@@ -236,8 +235,8 @@ function submitTask() {
 }
 
 .inventory-snapshot__item--active {
-  border-color: rgba(106, 67, 39, 0.38);
-  box-shadow: 0 18px 36px rgba(81, 52, 44, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .inventory-snapshot__item-top {
@@ -280,7 +279,8 @@ function submitTask() {
   align-items: end;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .inventory-snapshot__form--task {
@@ -306,9 +306,9 @@ function submitTask() {
 .inventory-snapshot__field textarea {
   min-height: 2.8rem;
   padding: 0.75rem 0.9rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -322,8 +322,13 @@ function submitTask() {
 
 .inventory-snapshot__primary {
   border: 0;
-  background: linear-gradient(135deg, #30525a, #6b8d8b);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.inventory-snapshot__primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .inventory-snapshot__error {

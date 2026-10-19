@@ -26,11 +26,21 @@ function resolveTone(riskLevel: string | null | undefined): 'neutral' | 'warn' |
 
   return 'neutral';
 }
+
+const riskLabelMap: Record<string, string> = {
+  high: '高风险',
+  medium: '中风险',
+  low: '低风险',
+  unknown: '未知'
+};
+
+function resolveRiskLabel(riskLevel: string | null | undefined) {
+  return riskLabelMap[(riskLevel ?? '').toLowerCase()] ?? riskLevel ?? '未知';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Product Opportunities"
     title="商品机会清单"
     description="把推荐商品的理由、利润空间和风险解释放在同一行里，方便直接跳进商品中心继续孵化。"
   >
@@ -48,7 +58,7 @@ function resolveTone(riskLevel: string | null | undefined): 'neutral' | 'warn' |
             </p>
           </div>
           <StatusPill
-            :label="item.riskLevel || 'unknown'"
+            :label="resolveRiskLabel(item.riskLevel)"
             :tone="resolveTone(item.riskLevel)"
           />
         </div>
@@ -78,7 +88,8 @@ function resolveTone(riskLevel: string | null | undefined): 'neutral' | 'warn' |
 .product-recommendation__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   display: grid;
   gap: 0.7rem;
 }
@@ -125,9 +136,9 @@ function resolveTone(riskLevel: string | null | undefined): 'neutral' | 'warn' |
 
 .product-recommendation__route {
   min-height: 2.8rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.66);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
   font: inherit;
 }

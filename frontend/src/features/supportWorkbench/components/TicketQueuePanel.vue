@@ -11,6 +11,21 @@ interface Props {
 
 defineProps<Props>();
 
+const ticketStatusMap: Record<string, string> = {
+  open: '待处理',
+  pending: '处理中',
+  resolved: '已解决',
+  closed: '已关闭',
+  escalated: '已升级'
+};
+
+const sessionStatusMap: Record<string, string> = {
+  requested: '已申请',
+  approved: '已批准',
+  rejected: '已拒绝',
+  closed: '已关闭'
+};
+
 function ticketTone(ticket: CustomerServiceTicket) {
   if (ticket.riskFlag) {
     return 'warn';
@@ -34,34 +49,33 @@ function sessionTone(status: string) {
 
 <template>
   <PanelCard
-    eyebrow="Queue"
     title="工单与支持会话队列"
-    description="把一线工单与平台支持会话放进同一工作台，便于判断何时需要升级到支持介入。"
+    description="一线工单与平台支持会话同屏处理。"
   >
     <div class="ticket-queue">
       <section class="ticket-queue__block">
-        <p class="ticket-queue__label">Tickets</p>
+        <p class="ticket-queue__label">工单列表</p>
         <article v-for="ticket in tickets.slice(0, 4)" :key="ticket.ticketId" class="ticket-queue__item">
           <div class="ticket-queue__head">
             <div>
               <h4 class="ticket-queue__title">{{ ticket.orderId }} · {{ ticket.customerId }}</h4>
               <p class="ticket-queue__meta">{{ ticket.aiReplySuggestion || '等待建议回复' }}</p>
             </div>
-            <StatusPill :label="ticket.ticketStatus" :tone="ticketTone(ticket)" />
+            <StatusPill :label="ticketStatusMap[ticket.ticketStatus] || ticket.ticketStatus" :tone="ticketTone(ticket)" />
           </div>
           <p class="ticket-queue__time">{{ formatDateTime(ticket.createdAt) }}</p>
         </article>
       </section>
 
       <section class="ticket-queue__block">
-        <p class="ticket-queue__label">Support Sessions</p>
+        <p class="ticket-queue__label">支持会话</p>
         <article v-for="session in supportSessions.slice(0, 4)" :key="session.id" class="ticket-queue__item">
           <div class="ticket-queue__head">
             <div>
               <h4 class="ticket-queue__title">{{ session.requesterId }}</h4>
               <p class="ticket-queue__meta">{{ session.reason }}</p>
             </div>
-            <StatusPill :label="session.status" :tone="sessionTone(session.status)" />
+            <StatusPill :label="sessionStatusMap[session.status] || session.status" :tone="sessionTone(session.status)" />
           </div>
           <p class="ticket-queue__time">{{ formatDateTime(session.createdAt) }}</p>
         </article>
@@ -89,17 +103,16 @@ function sessionTone(status: string) {
 }
 
 .ticket-queue__label {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .ticket-queue__item {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .ticket-queue__head {

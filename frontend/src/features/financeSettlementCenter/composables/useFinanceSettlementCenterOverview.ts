@@ -593,7 +593,7 @@ export function useFinanceSettlementCenterOverview() {
     });
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     filteredBills,
     filteredLedgers,
@@ -643,5 +643,5 @@ export function useFinanceSettlementCenterOverview() {
     submitRedFlushFinanceInvoice,
     submitArchiveFinanceVoucher,
     submitCloseFinancePeriod
-  };
+  });
 }

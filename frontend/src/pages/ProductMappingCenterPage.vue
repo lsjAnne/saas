@@ -16,7 +16,7 @@ const workspaceAnchor = shallowRef<HTMLElement | null>(null);
 authStore.hydrate();
 
 const selectedStoreName = computed(
-  () => mappingCenter.selectedStore.value?.shopName ?? '待选择商品'
+  () => mappingCenter.selectedStore?.shopName ?? '待选择商品'
 );
 
 async function bootstrapPage() {
@@ -66,12 +66,12 @@ onMounted(() => {
 <template>
   <section class="product-mapping-page">
     <header class="product-mapping-page__header">
-      <p class="product-mapping-page__eyebrow">Product Mapping Center</p>
+      <p class="product-mapping-page__eyebrow">商品映射</p>
       <h2 class="product-mapping-page__title">
-        让平台商品、上游货源与校验结论在同一页完成建立、切换和兜底
+        商品与货源映射
       </h2>
       <p class="product-mapping-page__subtitle">
-        这页严格按需求文档的商品与货源映射原型收口：左侧先挑平台商品，右侧马上完成主货源落位、备用补齐、映射回看和风险复核。
+        平台商品、上游货源与校验结论在同一页完成建立、切换与兜底。
       </p>
     </header>
 
@@ -143,18 +143,15 @@ onMounted(() => {
 }
 
 .product-mapping-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .product-mapping-page__title {
-  max-width: 14ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .product-mapping-page__subtitle,

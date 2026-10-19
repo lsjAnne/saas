@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import { getExceptions } from '@/services/exceptionCenterService';
 import {
@@ -424,7 +424,7 @@ export function useDashboardOverview() {
     }
   }
 
-  return {
+  return reactive({
     summary,
     risks,
     campaignAnalysis,
@@ -436,5 +436,5 @@ export function useDashboardOverview() {
     isLoading,
     errorMessage,
     load
-  };
+  });
 }

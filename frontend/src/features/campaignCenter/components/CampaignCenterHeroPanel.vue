@@ -43,17 +43,32 @@ function resolveTone(value: string | null | undefined) {
 
   return 'neutral';
 }
+
+const statusLabelMap: Record<string, string> = {
+  draft: '草稿',
+  pending_review: '待审批',
+  approved: '已通过',
+  rejected: '已驳回',
+  published: '已发布',
+  discount: '满减优惠',
+  coupon: '优惠券',
+  gift: '赠品活动'
+};
+
+function labelOf(value: string) {
+  return statusLabelMap[value] ?? value;
+}
 </script>
 
 <template>
   <section class="campaign-hero">
     <div class="campaign-hero__copy">
-      <p class="campaign-hero__eyebrow">Campaign Command Deck</p>
+      <p class="campaign-hero__eyebrow">营销主控台</p>
       <h3 class="campaign-hero__title">
-        把活动、优惠券、审批和发布轨道压进同一张能直接执行的营销主控页
+        活动、优惠券与审批发布一屏管理
       </h3>
       <p class="campaign-hero__subtitle">
-        当前聚焦店铺：{{ selectedStoreName }}。首轮不做花哨编排器，先把活动排期、规则、商品挂载和审批发布链路真正接进来。
+        当前聚焦店铺：{{ selectedStoreName }}。先把活动排期、规则、商品挂载和审批发布链路接进来。
       </p>
 
       <div class="campaign-hero__actions">
@@ -82,13 +97,13 @@ function resolveTone(value: string | null | undefined) {
         </div>
         <StatusPill
           v-if="selectedCampaign"
-          :label="selectedCampaign.status"
+          :label="labelOf(selectedCampaign.status)"
           :tone="resolveTone(selectedCampaign.status)"
         />
       </div>
 
       <div v-if="selectedCampaign" class="campaign-hero__focus-meta">
-        <span>{{ selectedCampaign.activityType }}</span>
+        <span>{{ labelOf(selectedCampaign.activityType) }}</span>
         <span>{{ formatDate(selectedCampaign.startAt) }} - {{ formatDate(selectedCampaign.endAt) }}</span>
         <span v-if="selectedCampaign.needApproval">需要审批</span>
         <span v-if="selectedCouponTemplate">{{ selectedCouponTemplate.templateName }}</span>
@@ -110,7 +125,7 @@ function resolveTone(value: string | null | undefined) {
         <article class="campaign-hero__focus-item">
           <p class="campaign-hero__focus-item-label">发布轨道</p>
           <p class="campaign-hero__focus-item-value">
-            {{ selectedCampaign?.status || '--' }}
+            {{ selectedCampaign ? labelOf(selectedCampaign.status) : '--' }}
           </p>
         </article>
       </div>
@@ -160,17 +175,16 @@ function resolveTone(value: string | null | undefined) {
 }
 
 .campaign-hero__copy {
-  background:
-    radial-gradient(circle at top right, rgba(181, 115, 82, 0.18), transparent 34%),
-    linear-gradient(145deg, rgba(255, 250, 245, 0.96), rgba(244, 230, 224, 0.92));
-  border: 1px solid rgba(123, 68, 44, 0.1);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .campaign-hero__focus-card {
   display: grid;
   gap: 1rem;
-  background: linear-gradient(150deg, #4a221d, #251210);
-  color: #fff5ed;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-strong);
 }
 
 .campaign-hero__eyebrow,
@@ -186,22 +200,21 @@ function resolveTone(value: string | null | undefined) {
 
 .campaign-hero__eyebrow,
 .campaign-hero__focus-label {
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .campaign-hero__eyebrow {
-  color: var(--color-ink-faint);
+  color: var(--color-accent);
 }
 
 .campaign-hero__title {
   margin-top: 0.55rem;
-  max-width: 13ch;
+  max-width: 24ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.5rem);
-  line-height: 1.05;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .campaign-hero__subtitle,
@@ -227,15 +240,29 @@ function resolveTone(value: string | null | undefined) {
   min-height: 2.8rem;
   padding: 0 1.1rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(123, 68, 44, 0.14);
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.campaign-hero__button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .campaign-hero__button--solid {
-  background: linear-gradient(135deg, #8f4b35, #4b241c);
-  border-color: #8f4b35;
-  color: #fff8f0;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.campaign-hero__button--solid:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .campaign-hero__focus-head {
@@ -246,20 +273,21 @@ function resolveTone(value: string | null | undefined) {
 }
 
 .campaign-hero__focus-label {
-  color: rgba(255, 237, 228, 0.68);
+  color: var(--color-ink-soft);
 }
 
 .campaign-hero__focus-title {
   margin-top: 0.45rem;
-  font-family: var(--font-display);
-  font-size: 1.55rem;
+  color: var(--color-ink-strong);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .campaign-hero__focus-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-  color: rgba(255, 237, 228, 0.82);
+  color: var(--color-ink-soft);
   font-size: 0.86rem;
 }
 
@@ -269,7 +297,8 @@ function resolveTone(value: string | null | undefined) {
   align-items: center;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .campaign-hero__focus-stats {
@@ -281,16 +310,18 @@ function resolveTone(value: string | null | undefined) {
 .campaign-hero__focus-item {
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .campaign-hero__focus-item-label {
-  color: rgba(255, 237, 228, 0.64);
+  color: var(--color-ink-soft);
   font-size: 0.78rem;
 }
 
 .campaign-hero__focus-item-value {
   margin-top: 0.55rem;
+  color: var(--color-ink-strong);
   font-size: 1.2rem;
   font-weight: 600;
 }

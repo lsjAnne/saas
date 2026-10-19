@@ -123,11 +123,32 @@ function handleRiskEvent() {
     remark: riskEventForm.remark
   });
 }
+
+const admissionStatusLabelMap: Record<string, string> = {
+  approved: '已通过',
+  conditional: '有条件通过',
+  rejected: '已驳回',
+  pending: '待评审'
+};
+
+function resolveAdmissionStatusLabel(status: string | null | undefined) {
+  return admissionStatusLabelMap[(status ?? '').toLowerCase()] ?? status ?? '--';
+}
+
+const warningLevelLabelMap: Record<string, string> = {
+  low: '低',
+  medium: '中',
+  high: '高',
+  critical: '紧急'
+};
+
+function resolveWarningLevelLabel(level: string | null | undefined) {
+  return warningLevelLabelMap[(level ?? '').toLowerCase()] ?? level ?? '--';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Execution Rail"
     title="准入、评分与风险动作"
     description="先把最常用的准入评审、评分卡、到货预约和风险记录收成同一执行面板。"
   >
@@ -146,9 +167,9 @@ function handleRiskEvent() {
         <article class="supplier-execution__linkage-card">
           <p class="supplier-execution__label">会话内最新动作</p>
           <div class="supplier-execution__chips">
-            <StatusPill v-if="latestAdmissionReview" :label="latestAdmissionReview.admissionStatus" tone="success" />
+            <StatusPill v-if="latestAdmissionReview" :label="resolveAdmissionStatusLabel(latestAdmissionReview.admissionStatus)" tone="success" />
             <StatusPill v-if="latestScorecard" :label="latestScorecard.ratingGrade" tone="neutral" />
-            <StatusPill v-if="latestRiskEvent" :label="latestRiskEvent.warningLevel" tone="warn" />
+            <StatusPill v-if="latestRiskEvent" :label="resolveWarningLevelLabel(latestRiskEvent.warningLevel)" tone="warn" />
           </div>
           <p class="supplier-execution__meta">
             这块只展示当前会话刚执行的结果，跨会话长期结果以 SRM 联动摘要为准。
@@ -162,9 +183,9 @@ function handleRiskEvent() {
           <label class="supplier-execution__field">
             <span>评审结论</span>
             <select v-model="admissionForm.decision" :disabled="!canSubmit || isSubmitting">
-              <option value="approved">approved</option>
-              <option value="conditional">conditional</option>
-              <option value="rejected">rejected</option>
+              <option value="approved">通过</option>
+              <option value="conditional">有条件通过</option>
+              <option value="rejected">驳回</option>
             </select>
           </label>
           <label class="supplier-execution__field">
@@ -177,7 +198,7 @@ function handleRiskEvent() {
           </label>
           <button class="supplier-execution__submit" type="submit" :disabled="!canSubmit || isSubmitting">提交评审</button>
           <p v-if="latestAdmissionReview" class="supplier-execution__footnote">
-            最新评审：{{ latestAdmissionReview.admissionStatus }} · {{ formatDateTime(latestAdmissionReview.reviewedAt) }}
+            最新评审：{{ resolveAdmissionStatusLabel(latestAdmissionReview.admissionStatus) }} · {{ formatDateTime(latestAdmissionReview.reviewedAt) }}
           </p>
         </form>
 
@@ -226,17 +247,17 @@ function handleRiskEvent() {
           <label class="supplier-execution__field">
             <span>风险类型</span>
             <select v-model="riskEventForm.riskType" :disabled="!canSubmit || isSubmitting">
-              <option value="delay">delay</option>
-              <option value="quality">quality</option>
-              <option value="capacity">capacity</option>
+              <option value="delay">延迟</option>
+              <option value="quality">质量</option>
+              <option value="capacity">产能</option>
             </select>
           </label>
           <label class="supplier-execution__field">
             <span>严重等级</span>
             <select v-model="riskEventForm.severity" :disabled="!canSubmit || isSubmitting">
-              <option value="low">low</option>
-              <option value="medium">medium</option>
-              <option value="high">high</option>
+              <option value="low">低</option>
+              <option value="medium">中</option>
+              <option value="high">高</option>
             </select>
           </label>
           <label class="supplier-execution__field">
@@ -273,8 +294,8 @@ function handleRiskEvent() {
 .supplier-execution__card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .supplier-execution__forms {
@@ -291,10 +312,9 @@ function handleRiskEvent() {
 }
 
 .supplier-execution__label {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .supplier-execution__value,
@@ -327,9 +347,9 @@ function handleRiskEvent() {
 .supplier-execution__field textarea {
   min-height: 2.75rem;
   padding: 0.75rem 0.9rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
 }
 
@@ -338,7 +358,12 @@ function handleRiskEvent() {
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--color-accent);
-  color: #fff8f0;
+  color: #ffffff;
+}
+
+.supplier-execution__submit:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .supplier-execution__submit--warn {

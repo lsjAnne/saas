@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   auditOrder,
@@ -656,7 +656,7 @@ export function useOrderFulfillmentOverview() {
     }
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     orders: sortedOrders,
     standardizedOrders,
@@ -691,5 +691,5 @@ export function useOrderFulfillmentOverview() {
     retrySelectedTask,
     replaySelectedTask,
     createSelectedTaskLogisticsRecord
-  };
+  });
 }

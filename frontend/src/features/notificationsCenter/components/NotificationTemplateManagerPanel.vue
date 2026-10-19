@@ -99,9 +99,8 @@ function handleSave() {
 
 <template>
   <PanelCard
-    eyebrow="Template Manager"
     title="通知模板管理"
-    description="统一维护模板启停、标题模板和内容模板。这里的修改直接影响后续通知任务的渲染结果。"
+    description="维护模板启停、标题模板与内容模板。"
   >
     <div v-if="templates.length" class="template-manager">
       <aside class="template-manager__list">
@@ -133,7 +132,7 @@ function handleSave() {
       <div v-if="selectedTemplate" class="template-manager__editor">
         <div class="template-manager__editor-head">
           <div>
-            <p class="template-manager__editor-eyebrow">Editing</p>
+            <p class="template-manager__editor-eyebrow">正在编辑</p>
             <h4 class="template-manager__editor-title">{{ selectedTemplate.templateCode }}</h4>
           </div>
           <label class="template-manager__toggle">
@@ -205,16 +204,16 @@ function handleSave() {
   width: 100%;
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
   cursor: pointer;
 }
 
 .template-manager__item--active {
-  border-color: rgba(143, 95, 58, 0.4);
-  background: rgba(252, 246, 239, 0.96);
-  box-shadow: inset 0 0 0 1px rgba(143, 95, 58, 0.15);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
 }
 
 .template-manager__item-head,
@@ -254,8 +253,8 @@ function handleSave() {
 .template-manager__editor-eyebrow,
 .template-manager__field-label {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
 .template-manager__field {
@@ -266,10 +265,10 @@ function handleSave() {
 .template-manager__input,
 .template-manager__textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.7rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: var(--color-surface);
   color: var(--color-ink-strong);
   font: inherit;
   box-sizing: border-box;
@@ -290,8 +289,8 @@ function handleSave() {
   border: none;
   border-radius: var(--radius-pill);
   padding: 0.72rem 1.15rem;
-  background: #8f5f3a;
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
   font: inherit;
   cursor: pointer;
 }

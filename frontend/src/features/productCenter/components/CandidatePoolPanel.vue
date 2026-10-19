@@ -38,7 +38,7 @@ function resolveTone(value: string | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Candidate Pool"
+
     title="候选商品池"
     description="先判断该不该做，再决定怎么写。这里聚焦候选来源、利润预估、风险等级和推荐理由。"
   >
@@ -78,7 +78,7 @@ function resolveTone(value: string | null | undefined) {
         <template v-if="selectedCandidate">
           <div class="candidate-pool__detail-head">
             <div>
-              <p class="candidate-pool__label">Selected Candidate</p>
+              <p class="candidate-pool__label">已选候选</p>
               <h4 class="candidate-pool__detail-title">{{ selectedCandidate.title }}</h4>
             </div>
             <div class="candidate-pool__detail-actions">
@@ -191,14 +191,14 @@ function resolveTone(value: string | null | undefined) {
 
 .candidate-pool__primary {
   border: 0;
-  background: linear-gradient(135deg, #2e251d, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .candidate-pool__ghost,
 .candidate-pool__status-btn {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
 }
 
@@ -213,14 +213,14 @@ function resolveTone(value: string | null | undefined) {
   gap: 0.85rem;
   padding: 0.9rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
 }
 
 .candidate-pool__item--active {
-  border-color: rgba(133, 98, 67, 0.34);
-  background: linear-gradient(135deg, rgba(250, 242, 233, 0.94), rgba(245, 232, 213, 0.88));
+  border-color: var(--color-accent);
+  background: var(--color-surface);
 }
 
 .candidate-pool__item-copy,
@@ -241,8 +241,8 @@ function resolveTone(value: string | null | undefined) {
 .candidate-pool__detail {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(248, 244, 238, 0.8);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .candidate-pool__item-title,
@@ -281,7 +281,7 @@ function resolveTone(value: string | null | undefined) {
   gap: 0.35rem;
   padding: 0.8rem 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--color-surface);
 }
 
 .candidate-pool__fact dt {

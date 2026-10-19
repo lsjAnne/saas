@@ -47,11 +47,34 @@ function toneFromGovernanceLevel(level: string) {
 
   return 'neutral';
 }
+
+const severityLabelMap: Record<string, string> = {
+  critical: '紧急',
+  high: '高',
+  medium: '中',
+  normal: '正常',
+  low: '低'
+};
+
+function resolveSeverityLabel(severity: string) {
+  return severityLabelMap[severity.toLowerCase()] ?? severity;
+}
+
+const governanceLabelMap: Record<string, string> = {
+  critical: '高风险',
+  high: '高风险',
+  medium: '中风险',
+  low: '低风险',
+  healthy: '健康'
+};
+
+function resolveGovernanceLabel(level: string) {
+  return governanceLabelMap[level.toLowerCase()] ?? level;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Risk Radar"
     title="风险雷达与互动闭环"
     description="把风险事件、阻塞队列、恢复动作、账号治理和互动闭环快照堆到同一屏上，方便直播负责人一次性判断。"
   >
@@ -115,7 +138,7 @@ function toneFromGovernanceLevel(level: string) {
                   会话 {{ event.liveSessionId || '--' }} / 计划 {{ event.livePlanId || '--' }}
                 </p>
               </div>
-              <StatusPill :label="event.severity" :tone="toneFromSeverity(event.severity)" />
+              <StatusPill :label="resolveSeverityLabel(event.severity)" :tone="toneFromSeverity(event.severity)" />
             </div>
             <p class="live-risk-radar__item-detail">{{ event.detail }}</p>
             <p class="live-risk-radar__item-time">{{ formatDateTime(event.occurredAt) }}</p>
@@ -195,7 +218,7 @@ function toneFromGovernanceLevel(level: string) {
                 </p>
               </div>
               <StatusPill
-                :label="account.governanceRiskLevel"
+                :label="resolveGovernanceLabel(account.governanceRiskLevel)"
                 :tone="toneFromGovernanceLevel(account.governanceRiskLevel)"
               />
             </div>
@@ -224,8 +247,8 @@ function toneFromGovernanceLevel(level: string) {
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .live-risk-radar__section-head,
@@ -261,8 +284,8 @@ function toneFromGovernanceLevel(level: string) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(91, 72, 54, 0.08);
-  color: var(--color-ink-strong);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .live-risk-radar__list {
@@ -276,7 +299,8 @@ function toneFromGovernanceLevel(level: string) {
   gap: 0.45rem;
   padding: 0.85rem 0.9rem;
   border-radius: calc(var(--radius-lg) - 0.25rem);
-  background: rgba(250, 245, 239, 0.82);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .live-risk-radar__item-meta,

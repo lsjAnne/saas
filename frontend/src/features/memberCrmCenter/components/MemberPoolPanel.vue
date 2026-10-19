@@ -40,11 +40,28 @@ function resolveTone(member: MemberView) {
 
   return 'neutral';
 }
+
+const labelMap: Record<string, string> = {
+  normal: '普通会员',
+  silver: '白银会员',
+  gold: '黄金会员',
+  platinum: '铂金会员',
+  vip: 'VIP',
+  svip: '超级VIP',
+  new: '新客',
+  active: '活跃',
+  dormant: '沉默',
+  silent: '静默',
+  churn_risk: '流失风险'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Member Pool"
     title="会员池与筛选上下文"
     description="店铺、层级、生命周期和标签筛选都先在这里确定，右侧所有 CRM 动作跟随当前池子变化。"
   >
@@ -75,7 +92,7 @@ function resolveTone(member: MemberView) {
             <select :value="levelFilter" @change="$emit('selectLevel', ($event.target as HTMLSelectElement).value)">
               <option value="all">全部</option>
               <option v-for="level in availableLevels" :key="level" :value="level">
-                {{ level }}
+                {{ labelOf(level) }}
               </option>
             </select>
           </label>
@@ -88,7 +105,7 @@ function resolveTone(member: MemberView) {
             >
               <option value="all">全部</option>
               <option v-for="stage in availableLifecycleStages" :key="stage" :value="stage">
-                {{ stage }}
+                {{ labelOf(stage) }}
               </option>
             </select>
           </label>
@@ -116,10 +133,10 @@ function resolveTone(member: MemberView) {
             <div>
               <h4 class="member-pool__item-title">{{ member.nickname || member.customerId }}</h4>
               <p class="member-pool__item-meta">
-                {{ member.levelCode }} / {{ member.lifecycleStage }}
+                {{ labelOf(member.levelCode) }} / {{ labelOf(member.lifecycleStage) }}
               </p>
             </div>
-            <StatusPill :label="member.levelCode" :tone="resolveTone(member)" />
+            <StatusPill :label="labelOf(member.levelCode)" :tone="resolveTone(member)" />
           </div>
 
           <div class="member-pool__chips">
@@ -180,8 +197,8 @@ function resolveTone(member: MemberView) {
   min-height: 2.8rem;
   padding: 0 0.9rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
 }
 
@@ -189,15 +206,18 @@ function resolveTone(member: MemberView) {
   min-height: 2.2rem;
   padding: 0 0.95rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .member-pool__store-chip--active {
-  background: rgba(86, 118, 120, 0.12);
-  border-color: rgba(86, 118, 120, 0.22);
-  color: #27454d;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
 }
 
 .member-pool__item {
@@ -205,14 +225,15 @@ function resolveTone(member: MemberView) {
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   cursor: pointer;
 }
 
 .member-pool__item--active {
-  border-color: rgba(86, 118, 120, 0.32);
-  box-shadow: inset 0 0 0 1px rgba(86, 118, 120, 0.14);
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .member-pool__item-head {
@@ -245,15 +266,16 @@ function resolveTone(member: MemberView) {
   min-height: 2rem;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(203, 224, 221, 0.34);
-  color: var(--color-ink);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.8rem;
 }
 
 .member-pool__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.64);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
   color: var(--color-ink-soft);
   line-height: 1.7;
 }

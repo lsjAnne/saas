@@ -43,11 +43,33 @@ function toneFromStatus(status: string) {
 
   return 'neutral';
 }
+
+const severityLabelMap: Record<string, string> = {
+  critical: '紧急',
+  high: '高',
+  medium: '中',
+  low: '低'
+};
+
+const statusLabelMap: Record<string, string> = {
+  open: '待处理',
+  pending: '待处理',
+  escalated: '已升级',
+  resolved: '已解决',
+  ignored: '已忽略'
+};
+
+function resolveSeverityLabel(severity: string) {
+  return severityLabelMap[normalizeText(severity)] ?? severity;
+}
+
+function resolveStatusLabel(status: string) {
+  return statusLabelMap[normalizeText(status)] ?? status;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Exception Queue"
     title="异常主队列"
     description="队列优先按状态和风险排序，先看仍开放的高风险项。"
   >
@@ -70,8 +92,8 @@ function toneFromStatus(status: string) {
             </p>
           </div>
           <div class="exception-queue__pill-stack">
-            <StatusPill :label="item.severity" :tone="toneFromSeverity(item.severity)" />
-            <StatusPill :label="item.status" :tone="toneFromStatus(item.status)" />
+            <StatusPill :label="resolveSeverityLabel(item.severity)" :tone="toneFromSeverity(item.severity)" />
+            <StatusPill :label="resolveStatusLabel(item.status)" :tone="toneFromStatus(item.status)" />
           </div>
         </div>
         <p class="exception-queue__detail">
@@ -99,8 +121,8 @@ function toneFromStatus(status: string) {
   padding: 0.95rem 1rem;
   text-align: left;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   transition:
     transform var(--transition-fast),
     border-color var(--transition-fast),
@@ -109,12 +131,12 @@ function toneFromStatus(status: string) {
 
 .exception-queue__item:hover {
   transform: translateY(-1px);
-  border-color: rgba(156, 113, 71, 0.24);
+  border-color: var(--color-accent);
 }
 
 .exception-queue__item--active {
-  border-color: rgba(156, 113, 71, 0.34);
-  box-shadow: 0 14px 30px rgba(112, 84, 55, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .exception-queue__item-head {

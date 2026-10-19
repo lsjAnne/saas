@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   downgradeTenantPlan,
@@ -269,7 +269,7 @@ export function useSubscriptionOverview() {
     actionFeedback.value = `Billing order ${billingOrderId} exported.`;
   }
 
-  return {
+  return reactive({
     plans,
     subscription,
     quotas,
@@ -291,5 +291,5 @@ export function useSubscriptionOverview() {
     settleOrder,
     requestInvoice,
     downloadBillingOrder
-  };
+  });
 }

@@ -14,9 +14,8 @@ const props = defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Support SLA"
     title="支持会话与 SLA 体征"
-    description="支持中心先看服务压力，再看是否需要平台支持会话介入。"
+    description="工单总量、逾期与支持会话一览。"
   >
     <div class="support-sla">
       <div class="support-sla__metrics">

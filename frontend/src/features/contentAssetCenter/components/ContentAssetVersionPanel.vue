@@ -82,7 +82,6 @@ function parseArtifact(url: string | null | undefined): ArtifactInfo | null {
 
 <template>
   <PanelCard
-    eyebrow="Version Ledger"
     title="版本记录与剪辑时间线"
     description="在这里确认 storyboard、剪辑成片和发布版本的顺序，再决定是否归档留痕。"
   >
@@ -157,8 +156,8 @@ function parseArtifact(url: string | null | undefined): ArtifactInfo | null {
   min-height: 2.9rem;
   padding: 0 1rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
 }
 
@@ -166,9 +165,9 @@ function parseArtifact(url: string | null | undefined): ArtifactInfo | null {
   min-height: 2.9rem;
   padding: 0 1.1rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(91, 72, 54, 0.14);
+  border: 1px solid var(--color-accent);
   background: var(--color-accent);
-  color: #fff7f0;
+  color: #ffffff;
 }
 
 .version-panel__button:disabled {
@@ -199,8 +198,8 @@ function parseArtifact(url: string | null | undefined): ArtifactInfo | null {
 .version-panel__item {
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .version-panel__item-head {
@@ -212,8 +211,8 @@ function parseArtifact(url: string | null | undefined): ArtifactInfo | null {
 
 .version-panel__label {
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
   font-size: 1.18rem;
+  font-weight: 600;
 }
 
 .version-panel__time,
@@ -236,8 +235,8 @@ function parseArtifact(url: string | null | undefined): ArtifactInfo | null {
   min-height: 2rem;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(91, 72, 54, 0.08);
-  color: var(--color-ink-strong);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.8rem;
 }
 
@@ -258,7 +257,8 @@ function parseArtifact(url: string | null | undefined): ArtifactInfo | null {
   margin-top: 0.9rem;
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.56);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-line);
   color: var(--color-ink-soft);
 }
 

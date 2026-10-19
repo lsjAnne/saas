@@ -74,11 +74,26 @@ function submitPayment() {
     remark: paymentForm.remark || undefined
   });
 }
+
+const labelMap: Record<string, string> = {
+  idle: '待处理',
+  pending: '待收款',
+  partial: '部分到账',
+  collected: '已收清',
+  settled: '已结算',
+  BANK_TRANSFER: '银行转账',
+  ALIPAY: '支付宝',
+  WECHAT: '微信支付',
+  CASH: '现金'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Receivable & Payment"
     title="应收台账与回款执行"
     description="把应收余额、客户回款和最近到账流水合在一块，让财务可以从未收款项目直接落动作。"
   >
@@ -103,7 +118,7 @@ function submitPayment() {
           >
             <div class="receivable-panel__row-head">
               <strong>{{ ledger.receivableNo }}</strong>
-              <StatusPill :label="ledger.receivableStatus" :tone="ledgerTone(ledger.receivableStatus)" />
+              <StatusPill :label="labelOf(ledger.receivableStatus)" :tone="ledgerTone(ledger.receivableStatus)" />
             </div>
             <p>{{ ledger.customerName }} / {{ ledger.platformOrderId }}</p>
             <p>应收 {{ formatCurrency(ledger.receivableAmount) }}</p>
@@ -121,7 +136,7 @@ function submitPayment() {
               <h4>{{ selectedLedger?.receivableNo || '等待选择应收记录' }}</h4>
             </div>
             <StatusPill
-              :label="selectedLedger?.receivableStatus || 'idle'"
+              :label="labelOf(selectedLedger?.receivableStatus || 'idle')"
               :tone="ledgerTone(selectedLedger?.receivableStatus || '')"
             />
           </div>
@@ -161,10 +176,10 @@ function submitPayment() {
             <label class="receivable-panel__field">
               <span>回款渠道</span>
               <select v-model="paymentForm.paymentChannel" class="receivable-panel__control">
-                <option value="BANK_TRANSFER">BANK_TRANSFER</option>
-                <option value="ALIPAY">ALIPAY</option>
-                <option value="WECHAT">WECHAT</option>
-                <option value="CASH">CASH</option>
+                <option value="BANK_TRANSFER">银行转账</option>
+                <option value="ALIPAY">支付宝</option>
+                <option value="WECHAT">微信支付</option>
+                <option value="CASH">现金</option>
               </select>
             </label>
             <label class="receivable-panel__field">
@@ -198,9 +213,9 @@ function submitPayment() {
             >
               <div class="receivable-panel__row-head">
                 <strong>{{ payment.paymentNo }}</strong>
-                <StatusPill :label="payment.paymentStatus" :tone="ledgerTone(payment.paymentStatus)" />
+                <StatusPill :label="labelOf(payment.paymentStatus)" :tone="ledgerTone(payment.paymentStatus)" />
               </div>
-              <p>{{ payment.customerName }} / {{ payment.paymentChannel }}</p>
+              <p>{{ payment.customerName }} / {{ labelOf(payment.paymentChannel) }}</p>
               <p>到账 {{ formatCurrency(payment.paymentAmount) }}</p>
               <p>{{ formatDateTime(payment.receivedAt) }}</p>
             </article>
@@ -239,8 +254,8 @@ function submitPayment() {
   gap: 0.4rem;
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.1);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
 }
 
@@ -249,15 +264,16 @@ function submitPayment() {
 }
 
 .receivable-panel__ledger-card--active {
-  border-color: rgba(113, 87, 62, 0.44);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .receivable-panel__detail-card,
 .receivable-panel__payments-card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 251, 247, 0.78);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .receivable-panel__section-header,
@@ -283,10 +299,9 @@ function submitPayment() {
 .receivable-panel__eyebrow,
 .receivable-panel__field span,
 .receivable-panel__detail-grid dt {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .receivable-panel__detail-grid {
@@ -299,7 +314,8 @@ function submitPayment() {
 .receivable-panel__detail-grid div {
   padding: 0.8rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .receivable-panel__detail-grid dd {
@@ -326,21 +342,25 @@ function submitPayment() {
 
 .receivable-panel__control {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   padding: 0 0.85rem;
 }
 
 .receivable-panel__primary {
-  border: 0;
-  background: linear-gradient(135deg, #6a4d3c, #2f221a);
-  color: #fffaf4;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
   font-weight: 600;
   cursor: pointer;
 }
 
+.receivable-panel__primary:hover {
+  background: var(--color-accent-hover);
+}
+
 .receivable-panel__error {
-  color: #b55d2f;
+  color: var(--color-danger);
   line-height: 1.6;
 }
 

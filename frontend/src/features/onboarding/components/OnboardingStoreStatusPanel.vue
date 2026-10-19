@@ -50,6 +50,17 @@ function statusTone(authStatus: string) {
   return authStatus.toLowerCase().includes('author') ? 'success' : 'warn';
 }
 
+function authStatusLabel(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('author')) {
+    return '已授权';
+  }
+  if (normalized.includes('pending')) {
+    return '待授权';
+  }
+  return '未授权';
+}
+
 function formatConfig(config: Record<string, unknown> | null) {
   return JSON.stringify(config ?? {}, null, 2);
 }
@@ -103,9 +114,8 @@ function submitConnection() {
 
 <template>
   <PanelCard
-    eyebrow="Store Access"
     title="平台选择与店铺授权状态"
-    description="先明确当前租户准备接入哪一家平台，再把授权状态、利润阈值和默认发货策略锁到真实店铺上。"
+    description="选择接入平台，把授权状态、利润阈值与发货策略锁到真实店铺。"
   >
     <div class="onboarding-store">
       <div class="onboarding-store__list">
@@ -127,7 +137,7 @@ function submitConnection() {
               </p>
             </div>
             <StatusPill
-              :label="store.authStatus"
+              :label="authStatusLabel(store.authStatus)"
               :tone="statusTone(store.authStatus)"
             />
           </div>
@@ -143,7 +153,7 @@ function submitConnection() {
           <div class="onboarding-store__snapshot-head">
             <strong>{{ selectedStore.shopName }}</strong>
             <StatusPill
-              :label="selectedStore.authStatus"
+              :label="authStatusLabel(selectedStore.authStatus)"
               :tone="statusTone(selectedStore.authStatus)"
             />
           </div>
@@ -235,18 +245,22 @@ function submitConnection() {
 .onboarding-store__item,
 .onboarding-store__snapshot {
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .onboarding-store__item {
   padding: 0.95rem 1rem;
   text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .onboarding-store__item--active {
-  border-color: rgba(133, 98, 67, 0.42);
-  box-shadow: 0 14px 28px rgba(33, 24, 16, 0.08);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .onboarding-store__item-head,
@@ -310,8 +324,9 @@ function submitConnection() {
   overflow: auto;
   padding: 0.85rem;
   border-radius: var(--radius-lg);
-  background: rgba(45, 36, 28, 0.92);
-  color: #fff8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-strong);
   font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
   font-size: 0.79rem;
   line-height: 1.6;
@@ -321,10 +336,10 @@ function submitConnection() {
 .onboarding-store__field select,
 .onboarding-store__field textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.82);
-  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 0.8rem 0.9rem;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -338,13 +353,21 @@ function submitConnection() {
 }
 
 .onboarding-store__primary {
-  min-height: 3rem;
+  min-height: 2.5rem;
   grid-column: 1 / -1;
   border: 0;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, #2d241c, #856243);
-  color: #fff8f0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #ffffff;
+  font: inherit;
   font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.onboarding-store__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .onboarding-store__primary:disabled {

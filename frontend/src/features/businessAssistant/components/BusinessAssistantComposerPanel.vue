@@ -46,13 +46,11 @@ function handleInput(event: Event) {
 
 <template>
   <PanelCard
-    eyebrow="Natural Language Assistant"
-    title="把复杂经营动作压缩成一句话提问"
+    title="经营提问"
     :description="
       overviewHeadline ||
-      `当前范围是 ${selectedStoreName}，可以直接提商品、订单、库存、活动、会员或风险问题，助手会回读真实业务数据再给建议。`
+      `当前范围是 ${selectedStoreName}，可直接提商品、订单、库存、活动、会员或风险问题，助手会回读真实数据给出建议。`
     "
-    dark
   >
     <div class="assistant-composer">
       <div class="assistant-composer__toolbar">
@@ -60,7 +58,7 @@ function handleInput(event: Event) {
           <p class="assistant-composer__scope-label">当前分析范围</p>
           <h4 class="assistant-composer__scope-value">{{ selectedStoreName }}</h4>
         </div>
-        <StatusPill :label="isLoading ? 'syncing' : 'ready'" :tone="isLoading ? 'warn' : 'success'" />
+        <StatusPill :label="isLoading ? '同步中' : '就绪'" :tone="isLoading ? 'warn' : 'success'" />
       </div>
 
       <div class="assistant-composer__stores">
@@ -183,8 +181,8 @@ function handleInput(event: Event) {
 .assistant-composer__input-card,
 .assistant-composer__question-chip {
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 244, 236, 0.1);
-  background: rgba(255, 248, 240, 0.08);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .assistant-composer__scope,
@@ -203,16 +201,15 @@ function handleInput(event: Event) {
 .assistant-composer__scope-label,
 .assistant-composer__section-title,
 .assistant-composer__input-label {
-  color: rgba(255, 244, 236, 0.72);
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .assistant-composer__scope-value {
-  color: #fff8f0;
-  font-family: var(--font-display);
-  font-size: 1.8rem;
+  color: var(--color-ink-strong);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .assistant-composer__stores,
@@ -233,17 +230,18 @@ function handleInput(event: Event) {
 
 .assistant-composer__store-button,
 .assistant-composer__submit {
-  border: 1px solid rgba(255, 244, 236, 0.12);
+  border: 1px solid var(--color-line);
 }
 
 .assistant-composer__store-button {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8f0;
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
 }
 
 .assistant-composer__store-button--active {
-  background: linear-gradient(135deg, rgba(117, 82, 59, 0.96), rgba(36, 25, 18, 0.96));
-  border-color: transparent;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
 }
 
 .assistant-composer__input-card {
@@ -256,9 +254,9 @@ function handleInput(event: Event) {
   min-height: 8rem;
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 244, 236, 0.12);
-  background: rgba(28, 20, 15, 0.65);
-  color: #fff8f0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
   font: inherit;
   line-height: 1.7;
   resize: vertical;
@@ -266,14 +264,19 @@ function handleInput(event: Event) {
 
 .assistant-composer__textarea::placeholder,
 .assistant-composer__hint {
-  color: rgba(255, 244, 236, 0.68);
+  color: var(--color-ink-faint);
 }
 
 .assistant-composer__submit {
   border: 0;
-  background: linear-gradient(135deg, rgba(255, 248, 240, 0.96), rgba(229, 206, 181, 0.96));
-  color: var(--color-ink-strong);
+  background: var(--color-accent);
+  color: #ffffff;
   font-weight: 600;
+}
+
+.assistant-composer__submit:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .assistant-composer__submit:disabled,
@@ -284,9 +287,10 @@ function handleInput(event: Event) {
 }
 
 .assistant-composer__question-chip {
-  border: 0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   text-align: left;
-  color: #fff8f0;
+  color: var(--color-ink);
 }
 
 .assistant-composer__metrics {

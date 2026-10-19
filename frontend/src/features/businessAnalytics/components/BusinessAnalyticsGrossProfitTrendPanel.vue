@@ -45,7 +45,6 @@ function toneOf(margin: number) {
 
 <template>
   <PanelCard
-    eyebrow="Gross Profit Trend"
     title="毛利趋势"
     description="不仅看卖了多少，还看卖出来的钱有没有留下来。"
   >
@@ -83,13 +82,13 @@ function toneOf(margin: number) {
 .gross-trend__summary {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .gross-trend__summary strong {
   color: var(--color-ink-strong);
-  font-size: 1.85rem;
+  font-size: 1.5rem;
 }
 
 .gross-trend__summary span,
@@ -109,14 +108,13 @@ function toneOf(margin: number) {
   height: 0.82rem;
   overflow: hidden;
   border-radius: var(--radius-pill);
-  background: rgba(72, 95, 63, 0.08);
+  background: var(--color-surface);
 }
 
 .gross-trend__bar {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #b9d2bb, #35523e);
-  box-shadow: 0 8px 18px rgba(53, 82, 62, 0.2);
+  background: var(--color-accent);
 }
 
 .gross-trend__value {

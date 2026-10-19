@@ -54,8 +54,8 @@ function buildGlyph(systemCode: string) {
   align-items: center;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   transition:
     transform var(--transition-fast),
     box-shadow var(--transition-fast);
@@ -63,7 +63,7 @@ function buildGlyph(systemCode: string) {
 
 .integration-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(58, 43, 28, 0.08);
+  box-shadow: var(--shadow-card);
 }
 
 .integration-card__glyph {
@@ -72,11 +72,10 @@ function buildGlyph(systemCode: string) {
   display: grid;
   place-items: center;
   border-radius: 1rem;
-  background: linear-gradient(135deg, #efe2d1, #d9c0a3);
-  color: #513f2e;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
 }
 
 .integration-card__copy {
@@ -109,12 +108,12 @@ function buildGlyph(systemCode: string) {
   height: 32px;
   border: 0;
   border-radius: var(--radius-pill);
-  background: rgba(121, 101, 83, 0.18);
+  background: var(--color-line);
   transition: background var(--transition-fast);
 }
 
 .integration-card__toggle--on {
-  background: linear-gradient(135deg, #2e251d, #866444);
+  background: var(--color-accent);
 }
 
 .integration-card__knob {
@@ -124,7 +123,7 @@ function buildGlyph(systemCode: string) {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #fffdf8;
+  background: #ffffff;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
   transition: transform var(--transition-fast);
 }

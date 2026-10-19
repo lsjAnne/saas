@@ -11,6 +11,14 @@ interface Props {
 
 defineProps<Props>();
 
+const trafficStatusMap: Record<string, string> = {
+  accepted: '已接受',
+  success: '成功',
+  rejected: '已拒绝',
+  failed: '失败',
+  pending: '处理中'
+};
+
 function toneFromStatus(status: string) {
   return status.includes('accepted') || status.includes('success') ? 'success' : 'warn';
 }
@@ -18,27 +26,26 @@ function toneFromStatus(status: string) {
 
 <template>
   <PanelCard
-    eyebrow="Traffic"
     title="调用与回调编排"
-    description="开放平台真正的质量信号来自调用结果和回调编排表现，而不只是资产数。"
+    description="调用结果与回调编排表现一览。"
   >
     <div class="open-platform-traffic">
       <section class="open-platform-traffic__block">
-        <p class="open-platform-traffic__label">Recent Logs</p>
+        <p class="open-platform-traffic__label">最近日志</p>
         <article v-for="log in logs.slice(0, 4)" :key="log.logId" class="open-platform-traffic__item">
           <div class="open-platform-traffic__head">
             <div>
               <h4 class="open-platform-traffic__title">{{ log.sourceModule }} · {{ log.direction }}</h4>
               <p class="open-platform-traffic__meta">{{ log.endpoint }}</p>
             </div>
-            <StatusPill :label="log.resultStatus" :tone="toneFromStatus(log.resultStatus)" />
+            <StatusPill :label="trafficStatusMap[log.resultStatus] || log.resultStatus" :tone="toneFromStatus(log.resultStatus)" />
           </div>
           <p class="open-platform-traffic__time">{{ formatDateTime(log.createdAt) }} · Trace {{ log.traceId }}</p>
         </article>
       </section>
 
       <section class="open-platform-traffic__block">
-        <p class="open-platform-traffic__label">Orchestrations</p>
+        <p class="open-platform-traffic__label">回调编排</p>
         <article
           v-for="orchestration in orchestrations.slice(0, 4)"
           :key="orchestration.subscriptionId"
@@ -49,7 +56,7 @@ function toneFromStatus(status: string) {
               <h4 class="open-platform-traffic__title">{{ orchestration.eventCode }}</h4>
               <p class="open-platform-traffic__meta">{{ orchestration.callbackUrl }}</p>
             </div>
-            <StatusPill :label="orchestration.status" :tone="toneFromStatus(orchestration.status)" />
+            <StatusPill :label="trafficStatusMap[orchestration.status] || orchestration.status" :tone="toneFromStatus(orchestration.status)" />
           </div>
           <p class="open-platform-traffic__time">
             尝试 {{ orchestration.callbackAttemptCount }} · 接受 {{ orchestration.acceptedCallbackCount }} · 拒绝 {{ orchestration.rejectedCallbackCount }}
@@ -79,17 +86,16 @@ function toneFromStatus(status: string) {
 }
 
 .open-platform-traffic__label {
-  color: var(--color-ink-faint);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .open-platform-traffic__item {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .open-platform-traffic__head {

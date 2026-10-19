@@ -17,7 +17,6 @@ const emit = defineEmits<{
 
 <template>
   <PanelCard
-    eyebrow="Conversation History"
     title="历史记录"
     description="保留最近的问题与结构化回答，方便重新分析或沿着上一轮动作继续追问。"
   >
@@ -79,7 +78,7 @@ const emit = defineEmits<{
   padding: 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-line);
-  background: rgba(132, 108, 85, 0.06);
+  background: var(--color-surface);
 }
 
 .assistant-history__card-head {
@@ -141,7 +140,7 @@ const emit = defineEmits<{
   padding: 0 0.95rem;
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-line);
-  background: transparent;
+  background: var(--color-panel-strong);
   color: var(--color-ink);
   font: inherit;
 }

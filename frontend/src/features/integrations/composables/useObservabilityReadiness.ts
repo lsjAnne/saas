@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import type {
   IntegrationReadinessDescriptor,
@@ -81,9 +81,9 @@ function mapConnectivity(snapshot: ExternalSystemConnectivitySnapshot): Integrat
     };
   }
 
-  return {
+  return reactive({
     label: '已就绪',
     tone: 'success',
     detail: snapshot.detail || '当前配置与探测结果均正常'
-  };
+  });
 }

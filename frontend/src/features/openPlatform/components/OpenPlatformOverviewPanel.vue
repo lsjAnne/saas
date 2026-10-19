@@ -35,25 +35,31 @@ function statusTone(status: string) {
 function issueLabel(issue: string) {
   switch (issue) {
     case 'credential_missing':
-      return 'Missing credential';
+      return '缺少凭证';
     case 'credential_revoked':
-      return 'Revoked credential';
+      return '凭证已吊销';
     case 'credential_expiring_soon':
-      return 'Expiring credential';
+      return '凭证即将过期';
     case 'webhook_missing':
-      return 'No webhook';
+      return '未配置回调';
     case 'webhook_disabled':
-      return 'Webhook disabled';
+      return '回调已停用';
     case 'webhook_partial':
-      return 'Webhook partial';
+      return '回调不完整';
     case 'traffic_rejected':
-      return 'Rejected traffic';
+      return '请求被拒';
     case 'app_disabled':
-      return 'App disabled';
+      return '应用已停用';
     default:
       return issue;
   }
 }
+
+const riskLevelMap: Record<string, string> = {
+  high: '高风险',
+  medium: '中风险',
+  low: '低风险'
+};
 
 function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
   return (entries ?? []).slice(0, 3);
@@ -62,61 +68,59 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Open Platform"
-    title="Integration governance stays visible before release traffic expands."
-    description="The dashboard now separates simple asset counts from the actual governance risks that still block a clean open-platform rollout."
-    dark
+    title="开放平台概览"
+    description="应用、凭证、回调与被拒流量的治理风险一览。"
   >
     <div class="open-platform-overview">
       <div class="open-platform-overview__metrics">
         <MetricCard
-          label="Apps"
+          label="应用数"
           :value="formatCount(overview?.appCount)"
-          caption="Total registered integration apps"
+          caption="已注册集成应用总数"
         />
         <MetricCard
-          label="Webhooks"
+          label="回调数"
           :value="formatCount(overview?.webhookCount)"
-          caption="Tenant callback subscriptions"
+          caption="租户回调订阅数"
         />
         <MetricCard
-          label="Call Logs"
+          label="调用日志"
           :value="formatCount(audit?.totalCallLogCount)"
-          caption="Observed management and external traffic"
+          caption="观测到的管理与外部流量"
         />
       </div>
 
       <div class="open-platform-overview__metrics">
         <MetricCard
-          label="Risky Apps"
+          label="风险应用"
           :value="formatCount(governance?.riskyApps)"
-          caption="Apps still blocked by governance issues"
+          caption="仍被治理问题阻断的应用"
         />
         <MetricCard
-          label="Missing Credentials"
+          label="缺凭证应用"
           :value="formatCount(governance?.appsMissingCredentials)"
-          caption="Apps not ready for external authorization"
+          caption="未就绪可外部授权的应用"
         />
         <MetricCard
-          label="Rejected Traffic"
+          label="被拒流量"
           :value="formatCount(governance?.appsWithRejectedTraffic)"
-          caption="Apps with recent rejected requests"
+          caption="近期存在被拒请求的应用"
         />
       </div>
 
       <section class="open-platform-overview__governance">
         <div class="open-platform-overview__section-head">
           <div>
-            <p class="open-platform-overview__label">Governance Actions</p>
-            <h3 class="open-platform-overview__section-title">What still needs to be closed before the plugin center is healthy</h3>
+            <p class="open-platform-overview__label">治理待办</p>
+            <h3 class="open-platform-overview__section-title">插件中心健康前仍需闭环的事项</h3>
           </div>
           <div class="open-platform-overview__status-cluster">
             <StatusPill
-              label="active apps"
+              label="活跃应用"
               :tone="statusTone(governance?.activeApps === governance?.totalApps ? 'active' : 'partial')"
             />
             <StatusPill
-              label="webhook gaps"
+              label="回调缺口"
               :tone="statusTone((governance?.organizationsWithoutWebhooks ?? 0) === 0 ? 'ready' : 'partial')"
             />
           </div>
@@ -134,7 +138,7 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
             v-if="!(governance?.recommendedActions?.length)"
             class="open-platform-overview__recommendation open-platform-overview__recommendation--quiet"
           >
-            No immediate governance actions are pending.
+            暂无待处理的治理事项。
           </p>
         </div>
 
@@ -151,14 +155,14 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
                   {{ entry.appType }} · {{ entry.permissionScope.join(', ') }}
                 </p>
               </div>
-              <StatusPill :label="entry.governanceRiskLevel" :tone="governanceTone(entry.governanceRiskLevel)" />
+              <StatusPill :label="riskLevelMap[entry.governanceRiskLevel] || entry.governanceRiskLevel" :tone="governanceTone(entry.governanceRiskLevel)" />
             </div>
 
             <div class="open-platform-overview__entry-facts">
-              <p>Credential: {{ entry.credentialStatus }}</p>
-              <p>Webhook: {{ entry.webhookStatus }} ({{ entry.enabledWebhookCount }}/{{ entry.organizationWebhookCount }})</p>
-              <p>Rejected: {{ entry.rejectedCallCount }}</p>
-              <p>Last activity: {{ formatDateTime(entry.lastActivityAt) }}</p>
+              <p>凭证：{{ entry.credentialStatus }}</p>
+              <p>回调：{{ entry.webhookStatus }} ({{ entry.enabledWebhookCount }}/{{ entry.organizationWebhookCount }})</p>
+              <p>被拒：{{ entry.rejectedCallCount }}</p>
+              <p>最近活动：{{ formatDateTime(entry.lastActivityAt) }}</p>
             </div>
 
             <div class="open-platform-overview__issue-list">
@@ -200,8 +204,8 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
 .open-platform-overview__governance {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .open-platform-overview__section-head,
@@ -230,22 +234,21 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
 }
 
 .open-platform-overview__label {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .open-platform-overview__section-title,
 .open-platform-overview__entry-title {
-  color: #fff;
+  color: var(--color-ink-strong);
 }
 
 .open-platform-overview__recommendation,
 .open-platform-overview__entry-meta,
 .open-platform-overview__entry-action,
 .open-platform-overview__entry-facts p {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--color-ink-soft);
 }
 
 .open-platform-overview__recommendations {
@@ -256,11 +259,11 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
 .open-platform-overview__recommendation {
   padding: 0.8rem 0.9rem;
   border-radius: 0.9rem;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
 }
 
 .open-platform-overview__recommendation--quiet {
-  color: rgba(255, 255, 255, 0.56);
+  color: var(--color-ink-faint);
 }
 
 .open-platform-overview__entry {
@@ -268,8 +271,8 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
   gap: 0.75rem;
   padding: 0.95rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .open-platform-overview__entry-facts {
@@ -281,8 +284,8 @@ function topEntries(entries: PluginGovernanceEntryView[] | undefined) {
 .open-platform-overview__issue {
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.82rem;
 }
 

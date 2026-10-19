@@ -84,12 +84,10 @@ onMounted(() => {
 <template>
   <section class="product-center-page">
     <header class="product-center-page__header">
-      <p class="product-center-page__eyebrow">Product Incubation Center</p>
-      <h2 class="product-center-page__title">
-        把选品判断、草稿生成与上架出栈压进同一张商品孵化控制台
-      </h2>
+      <p class="product-center-page__eyebrow">商品管理</p>
+      <h2 class="product-center-page__title">商品中心</h2>
       <p class="product-center-page__subtitle">
-        这张页故意不去伪装成传统 ERP 商品总表，而是把真正影响上架效率的前半程做深：先看候选池，再看草稿工位，最后把发布动作拉到可控边界内。
+        候选商品、草稿生成与上架发布在同一工作台完成。
       </p>
     </header>
 
@@ -183,25 +181,21 @@ onMounted(() => {
 }
 
 .product-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .product-center-page__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.55rem;
+  font-weight: 600;
 }
 
 .product-center-page__subtitle,
 .product-center-page__footer-note {
-  max-width: 62rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .product-center-page__grid {

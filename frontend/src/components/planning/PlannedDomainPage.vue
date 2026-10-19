@@ -76,7 +76,6 @@ const heroStyle = computed(() => ({
 
     <div class="planned-domain-page__grid">
       <PanelCard
-        eyebrow="Primary Modules"
         title="首屏模块"
         description="这些模块建议优先进入页面首屏，先保证主链路可看、可筛、可跳转。"
       >
@@ -101,7 +100,6 @@ const heroStyle = computed(() => ({
       </PanelCard>
 
       <PanelCard
-        eyebrow="Key Interfaces"
         title="关键接口"
         description="骨架页先把接口边界说清楚，后续接真数据时不需要再返工页面结构。"
       >
@@ -119,7 +117,6 @@ const heroStyle = computed(() => ({
 
     <div class="planned-domain-page__grid planned-domain-page__grid--secondary">
       <PanelCard
-        eyebrow="Phase Two"
         title="二期扩展"
         description="这些能力建议在主链稳定后补齐，不阻塞当前导航和页面骨架先落地。"
       >
@@ -144,7 +141,6 @@ const heroStyle = computed(() => ({
       </PanelCard>
 
       <PanelCard
-        eyebrow="Delivery Notes"
         title="开发提示"
         description="这些提示是给后续真实开发用的，避免骨架搭好后再整体返工。"
       >

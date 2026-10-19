@@ -20,7 +20,7 @@ const readinessRows = computed(() => {
     {
       label: '可观测栈',
       ready: props.overview.observabilityStackReady,
-      detail: `${props.overview.enabledGatewayCount}/${props.overview.configuredGatewayCount} 网关启用`
+      detail: `${props.overview.enabledGatewayCount ?? '--'}/${props.overview.configuredGatewayCount ?? '--'} 网关启用`
     },
     {
       label: '交付流水线',
@@ -30,30 +30,31 @@ const readinessRows = computed(() => {
     {
       label: '双交付验收',
       ready: props.overview.dualDeliveryAcceptanceReady,
-      detail: `${props.overview.readyExternalSystemCount}/${props.overview.requiredExternalSystemCount} 外部系统已就绪`
+      detail: `${props.overview.readyExternalSystemCount ?? '--'}/${props.overview.requiredExternalSystemCount ?? '--'} 外部系统已就绪`
     }
   ];
 });
 
 const stackRows = computed(() => {
-  if (!props.overview) {
+  const stack = props.overview?.observabilityStack;
+
+  if (!stack) {
     return [];
   }
 
   return [
-    { label: '日志聚合', endpoint: props.overview.observabilityStack.logAggregation },
-    { label: '链路追踪', endpoint: props.overview.observabilityStack.trace },
-    { label: '告警路由', endpoint: props.overview.observabilityStack.alertRouter },
-    { label: '看板', endpoint: props.overview.observabilityStack.dashboard }
+    { label: '日志聚合', endpoint: stack.logAggregation },
+    { label: '链路追踪', endpoint: stack.trace },
+    { label: '告警路由', endpoint: stack.alertRouter },
+    { label: '看板', endpoint: stack.dashboard }
   ];
 });
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Readiness"
     title="系统设置与交付门禁摘要"
-    description="系统设置页把 readiness 讲清楚：哪些是已配置、哪些是可联通、哪些只是已被纳入交付范围。"
+    description="系统就绪度摘要：已配置、可联通与已纳入交付范围的系统一目了然。"
   >
     <div class="readiness-panel">
       <div class="readiness-panel__summary">
@@ -100,8 +101,8 @@ const stackRows = computed(() => {
 .readiness-panel__stack-item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .readiness-panel__summary-head {

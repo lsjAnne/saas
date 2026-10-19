@@ -152,10 +152,8 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
 
 <template>
   <PanelCard
-    eyebrow="Preview Stage"
     title="预览区与素材流转"
     description="在一个视图里同时看素材预览、当前成片阶段、剪辑来源和发布回写，不再来回切页确认。"
-    :dark="Boolean(detail)"
   >
     <div v-if="detail" class="preview-panel">
       <div class="preview-panel__frame">
@@ -172,7 +170,7 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
         />
 
         <div v-else-if="previewMode === 'video'" class="preview-panel__placeholder">
-          <span class="preview-panel__badge">Video Workflow</span>
+          <span class="preview-panel__badge">视频流转</span>
           <h4 class="preview-panel__placeholder-title">{{ detail.asset.assetName }}</h4>
           <p class="preview-panel__placeholder-copy">{{ previewNarrative }}</p>
 
@@ -201,7 +199,7 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
         </div>
 
         <div v-else class="preview-panel__placeholder preview-panel__placeholder--text">
-          <span class="preview-panel__badge">Text Snapshot</span>
+          <span class="preview-panel__badge">文本快照</span>
           <h4 class="preview-panel__placeholder-title">{{ detail.asset.assetName }}</h4>
           <p class="preview-panel__placeholder-copy">{{ previewNarrative }}</p>
 
@@ -280,10 +278,8 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
   min-height: 22rem;
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background:
-    radial-gradient(circle at top left, rgba(204, 119, 65, 0.18), transparent 26%),
-    linear-gradient(160deg, rgba(19, 25, 28, 0.98), rgba(30, 41, 45, 0.98));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .preview-panel__image-shell,
@@ -293,7 +289,7 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
   min-height: 100%;
   border-radius: var(--radius-xl);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-panel-strong);
 }
 
 .preview-panel__image-shell {
@@ -320,7 +316,7 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
 }
 
 .preview-panel__placeholder--text {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(214, 170, 126, 0.08));
+  background: var(--color-panel-strong);
 }
 
 .preview-panel__badge {
@@ -329,11 +325,10 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
   min-height: 2rem;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(242, 245, 245, 0.82);
-  font-size: 0.76rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .preview-panel__placeholder-title,
@@ -355,18 +350,18 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
 .preview-panel__meta-title,
 .preview-panel__empty-title,
 .preview-panel__detail-item dd {
-  color: #fff6ef;
-  font-family: var(--font-display);
+  color: var(--color-ink-strong);
 }
 
 .preview-panel__placeholder-title {
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .preview-panel__placeholder-copy,
 .preview-panel__snapshot-list,
 .preview-panel__detail-item dt {
-  color: rgba(242, 245, 245, 0.76);
+  color: var(--color-ink-soft);
   line-height: 1.75;
 }
 
@@ -383,8 +378,8 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
   min-height: 2rem;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff6ef;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.8rem;
 }
 
@@ -398,13 +393,13 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
   gap: 0.22rem;
   padding: 0.8rem 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .preview-panel__detail-item dt {
-  font-size: 0.74rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
 .preview-panel__snapshot-list {
@@ -416,8 +411,9 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
   width: 100%;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(242, 245, 245, 0.82);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-soft);
   white-space: pre-wrap;
   word-break: break-word;
   font-family: 'IBM Plex Mono', monospace;
@@ -437,15 +433,15 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
 }
 
 .preview-panel__meta-label {
-  color: rgba(239, 244, 244, 0.66);
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .preview-panel__meta-title {
   margin-top: 0.45rem;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .preview-panel__meta-grid {
@@ -457,36 +453,37 @@ const currentStageLabel = computed(() => summarizeVersionStage(activeVersion.val
 .preview-panel__meta-item {
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .preview-panel__meta-item-label {
-  color: rgba(239, 244, 244, 0.6);
+  color: var(--color-ink-soft);
   font-size: 0.76rem;
 }
 
 .preview-panel__meta-item-value {
   margin-top: 0.55rem;
-  color: #fff6ef;
+  color: var(--color-ink-strong);
   line-height: 1.55;
   word-break: break-word;
 }
 
 .preview-panel__note {
-  color: rgba(239, 244, 244, 0.8);
+  color: var(--color-ink-soft);
   line-height: 1.75;
 }
 
 .preview-panel__empty {
   padding: 1.1rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px dashed rgba(255, 255, 255, 0.16);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-line);
 }
 
 .preview-panel__empty-copy {
   margin-top: 0.55rem;
-  color: rgba(239, 244, 244, 0.8);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 

@@ -91,12 +91,10 @@ onMounted(() => {
 <template>
   <section class="campaign-center-page">
     <header class="campaign-center-page__header">
-      <p class="campaign-center-page__eyebrow">Campaign Center</p>
-      <h2 class="campaign-center-page__title">
-        把营销活动、优惠券和审批发布轨道压进同一张高密度营销控制台
-      </h2>
+      <p class="campaign-center-page__eyebrow">活动营销</p>
+      <h2 class="campaign-center-page__title">营销活动</h2>
       <p class="campaign-center-page__subtitle">
-        当前版本不是展示壳。活动列表、新建与编辑、优惠券模板池、提交审批和发布动作都已经接到真实接口，先让营销域从规划页进入可执行前端。
+        活动编排、优惠券与效果追踪。
       </p>
     </header>
 
@@ -185,18 +183,16 @@ onMounted(() => {
 }
 
 .campaign-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .campaign-center-page__title {
-  max-width: 14ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .campaign-center-page__subtitle,

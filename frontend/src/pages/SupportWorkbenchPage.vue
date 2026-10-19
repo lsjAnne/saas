@@ -29,10 +29,10 @@ onMounted(() => {
 <template>
   <section class="support-workbench-page">
     <header class="support-workbench-page__header">
-      <p class="support-workbench-page__eyebrow">Support & Tickets</p>
-      <h2 class="support-workbench-page__title">把工单压力、支持会话和通知送达问题收进一个处置工作台</h2>
+      <p class="support-workbench-page__eyebrow">服务台</p>
+      <h2 class="support-workbench-page__title">支持工单</h2>
       <p class="support-workbench-page__subtitle">
-        支持与工单页强调“先知道压力在哪，再决定要不要升级支持介入”。
+        工单 SLA、队列与通知运维。
       </p>
     </header>
 
@@ -78,24 +78,23 @@ onMounted(() => {
 }
 
 .support-workbench-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .support-workbench-page__title {
   max-width: 18ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 3.8vw, 3.6rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .support-workbench-page__subtitle {
   max-width: 52rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .support-workbench-page__grid {

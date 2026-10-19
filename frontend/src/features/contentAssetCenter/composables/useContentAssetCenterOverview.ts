@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   archiveContentAssetVersion,
@@ -444,7 +444,7 @@ export function useContentAssetCenterOverview() {
     actionFeedback.value = `视频《${detail.asset.assetName}》已发布到 ${payload.platformCode}。`;
   }
 
-  return {
+  return reactive({
     selectedCategory,
     selectedAssetId,
     selectedAsset,
@@ -472,5 +472,5 @@ export function useContentAssetCenterOverview() {
     archiveLatestVersion,
     copyReferenceText,
     publishVideoAsset
-  };
+  });
 }

@@ -25,7 +25,6 @@ const emit = defineEmits<Emits>();
 
 <template>
   <PanelCard
-    eyebrow="Category Nav"
     title="异常分类导航"
     description="先按异常类型收口，再进入详情和动作。保持分类清楚，避免队列失焦。"
   >
@@ -70,8 +69,8 @@ const emit = defineEmits<Emits>();
   padding: 0.9rem 1rem;
   text-align: left;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   transition:
     transform var(--transition-fast),
     border-color var(--transition-fast),
@@ -80,12 +79,12 @@ const emit = defineEmits<Emits>();
 
 .exception-category__item:hover {
   transform: translateY(-1px);
-  border-color: rgba(156, 113, 71, 0.24);
+  border-color: var(--color-accent);
 }
 
 .exception-category__item--active {
-  border-color: rgba(156, 113, 71, 0.34);
-  box-shadow: 0 14px 30px rgba(112, 84, 55, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .exception-category__item-head {

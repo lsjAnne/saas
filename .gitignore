@@ -39,6 +39,7 @@ build/
 .tools/
 .superpowers/
 .playwright-cli/
+.codex/
 frontend/node_modules/
 frontend/dist/
 frontend/.tmp-*/

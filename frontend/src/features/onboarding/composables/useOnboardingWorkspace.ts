@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import { login, type LoginRequest } from '@/services/authService';
 import {
@@ -385,7 +385,7 @@ export function useOnboardingWorkspace() {
     accessFeedback.value = '已退出当前租户会话。';
   }
 
-  return {
+  return reactive({
     plans: orderedPlans,
     paidPlans,
     selectedPlanCode,
@@ -421,5 +421,5 @@ export function useOnboardingWorkspace() {
     submitStoreConnection,
     submitStoreSettings,
     signOut
-  };
+  });
 }

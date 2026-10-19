@@ -191,10 +191,10 @@ function submitGenerate() {
 <template>
   <section class="asset-hero">
     <div class="asset-hero__copy">
-      <p class="asset-hero__eyebrow">Content Asset Atelier</p>
-      <h3 class="asset-hero__title">素材中心不只管存档，还要把商品图真正推成可发布的视频成片</h3>
+      <p class="asset-hero__eyebrow">素材工作台</p>
+      <h3 class="asset-hero__title">把商品图生成可发布的视频成片</h3>
       <p class="asset-hero__subtitle">
-        当前焦点店铺：{{ selectedStoreName }}。左侧选中商品图后，可以直接在这里生成视频、补齐剪辑参数，再把成片发布动作写回素材链路。
+        当前焦点店铺：{{ selectedStoreName }}。选中商品图后可直接生成视频、补齐剪辑参数，再把成片发布写回素材链路。
       </p>
 
       <div class="asset-hero__forms">
@@ -423,21 +423,17 @@ function submitGenerate() {
 }
 
 .asset-hero__copy {
-  background:
-    radial-gradient(circle at top left, rgba(199, 116, 66, 0.22), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(46, 100, 85, 0.14), transparent 28%),
-    linear-gradient(145deg, rgba(255, 250, 244, 0.97), rgba(246, 234, 221, 0.96));
-  border: 1px solid rgba(121, 74, 40, 0.12);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .asset-hero__focus {
   display: grid;
   gap: 1rem;
   min-height: 100%;
-  background:
-    radial-gradient(circle at top right, rgba(144, 205, 195, 0.2), transparent 32%),
-    linear-gradient(160deg, rgba(32, 45, 49, 0.98), rgba(17, 25, 29, 0.98));
-  color: #f6f3ed;
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-strong);
 }
 
 .asset-hero__eyebrow,
@@ -459,22 +455,21 @@ function submitGenerate() {
 .asset-hero__focus-label,
 .asset-hero__composer-label,
 .asset-hero__workflow-label {
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .asset-hero__eyebrow {
-  color: var(--color-ink-faint);
+  color: var(--color-accent);
 }
 
 .asset-hero__title {
   margin-top: 0.55rem;
-  max-width: 14ch;
+  max-width: 24ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.5rem);
-  line-height: 1.02;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .asset-hero__subtitle,
@@ -502,13 +497,13 @@ function submitGenerate() {
 .asset-hero__composer {
   padding: 1rem;
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(121, 74, 40, 0.1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .asset-hero__composer--dark {
-  background: rgba(31, 39, 43, 0.9);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border-color: var(--color-line);
 }
 
 .asset-hero__composer-head {
@@ -527,7 +522,7 @@ function submitGenerate() {
 .asset-hero__composer--dark .asset-hero__field span,
 .asset-hero__composer--dark .asset-hero__workflow-label,
 .asset-hero__composer--dark .asset-hero__workflow-value {
-  color: rgba(245, 239, 233, 0.82);
+  color: var(--color-ink-soft);
 }
 
 .asset-hero__field-grid {
@@ -555,9 +550,9 @@ function submitGenerate() {
 .asset-hero__field select,
 .asset-hero__field textarea {
   width: 100%;
-  border: 1px solid rgba(121, 74, 40, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.88);
+  background: #ffffff;
   color: var(--color-ink-strong);
   padding: 0.82rem 0.9rem;
   font: inherit;
@@ -567,9 +562,9 @@ function submitGenerate() {
 .asset-hero__composer--dark .asset-hero__field input,
 .asset-hero__composer--dark .asset-hero__field select,
 .asset-hero__composer--dark .asset-hero__field textarea {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #fff8f0;
+  background: #ffffff;
+  border-color: var(--color-line);
+  color: var(--color-ink-strong);
 }
 
 .asset-hero__workflow-card {
@@ -577,7 +572,8 @@ function submitGenerate() {
   gap: 0.4rem;
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .asset-hero__workflow-value {
@@ -592,9 +588,18 @@ function submitGenerate() {
   min-height: 2.9rem;
   padding: 0 1.15rem;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(121, 74, 40, 0.14);
-  background: rgba(255, 255, 255, 0.62);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.asset-hero__button:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .asset-hero__button:disabled {
@@ -603,15 +608,27 @@ function submitGenerate() {
 }
 
 .asset-hero__button--solid {
-  background: #a95434;
-  border-color: #a95434;
-  color: #fff6ef;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.asset-hero__button--solid:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .asset-hero__button--inverted {
-  background: rgba(144, 205, 195, 0.18);
-  border-color: rgba(144, 205, 195, 0.24);
-  color: #f7f9fa;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
+}
+
+.asset-hero__button--inverted:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .asset-hero__focus-head {
@@ -622,20 +639,21 @@ function submitGenerate() {
 }
 
 .asset-hero__focus-label {
-  color: rgba(240, 245, 245, 0.62);
+  color: var(--color-ink-soft);
 }
 
 .asset-hero__focus-title {
   margin-top: 0.45rem;
-  font-family: var(--font-display);
-  font-size: 1.55rem;
+  color: var(--color-ink-strong);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .asset-hero__focus-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
-  color: rgba(240, 245, 245, 0.84);
+  color: var(--color-ink-soft);
   font-size: 0.86rem;
 }
 
@@ -645,7 +663,8 @@ function submitGenerate() {
   align-items: center;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .asset-hero__focus-grid {
@@ -657,11 +676,12 @@ function submitGenerate() {
 .asset-hero__focus-item {
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .asset-hero__focus-item-label {
-  color: rgba(240, 245, 245, 0.62);
+  color: var(--color-ink-soft);
   font-size: 0.78rem;
 }
 
@@ -669,6 +689,7 @@ function submitGenerate() {
   margin-top: 0.55rem;
   font-size: 1.16rem;
   font-weight: 600;
+  color: var(--color-ink-strong);
 }
 
 .asset-hero__metrics {

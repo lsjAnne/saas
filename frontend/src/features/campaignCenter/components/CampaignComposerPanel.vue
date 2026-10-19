@@ -33,6 +33,16 @@ const emit = defineEmits<{
 
 const localError = shallowRef<string | null>(null);
 
+const templateStatusMap: Record<string, string> = {
+  enabled: '启用',
+  disabled: '停用',
+  draft: '草稿'
+};
+
+function labelOf(value: string) {
+  return templateStatusMap[value] ?? value;
+}
+
 const form = reactive({
   storeId: '',
   activityType: 'full_reduction',
@@ -246,7 +256,6 @@ function submitUpdate() {
 
 <template>
   <PanelCard
-    eyebrow="Composer"
     title="活动编排台"
     description="活动创建和更新都在这里完成。首轮直接围绕后端已支持的字段，不伪装复杂拖拽编排器。"
   >
@@ -340,7 +349,7 @@ function submitUpdate() {
               :key="template.couponTemplateId"
               :value="template.couponTemplateId"
             >
-              {{ template.templateName }} / {{ template.status }}
+              {{ template.templateName }} / {{ labelOf(template.status) }}
             </option>
           </select>
         </label>
@@ -435,21 +444,28 @@ function submitUpdate() {
 }
 
 .campaign-composer__switch {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .campaign-composer__switch--active {
-  border-color: rgba(161, 84, 61, 0.32);
-  background: rgba(249, 236, 232, 0.94);
-  color: #7a4032;
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
 }
 
 .campaign-composer__primary {
-  border: 0;
-  background: linear-gradient(135deg, #5b241d, #a1543d);
-  color: #fff8f0;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.campaign-composer__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .campaign-composer__switch:disabled,
@@ -477,9 +493,9 @@ function submitUpdate() {
 .campaign-composer__field textarea,
 .campaign-composer__field select {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.14);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.78);
+  background: #ffffff;
   padding: 0.9rem 1rem;
   color: var(--color-ink-strong);
   font: inherit;

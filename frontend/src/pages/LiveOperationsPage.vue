@@ -176,10 +176,10 @@ onMounted(() => {
 <template>
   <section class="live-operations-page">
     <header class="live-operations-page__header">
-      <p class="live-operations-page__eyebrow">Live Operations Center</p>
-      <h2 class="live-operations-page__title">把数字人实时互动、接管和场景编排拉回同一个直播指挥台</h2>
+      <p class="live-operations-page__eyebrow">直播指挥</p>
+      <h2 class="live-operations-page__title">直播运营</h2>
       <p class="live-operations-page__subtitle">
-        这里不是事后复盘页，而是直播进行中的控制台。计划排期、会话治理、场景切换、人工接管、承诺审核和互动闭环数据都在同一页联动。
+        直播排期、风险雷达与现场指挥一屏管理
       </p>
     </header>
 
@@ -270,18 +270,16 @@ onMounted(() => {
 }
 
 .live-operations-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .live-operations-page__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.15rem, 3.8vw, 3.7rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .live-operations-page__subtitle,

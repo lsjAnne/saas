@@ -1,4 +1,4 @@
-import { shallowRef } from 'vue';
+import { shallowRef, reactive } from 'vue';;
 
 import {
   getComplianceAcceptances,
@@ -37,12 +37,12 @@ export function useSystemSettingsOverview() {
     }
   }
 
-  return {
+  return reactive({
     privacyPolicy,
     userAgreement,
     acceptances,
     isLoading,
     errorMessage,
     load
-  };
+  });
 }

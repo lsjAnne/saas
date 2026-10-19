@@ -13,9 +13,8 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Template Matrix"
     title="审批模板与阶段编排"
-    description="模板本身就是治理资产，直接展示启用态、阶段顺序和处理人分配。"
+    description="启用态、阶段顺序与处理人分配一览。"
   >
     <div v-if="templates.length" class="template-matrix">
       <article
@@ -73,8 +72,8 @@ defineProps<Props>();
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .template-matrix__header,
@@ -120,7 +119,8 @@ defineProps<Props>();
 .template-matrix__stage {
   padding: 0.8rem 0.85rem;
   border-radius: calc(var(--radius-lg) - 0.25rem);
-  background: rgba(250, 245, 239, 0.82);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .template-matrix__stage-order {

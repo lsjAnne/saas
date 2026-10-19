@@ -25,11 +25,20 @@ function resolveTone(segmentCode: string): 'neutral' | 'warn' | 'success' {
 
   return 'neutral';
 }
+
+const segmentLabelMap: Record<string, string> = {
+  revive_vip: 'VIP 唤醒',
+  growth_upsell: '成长加购',
+  maintain: '常规维护'
+};
+
+function resolveSegmentLabel(segmentCode: string) {
+  return segmentLabelMap[segmentCode] ?? segmentCode;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Member Recommendations"
     title="会员触达建议"
     description="把高价值唤醒、成长型加购和一般维护三类会员建议拉平，让 CRM 页只负责继续执行。"
   >
@@ -46,7 +55,7 @@ function resolveTone(segmentCode: string): 'neutral' | 'warn' | 'success' {
               {{ item.levelCode }} / {{ item.memberId }}
             </p>
           </div>
-          <StatusPill :label="item.segmentCode" :tone="resolveTone(item.segmentCode)" />
+          <StatusPill :label="resolveSegmentLabel(item.segmentCode)" :tone="resolveTone(item.segmentCode)" />
         </div>
         <p class="member-recommendation__reason">{{ item.recommendationReason }}</p>
         <div class="member-recommendation__metrics">
@@ -74,7 +83,8 @@ function resolveTone(segmentCode: string): 'neutral' | 'warn' | 'success' {
 .member-recommendation__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   display: grid;
   gap: 0.7rem;
 }
@@ -121,9 +131,9 @@ function resolveTone(segmentCode: string): 'neutral' | 'warn' | 'success' {
 
 .member-recommendation__route {
   min-height: 2.8rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.66);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
   font: inherit;
 }

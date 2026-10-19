@@ -582,7 +582,7 @@ export function usePlatformAdminOverview() {
     });
   }
 
-  return {
+  return reactive({
     tenants: sortedTenants,
     plans,
     selectedTenantId,
@@ -615,5 +615,5 @@ export function usePlatformAdminOverview() {
     submitResumeTenant,
     submitSubscriptionAutomation,
     submitPublishComplianceDocument
-  };
+  });
 }

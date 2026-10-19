@@ -54,12 +54,10 @@ onMounted(() => {
 <template>
   <section class="approval-center-page">
     <header class="approval-center-page__header">
-      <p class="approval-center-page__eyebrow">Approval Center</p>
-      <h2 class="approval-center-page__title">
-        把审批流转、模板治理和协作责任放进同一个审批与协作中心
-      </h2>
+      <p class="approval-center-page__eyebrow">协作中心</p>
+      <h2 class="approval-center-page__title">审批协作</h2>
       <p class="approval-center-page__subtitle">
-        这个页面不只是看审批结果，而是把待处理队列、处理人流转、模板阶段设计和治理申请统一摆在一个入口里，方便真正执行协作闭环。
+        审批队列、模板与治理请求。
       </p>
     </header>
 
@@ -120,25 +118,24 @@ onMounted(() => {
 }
 
 .approval-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .approval-center-page__title {
   max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.15rem, 3.8vw, 3.7rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .approval-center-page__subtitle,
 .approval-center-page__footer-note {
   max-width: 64rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .approval-center-page__grid {

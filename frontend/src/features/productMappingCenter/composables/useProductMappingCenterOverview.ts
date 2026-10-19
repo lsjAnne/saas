@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   createProductMapping,
@@ -457,7 +457,7 @@ export function useProductMappingCenterOverview() {
     await createMapping('backup', supplierId, token);
   }
 
-  return {
+  return reactive({
     stores,
     selectedProductId,
     selectedProduct,
@@ -480,5 +480,5 @@ export function useProductMappingCenterOverview() {
     createMapping,
     switchPrimarySupplier,
     createBackupSupplier
-  };
+  });
 }

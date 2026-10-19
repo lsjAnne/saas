@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import type { AuditLogRecord, Organization, OrganizationMember, Store } from '@/services/apiTypes';
 import { ApiError } from '@/services/http/apiClient';
@@ -198,7 +198,7 @@ export function useOrganizationCenterOverview() {
     }
   }
 
-  return {
+  return reactive({
     organizations,
     selectedOrganizationId,
     selectedOrganization,
@@ -216,5 +216,5 @@ export function useOrganizationCenterOverview() {
     selectOrganization,
     submitInvite,
     updateMemberRole
-  };
+  });
 }

@@ -56,18 +56,18 @@ const emit = defineEmits<Emits>();
 
 const form = reactive({
   sceneTarget: 'flash_sale',
-  sceneReason: 'boost conversion',
+  sceneReason: '提升转化',
   strongControlMode: 'strict_control',
-  strongControlReason: 'price commitment risk',
+  strongControlReason: '价格承诺风险',
   documentedControlMode: 'enhanced',
   documentedOperatorId: '30021',
-  documentedControlReason: 'comment spike',
-  takeoverOperator: 'risk-operator',
-  takeoverReason: 'human intervention required',
-  promiseText: 'guaranteed lowest price',
+  documentedControlReason: '评论激增',
+  takeoverOperator: '风控运营',
+  takeoverReason: '需要人工介入',
+  promiseText: '保证全网最低价',
   promiseRiskLevel: 'high',
   promiseDecision: 'rejected',
-  promiseRemark: 'need human review',
+  promiseRemark: '需要人工复核',
   whitelistPhrases: '补发赠品\n短信通知',
   manualConfirmPhrases: '赔付优惠券\n补偿红包',
   prohibitedPhrases: '12小时送达\n最低价保证',
@@ -77,7 +77,7 @@ const form = reactive({
   knowledgeSourceSummary: 'FAQ#gift-01',
   commitmentType: 'compensation',
   callbackEventType: 'paused',
-  callbackErrorMessage: 'live interrupted by callback'
+  callbackErrorMessage: '直播被回调中断'
 });
 
 const sessionStatus = computed(() => props.selectedSessionStatus?.sessionStatus?.toLowerCase() ?? '');
@@ -124,7 +124,7 @@ watch(
       : 'enhanced';
     form.takeoverOperator = value?.takeoverOperator || 'risk-operator';
     form.promiseDecision = value?.promiseAuditStatus === 'approved' ? 'approved' : 'rejected';
-    form.promiseRemark = value?.promiseAuditRemark || 'need human review';
+    form.promiseRemark = value?.promiseAuditRemark || '需要人工复核';
   },
   { immediate: true }
 );
@@ -149,6 +149,34 @@ function toneFromStatus(status: string | null | undefined) {
 
 function formatReadyFlag(value: boolean) {
   return value ? '已就绪' : '未就绪';
+}
+
+const sessionStatusLabelMap: Record<string, string> = {
+  running: '直播中',
+  paused: '已暂停',
+  resumed: '已恢复',
+  stopped: '已停止',
+  ended: '已结束',
+  manual_takeover: '人工接管',
+  failed: '失败',
+  interrupted: '已中断',
+  started: '已开始'
+};
+
+function resolveSessionStatusLabel(status: string | null | undefined) {
+  return sessionStatusLabelMap[(status ?? '').toLowerCase()] ?? status ?? '--';
+}
+
+const severityLabelMap: Record<string, string> = {
+  critical: '紧急',
+  high: '高',
+  medium: '中',
+  normal: '正常',
+  low: '低'
+};
+
+function resolveSeverityLabel(severity: string) {
+  return severityLabelMap[severity.toLowerCase()] ?? severity;
 }
 
 function formatStrictGate(enabled: boolean, ready: boolean) {
@@ -232,7 +260,6 @@ function handleSimulateCallback() {
 
 <template>
   <PanelCard
-    eyebrow="Session Command"
     title="直播会话指挥台"
     description="在播会话、风险互动、承诺回复、控场切换和人工接管都在这里完成。"
   >
@@ -255,7 +282,7 @@ function handleSimulateCallback() {
                 计划 {{ session.livePlanId }} / 账号 {{ session.liveAccountId }}
               </p>
             </div>
-            <StatusPill :label="session.sessionStatus" :tone="toneFromStatus(session.sessionStatus)" />
+            <StatusPill :label="resolveSessionStatusLabel(session.sessionStatus)" :tone="toneFromStatus(session.sessionStatus)" />
           </div>
           <p class="live-session-command__item-time">
             开始 {{ formatDateTime(session.actualStartAt) }} / 场景 {{ session.currentScene || '--' }}
@@ -274,7 +301,7 @@ function handleSimulateCallback() {
               </p>
             </div>
             <StatusPill
-              :label="selectedSessionStatus.sessionStatus"
+              :label="resolveSessionStatusLabel(selectedSessionStatus.sessionStatus)"
               :tone="toneFromStatus(selectedSessionStatus.sessionStatus)"
             />
           </div>
@@ -331,7 +358,7 @@ function handleSimulateCallback() {
 
             <dl class="live-session-command__runtime-grid">
               <div class="live-session-command__fact">
-                <dt>Runtime Provider</dt>
+                <dt>Runtime 服务商</dt>
                 <dd>{{ selectedSessionStatus.runtimeProvider || '--' }}</dd>
               </div>
               <div class="live-session-command__fact">
@@ -372,13 +399,13 @@ function handleSimulateCallback() {
 
             <div class="live-session-command__endpoint-grid">
               <div class="live-session-command__endpoint-card">
-                <p class="live-session-command__endpoint-title">Runtime Endpoint</p>
+                <p class="live-session-command__endpoint-title">Runtime 地址</p>
                 <p class="live-session-command__endpoint-value">
                   {{ selectedSessionStatus.runtimeProviderEndpoint || '--' }}
                 </p>
               </div>
               <div class="live-session-command__endpoint-card">
-                <p class="live-session-command__endpoint-title">Callback Endpoint</p>
+                <p class="live-session-command__endpoint-title">Callback 地址</p>
                 <p class="live-session-command__endpoint-value">
                   {{ selectedSessionStatus.callbackEndpoint || '--' }}
                 </p>
@@ -445,7 +472,7 @@ function handleSimulateCallback() {
                 class="live-session-command__risk-item"
               >
                 <div class="live-session-command__risk-head">
-                  <StatusPill :label="riskEvent.severity" :tone="toneFromStatus(riskEvent.severity)" />
+                  <StatusPill :label="resolveSeverityLabel(riskEvent.severity)" :tone="toneFromStatus(riskEvent.severity)" />
                   <span>{{ riskEvent.eventCode }}</span>
                 </div>
                 <p class="live-session-command__risk-detail">{{ riskEvent.detail }}</p>
@@ -526,9 +553,9 @@ function handleSimulateCallback() {
               <label class="live-session-command__field">
                 <span>控场模式</span>
                 <select v-model="form.documentedControlMode" :disabled="isRunningAction || !canGovern">
-                  <option value="standard">standard</option>
-                  <option value="enhanced">enhanced</option>
-                  <option value="manual">manual</option>
+                  <option value="standard">标准</option>
+                  <option value="enhanced">增强</option>
+                  <option value="manual">人工</option>
                 </select>
               </label>
               <label class="live-session-command__field">
@@ -549,9 +576,9 @@ function handleSimulateCallback() {
               <label class="live-session-command__field">
                 <span>强控模式</span>
                 <select v-model="form.strongControlMode" :disabled="isRunningAction || !canGovern">
-                  <option value="strict_control">strict_control</option>
-                  <option value="risk_control">risk_control</option>
-                  <option value="standard">standard</option>
+                  <option value="strict_control">严格控制</option>
+                  <option value="risk_control">风险控制</option>
+                  <option value="standard">标准</option>
                 </select>
               </label>
               <label class="live-session-command__field">
@@ -588,16 +615,16 @@ function handleSimulateCallback() {
                 <label class="live-session-command__field">
                   <span>风险等级</span>
                   <select v-model="form.promiseRiskLevel" :disabled="isRunningAction || !canGovern">
-                    <option value="low">low</option>
-                    <option value="medium">medium</option>
-                    <option value="high">high</option>
+                    <option value="low">低</option>
+                    <option value="medium">中</option>
+                    <option value="high">高</option>
                   </select>
                 </label>
                 <label class="live-session-command__field">
                   <span>审核结论</span>
                   <select v-model="form.promiseDecision" :disabled="isRunningAction || !canGovern">
-                    <option value="approved">approved</option>
-                    <option value="rejected">rejected</option>
+                    <option value="approved">通过</option>
+                    <option value="rejected">驳回</option>
                   </select>
                 </label>
               </div>
@@ -678,14 +705,14 @@ function handleSimulateCallback() {
                 <label class="live-session-command__field">
                   <span>事件类型</span>
                   <select v-model="form.callbackEventType" :disabled="isRunningAction">
-                    <option value="started">started</option>
-                    <option value="running">running</option>
-                    <option value="paused">paused</option>
-                    <option value="resumed">resumed</option>
-                    <option value="ended">ended</option>
-                    <option value="stopped">stopped</option>
-                    <option value="failed">failed</option>
-                    <option value="interrupted">interrupted</option>
+                    <option value="started">已开始</option>
+                    <option value="running">直播中</option>
+                    <option value="paused">已暂停</option>
+                    <option value="resumed">已恢复</option>
+                    <option value="ended">已结束</option>
+                    <option value="stopped">已停止</option>
+                    <option value="failed">失败</option>
+                    <option value="interrupted">已中断</option>
                   </select>
                 </label>
                 <label class="live-session-command__field">
@@ -727,13 +754,13 @@ function handleSimulateCallback() {
   padding: 0.95rem 1rem;
   text-align: left;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .live-session-command__item--active {
-  border-color: rgba(156, 113, 71, 0.3);
-  box-shadow: 0 14px 30px rgba(112, 84, 55, 0.12);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .live-session-command__item-head,
@@ -748,11 +775,9 @@ function handleSimulateCallback() {
 
 .live-session-command__detail-card {
   padding: 1rem;
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background:
-    radial-gradient(circle at top right, rgba(198, 172, 140, 0.12), transparent 36%),
-    rgba(255, 252, 248, 0.92);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .live-session-command__item-title,
@@ -806,8 +831,7 @@ function handleSimulateCallback() {
 .live-session-command__fact dt,
 .live-session-command__endpoint-title {
   font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  color: var(--color-ink-faint);
 }
 
 .live-session-command__fact dd {
@@ -823,8 +847,8 @@ function handleSimulateCallback() {
   gap: 0.55rem;
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(250, 245, 239, 0.82);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .live-session-command__runtime-card {
@@ -876,20 +900,27 @@ function handleSimulateCallback() {
 }
 
 .live-session-command__action {
-  background: rgba(91, 72, 54, 0.08);
-  color: var(--color-ink-strong);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
 }
 
 .live-session-command__action--primary,
 .live-session-command__submit {
-  background: linear-gradient(135deg, #8e6744, #c48d58);
-  color: white;
-  box-shadow: 0 12px 24px rgba(142, 103, 68, 0.18);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.live-session-command__action--primary:hover:not(:disabled),
+.live-session-command__submit:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .live-session-command__action--warn {
-  background: rgba(183, 82, 66, 0.14);
-  color: #8f3c2f;
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
 }
 
 .live-session-command__action:disabled,
@@ -919,9 +950,9 @@ function handleSimulateCallback() {
 .live-session-command__field select,
 .live-session-command__field textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  border-radius: 0.85rem;
-  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-panel-strong);
   color: var(--color-ink-strong);
   padding: 0.72rem 0.8rem;
   font: inherit;
@@ -940,9 +971,9 @@ function handleSimulateCallback() {
   display: grid;
   gap: 0.35rem;
   padding: 0.75rem 0.8rem;
-  border-radius: 0.9rem;
-  background: rgba(255, 255, 255, 0.74);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  border-radius: var(--radius-md);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .live-session-command__risk-head {

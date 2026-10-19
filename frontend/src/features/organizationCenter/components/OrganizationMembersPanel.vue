@@ -54,10 +54,10 @@ watch(
 function roleLabel(roleCode: string) {
   const normalized = roleCode === 'tenant_admin' ? 'admin' : roleCode;
   const mapping: Record<string, string> = {
-    owner: '租户 Owner',
-    admin: '组织 Admin',
-    operator: '运营 Operator',
-    service: '客服 Service'
+    owner: '租户负责人',
+    admin: '组织管理员',
+    operator: '运营',
+    service: '客服'
   };
 
   return mapping[normalized] ?? normalized;
@@ -67,7 +67,7 @@ function roleDescription(roleCode: string) {
   const normalized = roleCode === 'tenant_admin' ? 'admin' : roleCode;
   const mapping: Record<string, string> = {
     owner: '可分配全部角色，并覆盖租户治理、审计与经营全链路。',
-    admin: '可管理组织与成员，但不能把其他成员提升为 Owner。',
+    admin: '可管理组织与成员，但不能把其他成员提升为负责人。',
     operator: '聚焦店铺经营与履约执行，继承当前组织下的业务范围。',
     service: '聚焦客服、会员与通知协同，适合售后与客户运营岗位。'
   };
@@ -77,6 +77,10 @@ function roleDescription(roleCode: string) {
 
 function toneFromStatus(status: string) {
   return status === 'active' ? 'success' : 'neutral';
+}
+
+function statusLabel(status: string) {
+  return status === 'active' ? '正常' : '停用';
 }
 
 function handleInviteSubmit() {
@@ -103,7 +107,6 @@ function handleRoleUpdate(memberId: string) {
 
 <template>
   <PanelCard
-    eyebrow="Members & Roles"
     title="成员列表与角色分配"
     :description="`当前正在治理 ${selectedOrganizationName} 的成员、角色和店铺范围。`"
   >
@@ -188,7 +191,7 @@ function handleRoleUpdate(memberId: string) {
                 {{ member.userId }} · {{ member.mobile || '未留手机号' }}
               </p>
             </div>
-            <StatusPill :label="member.status" :tone="toneFromStatus(member.status)" />
+            <StatusPill :label="statusLabel(member.status)" :tone="toneFromStatus(member.status)" />
           </div>
 
           <div class="organization-members__body">
@@ -243,8 +246,8 @@ function handleRoleUpdate(memberId: string) {
 .organization-members__item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .organization-members__invite,
@@ -294,7 +297,7 @@ function handleRoleUpdate(memberId: string) {
   min-height: 2.75rem;
   padding: 0 0.9rem;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   background: #fff;
   font: inherit;
 }
@@ -329,30 +332,45 @@ function handleRoleUpdate(memberId: string) {
   min-height: 2rem;
   padding: 0.35rem 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(132, 108, 85, 0.12);
-  color: var(--color-ink);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   display: inline-flex;
   align-items: center;
 }
 
 .organization-members__primary,
 .organization-members__secondary {
-  min-height: 2.75rem;
-  padding: 0 1rem;
-  border-radius: var(--radius-pill);
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  border-radius: var(--radius-md);
   font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .organization-members__primary {
   border: 0;
-  background: linear-gradient(135deg, rgba(117, 82, 59, 0.96), rgba(36, 25, 18, 0.96));
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.organization-members__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .organization-members__secondary {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: transparent;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+}
+
+.organization-members__secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .organization-members__role-editor {

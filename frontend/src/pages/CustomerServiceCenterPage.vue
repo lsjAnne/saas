@@ -86,11 +86,11 @@ async function handleSubmitApproval() {
 }
 
 function handleReplyDraftUpdate(value: string) {
-  customerServiceCenter.replyDraft.value = value;
+  customerServiceCenter.replyDraft = value;
 }
 
 function handleManualReasonUpdate(value: string) {
-  customerServiceCenter.manualReason.value = value;
+  customerServiceCenter.manualReason = value;
 }
 
 onMounted(() => {
@@ -101,12 +101,10 @@ onMounted(() => {
 <template>
   <section class="customer-service-center-page">
     <header class="customer-service-center-page__header">
-      <p class="customer-service-center-page__eyebrow">Customer Service Center</p>
-      <h2 class="customer-service-center-page__title">
-        把工单、会话、风险动作和售后审批收回同一条商用闭环。
-      </h2>
+      <p class="customer-service-center-page__eyebrow">工单售后</p>
+      <h2 class="customer-service-center-page__title">客服售后</h2>
       <p class="customer-service-center-page__subtitle">
-        这一页不再只是工单看板，而是把客户上下文、会话证据、AI 建议回复、转人工和售后单动作放到同一工作面。
+        工单队列、SLA 与售后流程管理。
       </p>
     </header>
 
@@ -235,18 +233,16 @@ onMounted(() => {
 }
 
 .customer-service-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .customer-service-center-page__title {
-  max-width: 15ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .customer-service-center-page__subtitle,

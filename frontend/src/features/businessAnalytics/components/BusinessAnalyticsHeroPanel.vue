@@ -62,9 +62,8 @@ function submitPeriod() {
 
 <template>
   <PanelCard
-    eyebrow="Business Analytics"
-    title="把趋势、利润、异常和动作信号压成一页经营诊断台"
-    description="先回答今天的经营质量，再决定要补货、修异常、调活动，还是先追回款。"
+    title="经营概览与筛选"
+    description="销售额、净利润、利润率与待回款汇总，支持按店铺与分析周期筛选。"
   >
     <div class="analytics-hero">
       <section class="analytics-hero__copy">
@@ -164,8 +163,8 @@ function submitPeriod() {
 .analytics-hero__controls {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .analytics-hero__eyebrow,
@@ -175,12 +174,15 @@ function submitPeriod() {
   margin: 0;
 }
 
-.analytics-hero__eyebrow,
+.analytics-hero__eyebrow {
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 .analytics-hero__field span {
   color: var(--color-ink-faint);
   font-size: 0.74rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .analytics-hero__text {
@@ -205,18 +207,23 @@ function submitPeriod() {
 
 .analytics-hero__control {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   padding: 0 0.85rem;
 }
 
 .analytics-hero__primary {
   grid-column: span 2;
   border: 0;
-  background: linear-gradient(135deg, #314839, #17221b);
-  color: #fffaf4;
+  background: var(--color-accent);
+  color: #ffffff;
   font-weight: 600;
   cursor: pointer;
+}
+
+.analytics-hero__primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .analytics-hero__primary:disabled {

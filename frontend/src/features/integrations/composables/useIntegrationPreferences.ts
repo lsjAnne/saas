@@ -1,4 +1,4 @@
-import { computed, ref, shallowRef } from 'vue';
+import { computed, ref, shallowRef, reactive } from 'vue';;
 
 import { updateTenantExternalIntegrationPreferences } from '@/services/tenantExternalIntegrationService';
 import type {
@@ -77,7 +77,7 @@ export function useIntegrationPreferences() {
     }
   }
 
-  return {
+  return reactive({
     options,
     selectedSystemCodes,
     featureFlags,
@@ -90,5 +90,5 @@ export function useIntegrationPreferences() {
     toggleSystem,
     restoreRecommendedSelection,
     save
-  };
+  });
 }

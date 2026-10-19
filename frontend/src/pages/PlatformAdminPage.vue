@@ -82,14 +82,10 @@ onMounted(() => {
 <template>
   <section class="platform-admin-page">
     <header class="platform-admin-page__header">
-      <p class="platform-admin-page__eyebrow">SaaS Operations</p>
-      <h2 class="platform-admin-page__title">
-        Run the commercial SaaS portfolio from one operating console
-      </h2>
+      <p class="platform-admin-page__eyebrow">平台运营</p>
+      <h2 class="platform-admin-page__title">平台管理</h2>
       <p class="platform-admin-page__subtitle">
-        This view shifts the platform page from governance-only tooling to an operations cockpit:
-        growth, conversion, churn risk, and customer-success follow-up stay on top, while readiness
-        and compliance controls remain available below.
+        平台治理、租户矩阵与就绪度
       </p>
     </header>
 
@@ -150,7 +146,7 @@ onMounted(() => {
       v-if="platformAdmin.isLoading || platformAdmin.isRefreshingReadiness"
       class="platform-admin-page__footer-note"
     >
-      Loading portfolio metrics, follow-up queues, and governance status...
+      正在加载经营指标、跟进队列与治理状态...
     </p>
   </section>
 </template>
@@ -163,7 +159,7 @@ onMounted(() => {
 
 .platform-admin-page__header {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.35rem;
 }
 
 .platform-admin-page__eyebrow,
@@ -174,25 +170,21 @@ onMounted(() => {
 }
 
 .platform-admin-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .platform-admin-page__title {
-  max-width: 18ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .platform-admin-page__subtitle,
 .platform-admin-page__footer-note {
-  max-width: 68rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .platform-admin-page__stack {

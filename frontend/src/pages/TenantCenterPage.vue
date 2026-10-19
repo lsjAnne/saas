@@ -68,10 +68,10 @@ onMounted(() => {
 <template>
   <section class="tenant-center-page">
     <header class="tenant-center-page__header">
-      <p class="tenant-center-page__eyebrow">Tenant Center</p>
-      <h2 class="tenant-center-page__title">把租户开通、套餐配额和停复服动作收进同一个运营视角</h2>
+      <p class="tenant-center-page__eyebrow">租户运营</p>
+      <h2 class="tenant-center-page__title">租户中心</h2>
       <p class="tenant-center-page__subtitle">
-        这里按原型里的 SaaS 租户中心口径组织页面，先看租户列表和状态，再处理套餐、席位、试用到期与停复服动作。
+        租户列表、合规与生命周期管理
       </p>
     </header>
 
@@ -131,7 +131,7 @@ onMounted(() => {
 
 .tenant-center-page__header {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.35rem;
 }
 
 .tenant-center-page__eyebrow,
@@ -142,25 +142,21 @@ onMounted(() => {
 }
 
 .tenant-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .tenant-center-page__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 3.8vw, 3.6rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .tenant-center-page__subtitle,
 .tenant-center-page__footer-note {
-  max-width: 60rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .tenant-center-page__grid {

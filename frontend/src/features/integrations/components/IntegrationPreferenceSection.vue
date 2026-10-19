@@ -46,26 +46,25 @@ const saveStatus = computed(() => {
 
 <template>
   <PanelCard
-    eyebrow="Advanced Configuration"
     title="外部软件可选配置"
-    description="这里配置的是客户所需交付范围，不是简单系统开关。打开即表示该租户需要对应外部软件接入；关闭则表示当前交付中不应再被对应 gate 阻塞。"
+    description="配置租户需要的外部软件交付范围，开关即是否纳入对应接入门禁。"
   >
     <div class="integration-section">
       <div class="integration-section__summary">
         <div class="integration-section__summary-card">
-          <p class="integration-section__summary-label">Selected</p>
+          <p class="integration-section__summary-label">已选系统</p>
           <strong class="integration-section__summary-value">{{ selectedCount }}</strong>
           <p class="integration-section__summary-caption">当前纳入交付范围的系统数量</p>
         </div>
 
         <div class="integration-section__summary-card">
-          <p class="integration-section__summary-label">Ready</p>
+          <p class="integration-section__summary-label">已就绪</p>
           <strong class="integration-section__summary-value">{{ readyCount }}</strong>
           <p class="integration-section__summary-caption">当前已满足 readiness 的系统数量</p>
         </div>
 
         <div class="integration-section__summary-card">
-          <p class="integration-section__summary-label">Save Status</p>
+          <p class="integration-section__summary-label">保存状态</p>
           <strong class="integration-section__summary-value integration-section__summary-value--small">
             {{ saveStatus }}
           </strong>
@@ -121,8 +120,8 @@ const saveStatus = computed(() => {
 .integration-section__summary-card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .integration-section__summary-label,
@@ -132,9 +131,8 @@ const saveStatus = computed(() => {
 }
 
 .integration-section__summary-label {
-  font-size: 0.74rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .integration-section__summary-value {
@@ -158,8 +156,8 @@ const saveStatus = computed(() => {
 .integration-section__soft-notice {
   padding: 0.9rem 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(183, 117, 47, 0.08);
-  color: var(--color-warning);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .integration-section__grid {
@@ -175,15 +173,26 @@ const saveStatus = computed(() => {
 
 .integration-section__primary,
 .integration-section__ghost {
-  min-height: 3rem;
-  padding: 0 1.1rem;
-  border-radius: var(--radius-pill);
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  border-radius: var(--radius-md);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .integration-section__primary {
   border: 0;
-  background: linear-gradient(135deg, #2e251d, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.integration-section__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .integration-section__primary:disabled {
@@ -192,9 +201,14 @@ const saveStatus = computed(() => {
 }
 
 .integration-section__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+}
+
+.integration-section__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 @media (max-width: 820px) {

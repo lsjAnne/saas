@@ -83,13 +83,23 @@ function submitSettings() {
       error instanceof Error ? error.message : '初始化设置解析失败，请检查输入内容';
   }
 }
+
+function authStatusLabel(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('author')) {
+    return '已授权';
+  }
+  if (normalized.includes('pending')) {
+    return '待授权';
+  }
+  return '未授权';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Initialization"
     title="初始化设置区"
-    description="把利润阈值、风险阈值和默认发货配置从演示状态落成真实店铺设置，后续页面会直接消费这些值。"
+    description="把利润阈值、风险阈值和默认发货配置落成真实店铺设置。"
   >
     <div v-if="selectedStore" class="onboarding-init">
       <div class="onboarding-init__summary">
@@ -101,7 +111,7 @@ function submitSettings() {
           </p>
         </div>
         <StatusPill
-          :label="selectedStore.authStatus"
+          :label="authStatusLabel(selectedStore.authStatus)"
           :tone="selectedStore.authStatus.toLowerCase().includes('author') ? 'success' : 'warn'"
         />
       </div>
@@ -148,8 +158,8 @@ function submitSettings() {
   justify-content: space-between;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.64);
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .onboarding-init__label,
@@ -186,10 +196,10 @@ function submitSettings() {
 .onboarding-init__field input,
 .onboarding-init__field textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.82);
-  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 0.8rem 0.9rem;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -200,12 +210,20 @@ function submitSettings() {
 }
 
 .onboarding-init__primary {
-  min-height: 3rem;
+  min-height: 2.5rem;
   border: 0;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, #2d241c, #856243);
-  color: #fff8f0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #ffffff;
+  font: inherit;
   font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.onboarding-init__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .onboarding-init__primary:disabled {

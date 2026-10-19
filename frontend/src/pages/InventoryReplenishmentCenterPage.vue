@@ -84,12 +84,10 @@ onMounted(() => {
 <template>
   <section class="inventory-center-page">
     <header class="inventory-center-page__header">
-      <p class="inventory-center-page__eyebrow">Inventory & Replenishment</p>
-      <h2 class="inventory-center-page__title">
-        把库存快照、补货推进、采购下发和 WMS 联动收成一张真正会动的履约前链控制台
-      </h2>
+      <p class="inventory-center-page__eyebrow">履约前链</p>
+      <h2 class="inventory-center-page__title">库存补货</h2>
       <p class="inventory-center-page__subtitle">
-        这页不再停留在库存骨架说明，而是直接把低库存识别、安全库存调整、补货审批、采购单推进、收货差异和成本对账拉到一个连续工作台里。
+        库存水位、补货计划与成本控制
       </p>
     </header>
 
@@ -186,18 +184,16 @@ onMounted(() => {
 }
 
 .inventory-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .inventory-center-page__title {
-  max-width: 15ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.8rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .inventory-center-page__subtitle,

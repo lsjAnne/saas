@@ -17,9 +17,8 @@ defineProps<Props>();
 
 <template>
   <PanelCard
-    eyebrow="Action Deck"
-    title="今日建议动作区与快捷入口区"
-    description="默认展示系统建议动作，同时给订单、异常、草稿和直播保留直达入口。"
+    title="今日建议与快捷入口"
+    description="系统建议动作与高频执行页直达入口。"
   >
     <div class="insight-panel">
       <section class="insight-panel__block">
@@ -95,7 +94,7 @@ defineProps<Props>();
 .insight-panel__block {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  border: 1px solid var(--color-line);
   background: rgba(255, 255, 255, 0.76);
 }
 
@@ -138,7 +137,7 @@ defineProps<Props>();
 .insight-panel__shortcut-card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  border: 1px solid var(--color-line);
   background: rgba(252, 249, 244, 0.92);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }

@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   createCandidateProduct,
@@ -447,7 +447,7 @@ export function useProductCenterOverview() {
     }
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     candidates: sortedCandidates,
     drafts: sortedDrafts,
@@ -480,5 +480,5 @@ export function useProductCenterOverview() {
     submitDraftGeneration,
     submitDraftUpdate,
     submitDraftPublish
-  };
+  });
 }

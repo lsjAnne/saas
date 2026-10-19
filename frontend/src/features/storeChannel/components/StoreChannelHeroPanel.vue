@@ -31,10 +31,8 @@ defineEmits<{
 
 <template>
   <PanelCard
-    eyebrow="Store & Channel"
-    title="让店铺接入、渠道授权与阈值配置进入同一条交付主线"
-    description="这一页只处理真正影响运营接入面的对象：店铺、渠道账号、授权时效与默认发货策略。动作后全部回读后端真相源，不在前端制造假成功。"
-    dark
+    title="店铺与渠道概览"
+    description="店铺接入、渠道账号授权与发货策略的整体状态。"
   >
     <div class="store-hero">
       <div class="store-hero__primary">
@@ -74,25 +72,25 @@ defineEmits<{
 
       <div class="store-hero__metrics">
         <article class="store-hero__metric">
-          <p class="store-hero__metric-label">Connected Stores</p>
+          <p class="store-hero__metric-label">已接入店铺</p>
           <strong class="store-hero__metric-value">
             {{ formatCount(summary.connectedStoreCount) }}
           </strong>
         </article>
         <article class="store-hero__metric">
-          <p class="store-hero__metric-label">Platforms</p>
+          <p class="store-hero__metric-label">活跃平台</p>
           <strong class="store-hero__metric-value">
             {{ formatCount(summary.activePlatformCount) }}
           </strong>
         </article>
         <article class="store-hero__metric">
-          <p class="store-hero__metric-label">Policy Schemes</p>
+          <p class="store-hero__metric-label">发货策略</p>
           <strong class="store-hero__metric-value">
             {{ formatCount(summary.configuredShipSchemeCount) }}
           </strong>
         </article>
         <article class="store-hero__metric">
-          <p class="store-hero__metric-label">Expiring Auth</p>
+          <p class="store-hero__metric-label">临期授权</p>
           <strong class="store-hero__metric-value">
             {{ formatCount(summary.expiringAccountCount) }}
           </strong>
@@ -139,56 +137,63 @@ defineEmits<{
 }
 
 .store-hero__label {
-  color: rgba(255, 244, 236, 0.68);
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .store-hero__title {
-  max-width: 14ch;
-  color: #fffaf4;
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.6rem);
-  line-height: 1.06;
+  color: var(--color-ink-strong);
+  font-size: 1.35rem;
+  line-height: 1.3;
 }
 
 .store-hero__meta {
-  color: rgba(255, 244, 236, 0.76);
+  color: var(--color-ink-soft);
   line-height: 1.65;
 }
 
 .store-hero__feedback {
   padding: 0.9rem 1rem;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8f0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   line-height: 1.65;
 }
 
 .store-hero__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .store-hero__primary,
 .store-hero__ghost {
-  min-height: 3rem;
-  padding: 0 1.15rem;
-  border-radius: var(--radius-pill);
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
 }
 
 .store-hero__primary {
   border: 0;
-  background: linear-gradient(135deg, #f5d6ae, #e5b881);
-  color: #352617;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.store-hero__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .store-hero__ghost {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff7ee;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+}
+
+.store-hero__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .store-hero__metrics {
@@ -198,10 +203,10 @@ defineEmits<{
 }
 
 .store-hero__metric {
-  padding: 0.95rem;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .store-hero__metric-label,
@@ -210,30 +215,29 @@ defineEmits<{
 }
 
 .store-hero__metric-label {
-  color: rgba(255, 244, 236, 0.62);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
 .store-hero__metric-value {
   display: block;
-  margin-top: 0.45rem;
-  color: #fffaf4;
-  font-size: 1.55rem;
+  margin-top: 0.4rem;
+  color: var(--color-ink-strong);
+  font-size: 1.5rem;
 }
 
 .store-hero__platforms {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .store-hero__platform-chip {
-  padding: 0.45rem 0.8rem;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 247, 238, 0.88);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   font-size: 0.82rem;
 }
 

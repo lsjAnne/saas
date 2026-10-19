@@ -40,17 +40,32 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
 
   return 'neutral';
 }
+
+const labelMap: Record<string, string> = {
+  strategic: '战略客户',
+  key_account: '重点客户',
+  growth: '成长客户',
+  normal: '普通客户',
+  dormant: '沉默会员',
+  active: '活跃',
+  new: '新客',
+  churn_risk: '流失风险'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <section class="member-crm-hero">
     <div class="member-crm-hero__copy">
-      <p class="member-crm-hero__eyebrow">Member Operating Deck</p>
+      <p class="member-crm-hero__eyebrow">会员经营台</p>
       <h3 class="member-crm-hero__title">
-        把会员池、CRM 档案、标签分群和召回任务压进同一张高密度经营主控页
+        会员池、档案与召回任务一屏管理
       </h3>
       <p class="member-crm-hero__subtitle">
-        当前聚焦店铺：{{ selectedStoreName }}。这页直接承接会员经营，而不是再让“组织与成员”页面替代 CRM 主入口。
+        当前聚焦店铺：{{ selectedStoreName }}。集中承接会员经营，完成分层、画像与触达动作。
       </p>
       <p v-if="actionFeedback" class="member-crm-hero__feedback">{{ actionFeedback }}</p>
     </div>
@@ -70,14 +85,14 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
         </div>
         <StatusPill
           v-if="selectedMember"
-          :label="selectedCrmLinkage?.customerTier || selectedMember.levelCode"
+          :label="labelOf(selectedCrmLinkage?.customerTier || selectedMember.levelCode)"
           :tone="resolveTone(selectedCrmLinkage)"
         />
       </div>
 
       <div v-if="selectedMember" class="member-crm-hero__focus-meta">
-        <span>{{ selectedMember.levelCode }}</span>
-        <span>{{ selectedMember.lifecycleStage }}</span>
+        <span>{{ labelOf(selectedMember.levelCode) }}</span>
+        <span>{{ labelOf(selectedMember.lifecycleStage) }}</span>
         <span>{{ formatCurrency(selectedMember.totalPaidAmount) }}</span>
         <span>{{ formatDate(selectedMember.lastOrderAt) }}</span>
       </div>
@@ -114,17 +129,17 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
     <MetricCard
       label="战略会员"
       :value="formatCount(summary.strategicMembers)"
-      caption="已进入 strategic / key account 经营层的客户数"
+      caption="进入战略或重点客户经营层的会员数"
     />
     <MetricCard
       label="高价值沉默"
       :value="formatCount(summary.dormantMembers)"
-      caption="需要被唤醒的 dormant 会员数"
+      caption="需要被唤醒的沉默会员数"
     />
     <MetricCard
       label="进行中召回"
       :value="formatCount(summary.activeRecallTaskCount)"
-      caption="planned / in_progress 的 recall 任务"
+      caption="计划中或进行中的召回任务"
     />
   </section>
 </template>
@@ -148,17 +163,16 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
 }
 
 .member-crm-hero__copy {
-  background:
-    radial-gradient(circle at top right, rgba(86, 118, 120, 0.18), transparent 34%),
-    linear-gradient(145deg, rgba(250, 252, 251, 0.96), rgba(229, 238, 236, 0.92));
-  border: 1px solid rgba(71, 96, 101, 0.1);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .member-crm-hero__focus-card {
   display: grid;
   gap: 1rem;
-  background: linear-gradient(150deg, #21353b, #111b1e);
-  color: #eef8f6;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-strong);
 }
 
 .member-crm-hero__eyebrow,
@@ -174,22 +188,21 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
 
 .member-crm-hero__eyebrow,
 .member-crm-hero__focus-label {
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .member-crm-hero__eyebrow {
-  color: var(--color-ink-faint);
+  color: var(--color-accent);
 }
 
 .member-crm-hero__title {
   margin-top: 0.55rem;
-  max-width: 14ch;
+  max-width: 24ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.5rem);
-  line-height: 1.05;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .member-crm-hero__subtitle,
@@ -212,20 +225,20 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
 }
 
 .member-crm-hero__focus-label {
-  color: rgba(234, 248, 244, 0.68);
+  color: var(--color-ink-soft);
 }
 
 .member-crm-hero__focus-title {
   margin-top: 0.45rem;
-  font-family: var(--font-display);
-  font-size: 1.55rem;
+  font-size: 1.45rem;
+  font-weight: 600;
 }
 
 .member-crm-hero__focus-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
-  color: rgba(234, 248, 244, 0.82);
+  color: var(--color-ink-soft);
   font-size: 0.86rem;
 }
 
@@ -235,7 +248,8 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
   align-items: center;
   padding: 0 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .member-crm-hero__focus-stats {
@@ -247,11 +261,12 @@ function resolveTone(linkage: MemberCrmLinkageView | null) {
 .member-crm-hero__focus-item {
   padding: 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .member-crm-hero__focus-item-label {
-  color: rgba(234, 248, 244, 0.64);
+  color: var(--color-ink-soft);
   font-size: 0.78rem;
 }
 

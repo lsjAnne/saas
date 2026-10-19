@@ -1,4 +1,4 @@
-import { computed, shallowRef } from 'vue';
+import { computed, shallowRef, reactive } from 'vue';;
 
 import {
   createPurchaseOrder,
@@ -523,7 +523,7 @@ export function useInventoryReplenishmentCenterOverview() {
     });
   }
 
-  return {
+  return reactive({
     stores: sortedStores,
     inventorySnapshots: sortedSnapshots,
     filteredSnapshots,
@@ -564,5 +564,5 @@ export function useInventoryReplenishmentCenterOverview() {
     submitCreatePurchaseOrder,
     submitPurchaseOrderReview,
     submitPurchaseOrderDispatch
-  };
+  });
 }

@@ -56,14 +56,27 @@ const closingTone = computed<'neutral' | 'warn' | 'success'>(() => {
 
   return props.financeClosingCheck.readyToClose ? 'success' : 'warn';
 });
+
+const labelMap: Record<string, string> = {
+  idle: '待处理',
+  draft: '草稿',
+  pending: '待结算',
+  reconciled: '已对账',
+  settled: '已结算',
+  closed: '已关账',
+  ready: '可关账',
+  blocked: '有阻塞'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Finance Settlement Center"
-    title="把账单、回款、利润、发票和关账动作收成同一张真正可执行的财务工作台"
-    description="这里不再停留在规划页，而是把账单生成与结算、应收回款、利润洞察、发票凭证归档和期间关账放进同一条财务主链。"
-    dark
+    title="财务工作台"
+    description="账单结算、应收回款、利润洞察、发票凭证归档与期间关账统一在一条财务主链。"
   >
     <div class="finance-hero">
       <div class="finance-hero__copy">
@@ -86,7 +99,7 @@ const closingTone = computed<'neutral' | 'warn' | 'success'>(() => {
               {{ selectedBill?.financeBillId || '等待选择账单' }}
             </h5>
           </div>
-          <StatusPill :label="selectedBill?.billStatus || 'idle'" :tone="billTone" />
+          <StatusPill :label="labelOf(selectedBill?.billStatus || 'idle')" :tone="billTone" />
         </div>
         <p class="finance-hero__focus-meta">
           周期 {{ formatDate(selectedBill?.periodStart) }} - {{ formatDate(selectedBill?.periodEnd) }}
@@ -113,7 +126,7 @@ const closingTone = computed<'neutral' | 'warn' | 'success'>(() => {
             </p>
           </div>
           <StatusPill
-            :label="financeClosingCheck?.readyToClose ? 'ready' : 'blocked'"
+            :label="labelOf(financeClosingCheck?.readyToClose ? 'ready' : 'blocked')"
             :tone="closingTone"
           />
         </div>
@@ -168,15 +181,15 @@ const closingTone = computed<'neutral' | 'warn' | 'success'>(() => {
 .finance-hero__focus {
   padding: 1.05rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 244, 236, 0.08);
+  border: 1px solid var(--color-line);
 }
 
 .finance-hero__copy {
-  background: linear-gradient(145deg, rgba(255, 244, 233, 0.12), rgba(255, 255, 255, 0.04));
+  background: var(--color-panel-strong);
 }
 
 .finance-hero__focus {
-  background: rgba(255, 248, 240, 0.1);
+  background: var(--color-surface);
 }
 
 .finance-hero__eyebrow,
@@ -193,21 +206,20 @@ const closingTone = computed<'neutral' | 'warn' | 'success'>(() => {
 
 .finance-hero__eyebrow,
 .finance-hero__focus-eyebrow {
-  color: rgba(255, 244, 236, 0.7);
-  font-size: 0.74rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .finance-hero__title,
 .finance-hero__focus-title {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .finance-hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.7rem);
-  line-height: 1.02;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .finance-hero__summary,
@@ -215,12 +227,12 @@ const closingTone = computed<'neutral' | 'warn' | 'success'>(() => {
 .finance-hero__focus-meta,
 .finance-hero__focus-note,
 .finance-hero__closing-text {
-  color: rgba(255, 244, 236, 0.78);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 
 .finance-hero__feedback {
-  color: #f6d8b5;
+  color: var(--color-success);
 }
 
 .finance-hero__focus-header,

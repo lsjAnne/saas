@@ -18,13 +18,16 @@ defineEmits<{
 function toneFromStatus(status: string) {
   return status === 'active' ? 'success' : 'neutral';
 }
+
+function statusLabel(status: string) {
+  return status === 'active' ? '正常' : '停用';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Organizations"
     title="组织目录"
-    description="把组织结构、成员入口和当前操作上下文放在同一屏，避免团队协作配置分散。"
+    description="组织结构、成员入口与当前操作上下文一屏掌握。"
   >
     <div class="organization-directory">
       <button
@@ -44,7 +47,7 @@ function toneFromStatus(status: string) {
               创建于 {{ formatDate(organization.createdAt) }}
             </p>
           </div>
-          <StatusPill :label="organization.status" :tone="toneFromStatus(organization.status)" />
+          <StatusPill :label="statusLabel(organization.status)" :tone="toneFromStatus(organization.status)" />
         </div>
       </button>
 
@@ -65,14 +68,18 @@ function toneFromStatus(status: string) {
   width: 100%;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .organization-directory__item--active {
-  border-color: rgba(133, 98, 67, 0.34);
-  box-shadow: 0 12px 28px rgba(58, 43, 28, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-card);
 }
 
 .organization-directory__head {

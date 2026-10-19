@@ -34,10 +34,10 @@ function normalizeRole(roleCode: string | null | undefined) {
 
 function roleLabel(roleCode: string | null | undefined) {
   const mapping: Record<string, string> = {
-    owner: '租户 Owner',
-    admin: '组织 Admin',
-    operator: '运营 Operator',
-    service: '客服 Service'
+    owner: '租户负责人',
+    admin: '组织管理员',
+    operator: '运营',
+    service: '客服'
   };
 
   const normalized = normalizeRole(roleCode);
@@ -59,7 +59,6 @@ function roleDescription(roleCode: string | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Roles & Scope"
     title="角色权限与数据范围"
     :description="`围绕 ${selectedOrganizationName} 展示角色矩阵、当前登录权限以及组织级店铺范围。`"
   >
@@ -218,8 +217,8 @@ function roleDescription(roleCode: string | null | undefined) {
 .member-governance__scope-card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .member-governance__block {
@@ -280,15 +279,18 @@ function roleDescription(roleCode: string | null | undefined) {
   min-height: 2rem;
   padding: 0.35rem 0.8rem;
   border-radius: var(--radius-pill);
-  background: rgba(132, 108, 85, 0.12);
-  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-ink-soft);
   display: inline-flex;
   align-items: center;
   word-break: break-all;
 }
 
 .member-governance__chip--accent {
-  background: rgba(117, 82, 59, 0.16);
+  background: var(--color-accent-soft);
+  border: 1px solid transparent;
+  color: var(--color-accent);
 }
 
 .member-governance__notice-list {

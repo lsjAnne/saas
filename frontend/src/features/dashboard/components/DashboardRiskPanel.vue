@@ -30,9 +30,8 @@ function toneFromLevel(level: string) {
 
 <template>
   <PanelCard
-    eyebrow="Risk & Inventory"
-    title="风险提醒区与库存预警区"
-    description="风险项要高亮解释，库存预警要直接指出触线 SKU，避免首页只剩概念层总览。"
+    title="风险与库存预警"
+    description="需要优先处理的风险项与触及安全库存线的 SKU。"
   >
     <div class="risk-panel">
       <section class="risk-panel__section">
@@ -100,7 +99,7 @@ function toneFromLevel(level: string) {
 
 .risk-panel__section + .risk-panel__section {
   padding-top: 0.3rem;
-  border-top: 1px solid rgba(91, 72, 54, 0.08);
+  border-top: 1px solid var(--color-line);
 }
 
 .risk-panel__section-title,
@@ -132,7 +131,7 @@ function toneFromLevel(level: string) {
 .risk-panel__item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  border: 1px solid var(--color-line);
   background: rgba(255, 255, 255, 0.76);
 }
 

@@ -38,29 +38,29 @@ const evidenceItems = computed(() => {
 
   if (props.selectedTicket) {
     items.push({
-      label: 'Ticket',
+      label: '工单',
       detail: `${props.selectedTicket.ticketId} / ${props.selectedTicket.orderId} / ${formatDateTime(props.selectedTicket.createdAt)}`
     });
   }
 
   if (props.selectedConversation) {
     items.push({
-      label: 'Conversation',
-      detail: `${props.selectedConversation.platformType} / ${props.selectedConversation.platformConversationId} / ${props.selectedConversation.conversationStatus}`
+      label: '会话',
+      detail: `${props.selectedConversation.platformType} / ${props.selectedConversation.platformConversationId} / ${labelOf(props.selectedConversation.conversationStatus)}`
     });
   }
 
   props.conversationMessages.slice(-3).forEach((message) => {
     items.push({
-      label: `${message.senderType} / ${message.messageType}`,
+      label: `${labelOf(message.senderType)} / ${labelOf(message.messageType)}`,
       detail: message.contentText
     });
   });
 
   if (props.afterSaleRecord) {
     items.push({
-      label: 'After-Sale',
-      detail: `${props.afterSaleRecord.afterSaleId} / ${props.afterSaleRecord.status}`
+      label: '售后',
+      detail: `${props.afterSaleRecord.afterSaleId} / ${labelOf(props.afterSaleRecord.status)}`
     });
   }
 
@@ -71,36 +71,55 @@ const riskNotes = computed(() => {
   const notes: string[] = [];
 
   if (props.selectedTicket?.riskFlag) {
-    notes.push('The selected ticket is already marked as risk.');
+    notes.push('当前选中工单已被标记为风险工单。');
   }
 
   if (props.selectedConversation?.riskFlag) {
-    notes.push('The linked conversation already requires manual handling.');
+    notes.push('关联会话需要人工接管处理。');
   }
 
   if ((props.ticketSlaOverview?.overdueTicketCount ?? 0) > 0) {
     notes.push(
-      `${props.ticketSlaOverview?.overdueTicketCount ?? 0} tickets are overdue in the current scope.`
+      `当前范围内已有 ${props.ticketSlaOverview?.overdueTicketCount ?? 0} 个工单逾期。`
     );
   }
 
   if (!props.afterSaleRecord && props.selectedTicket) {
-    notes.push('No after-sale record is linked yet for the selected ticket.');
+    notes.push('当前工单还未关联售后单记录。');
   }
 
   if (!notes.length) {
-    notes.push('No obvious risk signal is active in the current selection.');
+    notes.push('当前选择范围内没有明显的风险信号。');
   }
 
   return notes;
 });
+
+const enumLabelMap: Record<string, string> = {
+  waiting_manual: '待人工接管',
+  closed: '已结束',
+  pending: '待处理',
+  processing: '处理中',
+  resolved: '已解决',
+  customer: '客户',
+  agent: '客服',
+  ai: '智能助手',
+  system: '系统',
+  text: '文本',
+  image: '图片',
+  video: '视频'
+};
+
+function labelOf(value: string) {
+  return enumLabelMap[value] ?? value;
+}
 
 function formatMinutes(value: number | null | undefined) {
   if (value == null || value <= 0) {
     return '--';
   }
 
-  return `${Number(value).toFixed(1)} min`;
+  return `${Number(value).toFixed(1)} 分钟`;
 }
 
 function formatScore(value: number | null | undefined) {
@@ -114,37 +133,36 @@ function formatScore(value: number | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="SLA / Risk / Evidence"
-    title="Operational health plus the evidence chain"
-    description="Use this panel to keep the SLA snapshot, risk notes, and the latest customer evidence visible while closing the case."
+    title="SLA 与证据链洞察"
+    description="集中查看 SLA 概览、风险提示与最新客户证据，便于快速结案。"
   >
     <div class="sla-insight">
       <div class="sla-insight__metrics">
         <MetricCard
-          label="Scoped Tickets"
+          label="筛选工单"
           :value="`${filteredTicketCount}`"
           :caption="selectedStoreName"
         />
         <MetricCard
-          label="SLA Rate"
+          label="SLA 达标率"
           :value="formatPercent(withinSlaRate, 0)"
-          caption="Higher means the queue is more stable"
+          caption="达标越高代表队列越稳定"
         />
         <MetricCard
-          label="Avg Response"
+          label="平均首响"
           :value="formatMinutes(ticketSlaOverview?.averageFirstResponseMinutes)"
-          caption="Measured from ticket creation to first handling"
+          caption="从工单创建到首次处理的时长"
         />
         <MetricCard
-          label="Avg Satisfaction"
+          label="满意度均分"
           :value="formatScore(ticketSlaOverview?.averageSatisfactionScore)"
-          :caption="`Rated ${ticketSlaOverview?.satisfactionCount ?? 0} times`"
+          :caption="`已收集 ${ticketSlaOverview?.satisfactionCount ?? 0} 次评分`"
         />
       </div>
 
       <div class="sla-insight__summary-grid">
         <div class="sla-insight__block">
-          <p class="sla-insight__eyebrow">Risk Notes</p>
+          <p class="sla-insight__eyebrow">风险提示</p>
           <p
             v-for="note in riskNotes"
             :key="note"
@@ -155,16 +173,16 @@ function formatScore(value: number | null | undefined) {
         </div>
 
         <div class="sla-insight__block">
-          <p class="sla-insight__eyebrow">Evidence Chain</p>
+          <p class="sla-insight__eyebrow">证据链</p>
           <p
             v-for="item in evidenceItems"
             :key="`${item.label}-${item.detail}`"
             class="sla-insight__note"
           >
-            <strong>{{ item.label }}:</strong> {{ item.detail }}
+            <strong>{{ item.label }}：</strong>{{ item.detail }}
           </p>
           <p v-if="!evidenceItems.length" class="sla-insight__note">
-            Select a ticket and linked conversation to populate the evidence chain.
+            选择一个工单及其关联会话后，这里会展示对应证据链。
           </p>
         </div>
       </div>
@@ -193,7 +211,8 @@ function formatScore(value: number | null | undefined) {
 .sla-insight__block {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.68);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .sla-insight__eyebrow,
@@ -202,10 +221,9 @@ function formatScore(value: number | null | undefined) {
 }
 
 .sla-insight__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .sla-insight__note {

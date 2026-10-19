@@ -47,10 +47,8 @@ function resolveTone(status: string | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Product Center"
-    title="把选品、草稿生成与上架节奏压进一条高密度商品孵化链"
-    description="这张页不去假装自己是完整商品主数据总表，而是专注做真正决定上架效率的前半程：候选筛入、风险判断、草稿打磨与发布出栈。"
-    dark
+    title="商品中心概览"
+    description="候选商品、草稿生成与上架发布的核心状态。"
   >
     <div class="product-hero">
       <div class="product-hero__focus">
@@ -93,25 +91,25 @@ function resolveTone(status: string | null | undefined) {
 
       <div class="product-hero__metrics">
         <article class="product-hero__metric">
-          <p class="product-hero__metric-label">Candidates</p>
+          <p class="product-hero__metric-label">候选商品</p>
           <strong class="product-hero__metric-value">
             {{ formatCount(summary.candidateCount) }}
           </strong>
         </article>
         <article class="product-hero__metric">
-          <p class="product-hero__metric-label">Pending Review</p>
+          <p class="product-hero__metric-label">待评审</p>
           <strong class="product-hero__metric-value">
             {{ formatCount(summary.pendingReviewCount) }}
           </strong>
         </article>
         <article class="product-hero__metric">
-          <p class="product-hero__metric-label">Pending Publish</p>
+          <p class="product-hero__metric-label">待发布</p>
           <strong class="product-hero__metric-value">
             {{ formatCount(summary.pendingPublishCount) }}
           </strong>
         </article>
         <article class="product-hero__metric">
-          <p class="product-hero__metric-label">High Risk</p>
+          <p class="product-hero__metric-label">高风险</p>
           <strong class="product-hero__metric-value">
             {{ formatCount(summary.highRiskCount) }}
           </strong>
@@ -122,7 +120,7 @@ function resolveTone(status: string | null | undefined) {
         <div class="product-hero__published-head">
           <p class="product-hero__label">本次会话已发布</p>
           <span class="product-hero__published-caption">
-            后端当前没有“已发布商品列表”接口，这里只保留本次会话的发布结果。
+            本次会话的发布结果。
           </span>
         </div>
 
@@ -179,24 +177,21 @@ function resolveTone(status: string | null | undefined) {
 }
 
 .product-hero__label {
-  color: rgba(255, 244, 236, 0.66);
-  font-size: 0.76rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .product-hero__title {
-  max-width: 15ch;
-  color: #fffaf4;
-  font-family: var(--font-display);
-  font-size: clamp(1.95rem, 3vw, 2.75rem);
-  line-height: 1.04;
+  color: var(--color-ink-strong);
+  font-size: 1.35rem;
+  line-height: 1.3;
 }
 
 .product-hero__status-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.6rem;
   align-items: center;
 }
 
@@ -204,41 +199,51 @@ function resolveTone(status: string | null | undefined) {
 .product-hero__published-caption,
 .product-hero__published-empty,
 .product-hero__published-meta {
-  color: rgba(255, 244, 236, 0.76);
+  color: var(--color-ink-soft);
   line-height: 1.6;
 }
 
 .product-hero__feedback {
   padding: 0.9rem 1rem;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8f0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
 
 .product-hero__actions,
 .product-hero__price-band {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .product-hero__primary,
 .product-hero__ghost {
-  min-height: 3rem;
-  padding: 0 1.15rem;
-  border-radius: var(--radius-pill);
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
 }
 
 .product-hero__primary {
   border: 0;
-  background: linear-gradient(135deg, #f4d7b4, #e2b37b);
-  color: #352617;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.product-hero__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .product-hero__ghost {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff7ee;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+}
+
+.product-hero__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .product-hero__metrics {
@@ -248,10 +253,10 @@ function resolveTone(status: string | null | undefined) {
 }
 
 .product-hero__metric {
-  padding: 0.95rem;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .product-hero__metric-label,
@@ -260,16 +265,15 @@ function resolveTone(status: string | null | undefined) {
 }
 
 .product-hero__metric-label {
-  color: rgba(255, 244, 236, 0.62);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
 .product-hero__metric-value {
   display: block;
-  margin-top: 0.45rem;
-  color: #fffaf4;
+  margin-top: 0.4rem;
+  color: var(--color-ink-strong);
   font-size: 1.5rem;
 }
 
@@ -291,19 +295,20 @@ function resolveTone(status: string | null | undefined) {
 
 .product-hero__published-card {
   padding: 0.85rem 0.9rem;
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .product-hero__published-title {
-  color: #fffaf4;
+  color: var(--color-ink-strong);
 }
 
 .product-hero__price-band span {
-  padding: 0.45rem 0.75rem;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 247, 238, 0.9);
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-ink-soft);
   font-size: 0.82rem;
 }
 

@@ -70,6 +70,15 @@ function statusTone(status: string) {
   return normalized === 'accepted' || normalized === 'ready' ? 'success' : 'warn';
 }
 
+function acceptanceStatusLabel(status: string) {
+  const map: Record<string, string> = {
+    accepted: '已签收',
+    pending: '待签收',
+    reaccept_required: '需重签'
+  };
+  return map[status] ?? status;
+}
+
 function submitFilters() {
   emit('updateFilters', {
     tenantId: filterForm.tenantId || undefined,
@@ -93,7 +102,6 @@ function submitPublish() {
 
 <template>
   <PanelCard
-    eyebrow="Compliance Governance"
     title="文档发布与租户签收治理"
     description="平台端要在同一块面板里同时看到文档版本、租户签收状态和重签压力。"
   >
@@ -148,9 +156,9 @@ function submitPublish() {
             <span>签收状态</span>
             <select v-model="filterForm.acceptanceStatus" class="compliance-panel__control">
               <option value="">全部</option>
-              <option value="accepted">accepted</option>
-              <option value="pending">pending</option>
-              <option value="reaccept_required">reaccept_required</option>
+              <option value="accepted">已签收</option>
+              <option value="pending">待签收</option>
+              <option value="reaccept_required">需重签</option>
             </select>
           </label>
         </div>
@@ -186,7 +194,7 @@ function submitPublish() {
             <article v-for="item in acceptances.slice(0, 8)" :key="`${item.tenantId}-${item.documentCode}`" class="compliance-panel__item">
               <div class="compliance-panel__row">
                 <strong>{{ item.tenantName }}</strong>
-                <StatusPill :label="item.acceptanceStatus" :tone="statusTone(item.acceptanceStatus)" />
+                <StatusPill :label="acceptanceStatusLabel(item.acceptanceStatus)" :tone="statusTone(item.acceptanceStatus)" />
               </div>
               <p>{{ item.documentCode }} / 当前 {{ item.currentVersion }} / 最新签收 {{ item.latestAcceptedVersion || '--' }}</p>
               <p>{{ item.reacceptRequired ? '需要重签' : '当前版本已覆盖' }} / {{ formatDateTime(item.latestAcceptedAt) }}</p>
@@ -211,8 +219,8 @@ function submitPublish() {
 .compliance-panel__card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 251, 247, 0.78);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .compliance-panel__grid {
@@ -244,10 +252,9 @@ function submitPublish() {
 
 .compliance-panel__eyebrow,
 .compliance-panel__field span {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .compliance-panel__control,
@@ -260,28 +267,45 @@ function submitPublish() {
 .compliance-panel__control,
 .compliance-panel__textarea {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-line);
+  background: #fff;
   padding: 0.75rem 0.85rem;
+  font: inherit;
 }
 
 .compliance-panel__primary,
 .compliance-panel__secondary {
-  min-height: 2.8rem;
-  border: 0;
-  padding: 0 1rem;
+  min-height: 2.5rem;
+  padding: 0 0.95rem;
+  font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .compliance-panel__primary {
-  background: linear-gradient(135deg, #3f5f55, #1f2c28);
-  color: #fffaf4;
+  border: 0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.compliance-panel__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .compliance-panel__secondary {
-  background: rgba(61, 46, 36, 0.08);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+}
+
+.compliance-panel__secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .compliance-panel__item {
@@ -289,7 +313,8 @@ function submitPublish() {
   gap: 0.35rem;
   padding: 0.8rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .compliance-panel__row {

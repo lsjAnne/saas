@@ -121,11 +121,10 @@ onMounted(() => {
 <template>
   <section class="open-platform-page">
     <header class="open-platform-page__header">
-      <p class="open-platform-page__eyebrow">Open Platform</p>
-      <h2 class="open-platform-page__title">Govern access, credentials, traffic, and callbacks in one place.</h2>
+      <p class="open-platform-page__eyebrow">开放平台</p>
+      <h2 class="open-platform-page__title">开放接口</h2>
       <p class="open-platform-page__subtitle">
-        This page now combines asset operations with governance signals, so you can see where
-        credentials, webhooks, and rejected traffic still leave the integration loop incomplete.
+        开放能力、流量与应用资产管理。
       </p>
     </header>
 
@@ -186,24 +185,23 @@ onMounted(() => {
 }
 
 .open-platform-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .open-platform-page__title {
   max-width: 18ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 3.8vw, 3.6rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .open-platform-page__subtitle {
   max-width: 56rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .open-platform-page__grid {

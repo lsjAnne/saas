@@ -35,6 +35,18 @@ const selectedOrder = computed(
     null
 );
 
+const paymentStatusMap: Record<string, string> = {
+  paid: '已支付',
+  unpaid: '待支付',
+  pending: '处理中'
+};
+
+const invoiceStatusMap: Record<string, string> = {
+  draft: '草稿',
+  submitted: '已提交',
+  issued: '已开具'
+};
+
 function paymentTone(status: string) {
   return status === 'paid' ? 'success' : 'warn';
 }
@@ -49,7 +61,7 @@ watch(
     const preferredOrder = orders.find((order) => order.paymentStatus !== 'paid') ?? orders[0] ?? null;
 
     invoiceForm.billingOrderId = preferredOrder?.billingOrderId ?? '';
-    invoiceForm.invoiceTitle = preferredOrder ? `${preferredOrder.planName} subscription bill` : '';
+    invoiceForm.invoiceTitle = preferredOrder ? `${preferredOrder.planName} 订阅账单` : '';
     invoiceForm.invoiceTaxNo = '';
   },
   { immediate: true }
@@ -70,10 +82,8 @@ function submitInvoice() {
 
 <template>
   <PanelCard
-    eyebrow="Billing Timeline"
-    title="Bills, payment, and invoice actions"
-    description="The right column keeps bill download, settlement, and invoice submission in the same operational flow."
-    dark
+    title="账单与发票"
+    description="账单下载、结算与开票申请同屏处理。"
   >
     <div class="billing-timeline">
       <article v-for="order in visibleOrders" :key="order.billingOrderId" class="billing-timeline__item">
@@ -84,17 +94,17 @@ function submitInvoice() {
               {{ formatDate(order.createdAt) }} / {{ order.orderType }}
             </p>
           </div>
-          <StatusPill :label="order.paymentStatus" :tone="paymentTone(order.paymentStatus)" />
+          <StatusPill :label="paymentStatusMap[order.paymentStatus] || order.paymentStatus" :tone="paymentTone(order.paymentStatus)" />
         </div>
         <p class="billing-timeline__amount">{{ formatCurrency(order.payableAmount) }}</p>
-        <p class="billing-timeline__meta">External order {{ order.externalOrderNo || '--' }}</p>
+        <p class="billing-timeline__meta">外部订单 {{ order.externalOrderNo || '--' }}</p>
         <div class="billing-timeline__actions">
           <button
             class="billing-timeline__ghost"
             type="button"
             @click="emit('downloadOrder', order.billingOrderId)"
           >
-            Download bill
+            下载账单
           </button>
           <button
             class="billing-timeline__solid"
@@ -102,29 +112,29 @@ function submitInvoice() {
             :disabled="isSubmitting || !canSettle(order)"
             @click="emit('settleOrder', order.billingOrderId)"
           >
-            {{ !canSettle(order) ? 'Already paid' : isSubmitting ? 'Processing...' : 'Settle payment' }}
+            {{ !canSettle(order) ? '已支付' : isSubmitting ? '处理中...' : '结算付款' }}
           </button>
         </div>
       </article>
 
       <p v-if="visibleOrders.length === 0" class="billing-timeline__empty">
-        No billing orders yet. This panel will be reused as soon as upgrades, renewals, or seat purchases generate new orders.
+        暂无账单订单。升级、续费或购买坐席后将在此生成新订单。
       </p>
 
       <div class="billing-timeline__invoice">
         <div class="billing-timeline__invoice-head">
           <div>
-            <p class="billing-timeline__invoice-eyebrow">Invoice Request</p>
-            <h4 class="billing-timeline__invoice-title">Submit an invoice request</h4>
+            <p class="billing-timeline__invoice-eyebrow">开票申请</p>
+            <h4 class="billing-timeline__invoice-title">提交开票申请</h4>
           </div>
           <StatusPill
-            :label="lastInvoiceRequest?.invoiceStatus || 'draft'"
+            :label="invoiceStatusMap[lastInvoiceRequest?.invoiceStatus ?? ''] || lastInvoiceRequest?.invoiceStatus || '草稿'"
             :tone="lastInvoiceRequest ? 'success' : 'neutral'"
           />
         </div>
 
         <label class="billing-timeline__field">
-          <span class="billing-timeline__field-label">Billing order</span>
+          <span class="billing-timeline__field-label">账单订单</span>
           <select v-model="invoiceForm.billingOrderId" class="billing-timeline__control">
             <option v-for="order in visibleOrders" :key="order.billingOrderId" :value="order.billingOrderId">
               {{ order.billingOrderId }} / {{ order.planName }}
@@ -133,21 +143,21 @@ function submitInvoice() {
         </label>
 
         <label class="billing-timeline__field">
-          <span class="billing-timeline__field-label">Invoice title</span>
+          <span class="billing-timeline__field-label">发票抬头</span>
           <input v-model="invoiceForm.invoiceTitle" class="billing-timeline__control" type="text" />
         </label>
 
         <label class="billing-timeline__field">
-          <span class="billing-timeline__field-label">Tax number</span>
+          <span class="billing-timeline__field-label">税号</span>
           <input v-model="invoiceForm.invoiceTaxNo" class="billing-timeline__control" type="text" />
         </label>
 
         <div class="billing-timeline__invoice-summary">
           <p class="billing-timeline__meta">
-            Selected amount {{ formatCurrency(selectedOrder?.payableAmount) }}
+            已选金额 {{ formatCurrency(selectedOrder?.payableAmount) }}
           </p>
           <p class="billing-timeline__meta">
-            Latest request
+            最近申请
             {{
               lastInvoiceRequest
                 ? `${lastInvoiceRequest.invoiceRequestId} / ${formatDateTime(lastInvoiceRequest.createdAt)}`
@@ -162,7 +172,7 @@ function submitInvoice() {
           :disabled="isSubmitting || !invoiceForm.billingOrderId || !invoiceForm.invoiceTitle || !invoiceForm.invoiceTaxNo"
           @click="submitInvoice"
         >
-          {{ isSubmitting ? 'Submitting...' : 'Submit invoice request' }}
+          {{ isSubmitting ? '提交中...' : '提交开票申请' }}
         </button>
       </div>
     </div>
@@ -178,8 +188,8 @@ function submitInvoice() {
 .billing-timeline__item {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .billing-timeline__head {
@@ -192,13 +202,13 @@ function submitInvoice() {
 .billing-timeline__title,
 .billing-timeline__amount {
   margin: 0;
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .billing-timeline__meta,
 .billing-timeline__empty {
   margin: 0.35rem 0 0;
-  color: rgba(255, 244, 236, 0.72);
+  color: var(--color-ink-soft);
   line-height: 1.6;
 }
 
@@ -223,14 +233,24 @@ function submitInvoice() {
 
 .billing-timeline__solid {
   border: 0;
-  background: rgba(255, 248, 240, 0.92);
-  color: #2d2017;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.billing-timeline__solid:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .billing-timeline__ghost {
-  border: 1px solid rgba(255, 244, 236, 0.18);
-  background: transparent;
-  color: #fff8f0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+}
+
+.billing-timeline__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .billing-timeline__invoice {
@@ -238,8 +258,8 @@ function submitInvoice() {
   gap: 0.85rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .billing-timeline__invoice-head {
@@ -252,15 +272,14 @@ function submitInvoice() {
 .billing-timeline__invoice-eyebrow,
 .billing-timeline__field-label {
   margin: 0;
-  color: rgba(255, 244, 236, 0.72);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.72rem;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .billing-timeline__invoice-title {
   margin: 0.45rem 0 0;
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .billing-timeline__field {
@@ -271,11 +290,11 @@ function submitInvoice() {
 .billing-timeline__control {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 244, 236, 0.18);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.72rem 0.8rem;
-  background: rgba(255, 248, 240, 0.12);
-  color: #fff8f0;
+  background: var(--color-surface);
+  color: var(--color-ink-strong);
   font: inherit;
 }
 

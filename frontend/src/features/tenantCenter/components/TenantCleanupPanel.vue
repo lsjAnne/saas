@@ -38,11 +38,20 @@ function submitCreateTenant() {
     mobile: createForm.mobile.trim()
   });
 }
+
+function tenantStatusLabel(status?: string | null) {
+  const map: Record<string, string> = {
+    active: '正常',
+    suspended: '已停用',
+    trial: '试用',
+    expiring: '临期'
+  };
+  return (status && map[status]) || '未知';
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Lifecycle Actions"
     title="试用到期与停复服操作区"
     description="右侧统一处理开通租户、启动试用、停服和恢复服务，同时把试用临期租户直接拉到面前。"
   >
@@ -50,7 +59,7 @@ function submitCreateTenant() {
       <div class="tenant-lifecycle__alerts">
         <div class="tenant-lifecycle__section-head">
           <div>
-            <p class="tenant-lifecycle__eyebrow">Trial Expiry</p>
+            <p class="tenant-lifecycle__eyebrow">试用到期</p>
             <h4 class="tenant-lifecycle__title">试用到期区</h4>
           </div>
         </div>
@@ -64,7 +73,7 @@ function submitCreateTenant() {
             <div class="tenant-lifecycle__row">
               <strong>{{ tenant.tenantName }}</strong>
               <StatusPill
-                :label="tenant.tenantStatus"
+                :label="tenantStatusLabel(tenant.tenantStatus)"
                 :tone="tenant.tenantStatus === 'trial' ? 'warn' : 'neutral'"
               />
             </div>
@@ -79,7 +88,7 @@ function submitCreateTenant() {
       <div class="tenant-lifecycle__actions">
         <div class="tenant-lifecycle__card">
           <div>
-            <p class="tenant-lifecycle__eyebrow">Create Tenant</p>
+            <p class="tenant-lifecycle__eyebrow">开通租户</p>
             <h4 class="tenant-lifecycle__title">开通租户</h4>
           </div>
 
@@ -103,7 +112,7 @@ function submitCreateTenant() {
 
         <div class="tenant-lifecycle__card">
           <div>
-            <p class="tenant-lifecycle__eyebrow">Tenant Status</p>
+            <p class="tenant-lifecycle__eyebrow">租户状态</p>
             <h4 class="tenant-lifecycle__title">
               {{ selectedTenant?.tenantName || '等待选择租户' }}
             </h4>
@@ -112,7 +121,7 @@ function submitCreateTenant() {
           <dl v-if="selectedTenant" class="tenant-lifecycle__detail">
             <div>
               <dt>当前状态</dt>
-              <dd>{{ selectedTenant.tenantStatus }}</dd>
+              <dd>{{ tenantStatusLabel(selectedTenant.tenantStatus) }}</dd>
             </div>
             <div>
               <dt>试用到期</dt>
@@ -173,8 +182,8 @@ function submitCreateTenant() {
 .tenant-lifecycle__alert-item {
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.1);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .tenant-lifecycle__section-head,
@@ -198,10 +207,9 @@ function submitCreateTenant() {
 .tenant-lifecycle__eyebrow,
 .tenant-lifecycle__field-label,
 .tenant-lifecycle__detail dt {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .tenant-lifecycle__alert-meta,
@@ -219,10 +227,10 @@ function submitCreateTenant() {
 .tenant-lifecycle__input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(91, 72, 54, 0.12);
+  border: 1px solid var(--color-line);
   border-radius: calc(var(--radius-lg) - 0.25rem);
   padding: 0.72rem 0.8rem;
-  background: rgba(255, 251, 247, 0.92);
+  background: #fff;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -237,7 +245,7 @@ function submitCreateTenant() {
 .tenant-lifecycle__detail div {
   padding: 0.8rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 248, 242, 0.72);
+  background: var(--color-surface);
 }
 
 .tenant-lifecycle__detail dd {
@@ -250,22 +258,38 @@ function submitCreateTenant() {
 
 .tenant-lifecycle__primary,
 .tenant-lifecycle__secondary {
-  min-height: 2.8rem;
+  min-height: 2.5rem;
   border-radius: var(--radius-md);
-  border: 0;
-  padding: 0 1rem;
+  padding: 0 0.95rem;
+  font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .tenant-lifecycle__primary {
-  background: linear-gradient(135deg, #3f5f55, #1f2c28);
-  color: #fffaf4;
+  border: 0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.tenant-lifecycle__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .tenant-lifecycle__secondary {
-  background: rgba(61, 46, 36, 0.08);
-  color: var(--color-ink-strong);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+}
+
+.tenant-lifecycle__secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .tenant-lifecycle__error {

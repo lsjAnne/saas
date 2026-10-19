@@ -47,10 +47,8 @@ function scorePercent(score: number | null | undefined) {
 
 <template>
   <PanelCard
-    eyebrow="Business Assistant"
-    title="把推荐解释、经营动作和跨域落点压进一张决策首屏"
-    description="这页紧跟 dashboard，不再只是看数，而是直接把商品、会员、活动三类建议变成可以顺手转去执行页的动作清单。"
-    dark
+    title="推荐概览"
+    description="商品、会员、活动三类经营建议汇总，可一键跳转执行。"
   >
     <div class="business-hero">
       <div class="business-hero__copy">
@@ -179,8 +177,8 @@ function scorePercent(score: number | null | undefined) {
 .business-hero__focus-card {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 244, 236, 0.08);
-  background: rgba(255, 248, 240, 0.08);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .business-hero__eyebrow,
@@ -194,25 +192,24 @@ function scorePercent(score: number | null | undefined) {
 
 .business-hero__eyebrow,
 .business-hero__focus-label {
-  color: rgba(255, 244, 236, 0.72);
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .business-hero__title,
 .business-hero__focus-value {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
 }
 
 .business-hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .business-hero__headline,
 .business-hero__focus-copy {
-  color: rgba(255, 244, 236, 0.78);
+  color: var(--color-ink-soft);
   line-height: 1.7;
 }
 
@@ -225,9 +222,9 @@ function scorePercent(score: number | null | undefined) {
 
 .business-hero__filter,
 .business-hero__route {
-  border: 1px solid rgba(255, 244, 236, 0.12);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8f0;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
 }
 
 .business-hero__filter {
@@ -238,8 +235,9 @@ function scorePercent(score: number | null | undefined) {
 }
 
 .business-hero__filter--active {
-  background: linear-gradient(135deg, rgba(117, 82, 59, 0.96), rgba(36, 25, 18, 0.96));
-  border-color: transparent;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #ffffff;
 }
 
 .business-hero__route {
@@ -252,12 +250,12 @@ function scorePercent(score: number | null | undefined) {
 }
 
 .business-hero__route span {
-  color: rgba(255, 244, 236, 0.72);
+  color: var(--color-ink-soft);
   font-size: 0.8rem;
 }
 
 .business-hero__route strong {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
   font-size: 1rem;
   line-height: 1.5;
 }

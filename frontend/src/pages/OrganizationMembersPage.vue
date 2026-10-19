@@ -17,7 +17,7 @@ const authStore = useAuthStore();
 const organizationCenter = useOrganizationCenterOverview();
 
 const selectedOrganizationName = computed(
-  () => organizationCenter.selectedOrganization.value?.organizationName ?? '当前组织'
+  () => organizationCenter.selectedOrganization?.organizationName ?? '当前组织'
 );
 
 authStore.hydrate();
@@ -82,10 +82,10 @@ onMounted(() => {
 <template>
   <section class="organization-page">
     <header class="organization-page__header">
-      <p class="organization-page__eyebrow">Organization Governance</p>
-      <h2 class="organization-page__title">把组织结构、成员治理、权限边界和审计入口收敛到一个治理中枢</h2>
+      <p class="organization-page__eyebrow">组织治理</p>
+      <h2 class="organization-page__title">组织与成员</h2>
       <p class="organization-page__subtitle">
-        当前页围绕组织与权限中心的真实接口编排组织结构区、成员治理区、角色权限区、数据范围区和审计入口区。
+        组织目录、成员与角色权限
       </p>
     </header>
 
@@ -126,9 +126,8 @@ onMounted(() => {
       <AuditTrailPanel :audit-logs="organizationCenter.governanceAuditLogs" />
 
       <PanelCard
-        eyebrow="Audit Entry"
         title="查看完整审计中心"
-        description="组织权限治理页只保留治理相关的近端日志，完整导出治理、全量审计轨迹和合规留痕在独立审计中心查看。"
+        description="组织治理只保留近端日志，完整审计轨迹在独立审计中心查看。"
       >
         <div class="organization-page__audit-entry">
           <p class="organization-page__audit-copy">
@@ -154,7 +153,7 @@ onMounted(() => {
 
 .organization-page__header {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.35rem;
 }
 
 .organization-page__eyebrow,
@@ -165,24 +164,20 @@ onMounted(() => {
 }
 
 .organization-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .organization-page__title {
-  max-width: 20ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 3.8vw, 3.6rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
 }
 
 .organization-page__subtitle {
-  max-width: 56rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .organization-page__primary,
@@ -210,14 +205,21 @@ onMounted(() => {
 }
 
 .organization-page__audit-button {
-  min-height: 2.9rem;
+  min-height: 2.5rem;
   width: fit-content;
-  padding: 0 1rem;
+  padding: 0 0.95rem;
   border: 0;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, rgba(117, 82, 59, 0.96), rgba(36, 25, 18, 0.96));
-  color: #fff8f0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #ffffff;
   font: inherit;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.organization-page__audit-button:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 @media (max-width: 1080px) {

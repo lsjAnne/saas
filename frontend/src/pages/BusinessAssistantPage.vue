@@ -70,10 +70,10 @@ onMounted(() => {
 <template>
   <section class="business-assistant-page">
     <header class="business-assistant-page__header">
-      <p class="business-assistant-page__eyebrow">Business Assistant</p>
-      <h2 class="business-assistant-page__title">经营助手已升级成通用经营问答工作台</h2>
+      <p class="business-assistant-page__eyebrow">智能问答</p>
+      <h2 class="business-assistant-page__title">经营助手</h2>
       <p class="business-assistant-page__subtitle">
-        这里不再只是推荐聚合页，而是把商品、订单、风险、库存、活动和会员数据压缩成一句话提问后的经营建议。
+        用自然语言描述诉求，快速获得分析与行动建议
       </p>
     </header>
 
@@ -143,18 +143,16 @@ onMounted(() => {
 }
 
 .business-assistant-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .business-assistant-page__title {
-  max-width: 14ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.2rem, 4vw, 3.6rem);
-  line-height: 1.04;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .business-assistant-page__subtitle,

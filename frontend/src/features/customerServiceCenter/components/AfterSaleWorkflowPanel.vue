@@ -55,14 +55,14 @@ const canSubmitApproval = computed(
 
 const conversationSummary = computed(() => {
   if (!props.conversation) {
-    return 'No linked conversation';
+    return '暂未关联会话';
   }
 
-  return `${props.conversation.platformType} / ${props.conversation.platformConversationId} / ${props.conversation.conversationStatus}`;
+  return `${props.conversation.platformType} / ${props.conversation.platformConversationId} / ${labelOf(props.conversation.conversationStatus)}`;
 });
 
 const recentEvidencePreview = computed(() =>
-  props.messages.slice(-2).map((message) => `${message.senderType}: ${message.contentText}`)
+  props.messages.slice(-2).map((message) => `${labelOf(message.senderType)}：${message.contentText}`)
 );
 
 watch(
@@ -88,6 +88,29 @@ function resolveTone(
   }
 
   return 'neutral';
+}
+
+const labelMap: Record<string, string> = {
+  ready: '就绪',
+  created: '已创建',
+  reviewing: '审核中',
+  approved: '已通过',
+  rejected: '已驳回',
+  refund_only: '仅退款',
+  return_refund: '退货退款',
+  exchange: '换货',
+  repair: '维修',
+  waiting_manual: '待人工接管',
+  closed: '已结束',
+  pending: '待处理',
+  customer: '客户',
+  agent: '客服',
+  ai: '智能助手',
+  system: '系统'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
 }
 
 function applyGeneratedDraft() {
@@ -120,22 +143,21 @@ function submitLookup() {
 
 <template>
   <PanelCard
-    eyebrow="After-Sale Workflow"
-    title="After-sale request, evidence, and approval"
-    description="Turn the current ticket and conversation into a structured after-sale request without leaving the service desk."
+    title="售后申请、证据与审批"
+    description="在客服工作台内把当前工单与会话整理成结构化的售后申请。"
   >
     <div class="after-sale-workflow">
       <div class="after-sale-workflow__context">
         <div>
-          <p class="after-sale-workflow__eyebrow">Current Order Anchor</p>
+          <p class="after-sale-workflow__eyebrow">当前订单</p>
           <h4 class="after-sale-workflow__title">{{ ticket?.orderId || createForm.orderId || '--' }}</h4>
           <p class="after-sale-workflow__meta">
-            Ticket {{ ticket?.ticketId || '--' }} / Customer {{ ticket?.customerId || '--' }}
+            工单 {{ ticket?.ticketId || '--' }} / 客户 {{ ticket?.customerId || '--' }}
           </p>
-          <p class="after-sale-workflow__meta">Conversation {{ conversationSummary }}</p>
+          <p class="after-sale-workflow__meta">会话 {{ conversationSummary }}</p>
         </div>
         <StatusPill
-          :label="afterSaleRecord?.status || 'ready'"
+          :label="labelOf(afterSaleRecord?.status || 'ready')"
           :tone="resolveTone(afterSaleRecord?.status)"
         />
       </div>
@@ -143,9 +165,9 @@ function submitLookup() {
       <div class="after-sale-workflow__draft">
         <div class="after-sale-workflow__draft-head">
           <div>
-            <p class="after-sale-workflow__eyebrow">Generated Request Draft</p>
+            <p class="after-sale-workflow__eyebrow">生成的售后草稿</p>
             <p class="after-sale-workflow__meta">
-              Pull the latest customer request, handling note, and risk signals into the form before creating the record.
+              在创建记录前，把最新客户诉求、处理备注与风险信号带入表单。
             </p>
           </div>
           <button
@@ -154,68 +176,68 @@ function submitLookup() {
             :disabled="!generatedAfterSaleDraft || isSubmitting"
             @click="applyGeneratedDraft"
           >
-            Apply draft
+            应用草稿
           </button>
         </div>
         <p class="after-sale-workflow__draft-copy">
           {{
             generatedAfterSaleDraft?.reasonText ||
-            'No generated after-sale draft yet. Create or refresh a conversation suggestion first.'
+            '当前还没有生成售后草稿，请先生成或刷新会话建议。'
           }}
         </p>
         <p v-if="recentEvidencePreview.length" class="after-sale-workflow__draft-copy">
-          Recent evidence: {{ recentEvidencePreview.join(' | ') }}
+          最近证据：{{ recentEvidencePreview.join(' | ') }}
         </p>
       </div>
 
       <form class="after-sale-workflow__create" @submit.prevent="submitCreate">
         <label class="after-sale-workflow__field">
-          <span>Order ID</span>
+          <span>订单号</span>
           <input v-model="createForm.orderId" :disabled="isSubmitting" />
         </label>
         <label class="after-sale-workflow__field">
-          <span>After-Sale Type</span>
+          <span>售后类型</span>
           <select v-model="createForm.afterSaleType" :disabled="isSubmitting">
-            <option value="refund_only">refund_only</option>
-            <option value="return_refund">return_refund</option>
-            <option value="exchange">exchange</option>
-            <option value="repair">repair</option>
+            <option value="refund_only">仅退款</option>
+            <option value="return_refund">退货退款</option>
+            <option value="exchange">换货</option>
+            <option value="repair">维修</option>
           </select>
         </label>
         <label class="after-sale-workflow__field after-sale-workflow__field--wide">
-          <span>Reason</span>
+          <span>售后原因</span>
           <textarea
             v-model="createForm.reasonText"
             rows="3"
             :disabled="isSubmitting"
-            placeholder="Describe why this order needs an after-sale action."
+            placeholder="说明该订单需要售后处理的原因。"
           />
         </label>
         <label class="after-sale-workflow__field after-sale-workflow__field--wide">
-          <span>Evidence</span>
+          <span>证据材料</span>
           <textarea
             v-model="createForm.evidenceBlob"
             rows="5"
             :disabled="isSubmitting"
-            placeholder="Capture screenshots, conversation snippets, logistics checkpoints, or any internal notes."
+            placeholder="记录截图、会话片段、物流节点或内部备注等。"
           />
         </label>
         <button class="after-sale-workflow__primary" type="submit" :disabled="isSubmitting">
-          Create after-sale record
+          创建售后单
         </button>
       </form>
 
       <form class="after-sale-workflow__lookup" @submit.prevent="submitLookup">
         <label class="after-sale-workflow__field">
-          <span>Load Existing After-Sale ID</span>
+          <span>读取已有售后单号</span>
           <input
             v-model="lookupForm.afterSaleId"
             :disabled="isSubmitting"
-            placeholder="Enter afterSaleId"
+            placeholder="输入售后单号"
           />
         </label>
         <button class="after-sale-workflow__ghost" type="submit" :disabled="isSubmitting">
-          Load record
+          读取记录
         </button>
       </form>
 
@@ -224,22 +246,22 @@ function submitLookup() {
           <div>
             <p class="after-sale-workflow__record-title">{{ afterSaleRecord.afterSaleId }}</p>
             <p class="after-sale-workflow__record-meta">
-              {{ afterSaleRecord.afterSaleType }} / Order {{ afterSaleRecord.orderId }}
+              {{ labelOf(afterSaleRecord.afterSaleType) }} / 订单 {{ afterSaleRecord.orderId }}
             </p>
           </div>
           <StatusPill
-            :label="afterSaleRecord.status"
+            :label="labelOf(afterSaleRecord.status)"
             :tone="resolveTone(afterSaleRecord.status)"
           />
         </div>
         <p class="after-sale-workflow__record-copy">
-          Reason: {{ afterSaleRecord.reasonText || 'None' }}
+          原因：{{ afterSaleRecord.reasonText || '无' }}
         </p>
         <p class="after-sale-workflow__record-copy">
-          Evidence: {{ afterSaleRecord.evidenceBlob || 'None' }}
+          证据：{{ afterSaleRecord.evidenceBlob || '无' }}
         </p>
         <p class="after-sale-workflow__record-copy">
-          Created: {{ formatDateTime(afterSaleRecord.createdAt) }}
+          创建于：{{ formatDateTime(afterSaleRecord.createdAt) }}
         </p>
         <button
           class="after-sale-workflow__ghost"
@@ -247,12 +269,12 @@ function submitLookup() {
           :disabled="isSubmitting || !canSubmitApproval"
           @click="emit('submitApproval')"
         >
-          Submit approval
+          提交审批
         </button>
       </div>
 
       <div v-else class="after-sale-workflow__empty">
-        Build a draft from the current ticket, then create a new after-sale record or load an existing one for approval follow-up.
+        先基于当前工单整理草稿，再创建新售后单或读取已有记录进行审批跟进。
       </div>
 
       <p v-if="actionError" class="after-sale-workflow__error">{{ actionError }}</p>
@@ -282,7 +304,8 @@ function submitLookup() {
 .after-sale-workflow__context {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .after-sale-workflow__eyebrow,
@@ -298,10 +321,9 @@ function submitLookup() {
 }
 
 .after-sale-workflow__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .after-sale-workflow__title,
@@ -324,7 +346,8 @@ function submitLookup() {
 .after-sale-workflow__empty {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.66);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .after-sale-workflow__create {
@@ -357,8 +380,8 @@ function submitLookup() {
   min-height: 2.8rem;
   padding: 0.75rem 0.9rem;
   border-radius: 1rem;
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   color: var(--color-ink-strong);
   font: inherit;
 }
@@ -371,15 +394,27 @@ function submitLookup() {
 }
 
 .after-sale-workflow__primary {
-  border: 0;
-  background: linear-gradient(135deg, #30525a, #6b8d8b);
-  color: #fff8f0;
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.after-sale-workflow__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .after-sale-workflow__ghost {
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid var(--color-line);
+  background: var(--color-panel-strong);
   color: var(--color-ink);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.after-sale-workflow__ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .after-sale-workflow__error {

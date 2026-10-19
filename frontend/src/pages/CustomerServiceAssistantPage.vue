@@ -97,12 +97,10 @@ onMounted(() => {
 <template>
   <section class="customer-service-assistant-page">
     <header class="customer-service-assistant-page__header">
-      <p class="customer-service-assistant-page__eyebrow">Customer Service Assistant</p>
-      <h2 class="customer-service-assistant-page__title">
-        把会话队列、消息流和 AI 建议放进同一条客服辅助链路
-      </h2>
+      <p class="customer-service-assistant-page__eyebrow">客服辅助</p>
+      <h2 class="customer-service-assistant-page__title">客户服务辅助</h2>
       <p class="customer-service-assistant-page__subtitle">
-        这一页强调“先识别风险，再决定直接回复还是人工接管”，并把支持会话 gate 明确暴露在界面上。
+        会话洞察与回复建议，辅助客服高效接待。
       </p>
     </header>
 
@@ -167,18 +165,16 @@ onMounted(() => {
 }
 
 .customer-service-assistant-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .customer-service-assistant-page__title {
-  max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.1rem, 3.8vw, 3.6rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .customer-service-assistant-page__subtitle {

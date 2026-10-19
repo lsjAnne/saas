@@ -71,10 +71,8 @@ function handleRegister() {
 <template>
   <section class="onboarding-access">
     <PanelCard
-      eyebrow="Tenant Onboarding"
-      title="把登录、开通、套餐选择压缩到同一页"
-      description="先选定你要试跑的套餐，再决定是直接登录已有租户，还是现场开一个默认组织自动建立的试用租户。"
-      dark
+      title="登录与开通"
+      description="先选定试跑套餐，再登录已有租户或现场开通试用。"
     >
       <div class="onboarding-access__hero">
         <div>
@@ -132,7 +130,6 @@ function handleRegister() {
 
     <div class="onboarding-access__grid">
       <PanelCard
-        eyebrow="Login"
         title="登录已有租户"
         description="已有租户可直接登录并留在此页继续补齐套餐、店铺和初始化动作。"
       >
@@ -164,9 +161,8 @@ function handleRegister() {
       </PanelCard>
 
       <PanelCard
-        eyebrow="Trial Start"
         title="现场开通试用租户"
-        description="注册后会自动创建默认组织，并用默认密码直接登录回 onboarding 工作台。"
+        description="注册后会自动创建默认组织，并用默认密码直接登录回接入工作台。"
       >
         <form class="onboarding-access__form" @submit.prevent="handleRegister">
           <label class="onboarding-access__field">
@@ -202,7 +198,7 @@ function handleRegister() {
             {{ defaultBootstrapPassword }} 自动登录。
           </p>
           <button class="onboarding-access__primary" type="submit" :disabled="isRegistering">
-            {{ isRegistering ? '开通中...' : '开通并进入 onboarding' }}
+            {{ isRegistering ? '开通中...' : '开通并进入工作台' }}
           </button>
         </form>
       </PanelCard>
@@ -241,21 +237,21 @@ function handleRegister() {
 }
 
 .onboarding-access__hero-title {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
   font-size: 1.25rem;
   font-weight: 700;
 }
 
 .onboarding-access__hero-copy,
 .onboarding-access__hero-note {
-  color: rgba(255, 244, 236, 0.78);
-  line-height: 1.7;
+  color: var(--color-ink-soft);
+  line-height: 1.6;
 }
 
 .onboarding-access__hero-note {
   padding: 1rem 1.1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 248, 240, 0.08);
+  background: var(--color-accent-soft);
 }
 
 .onboarding-access__plans {
@@ -270,15 +266,20 @@ function handleRegister() {
   gap: 0.7rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 248, 240, 0.12);
-  background: rgba(255, 248, 240, 0.06);
-  color: #fff8f0;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-ink-strong);
   text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .onboarding-access__plan--active {
-  border-color: rgba(255, 232, 206, 0.66);
-  background: rgba(255, 248, 240, 0.14);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
   transform: translateY(-2px);
 }
 
@@ -295,7 +296,7 @@ function handleRegister() {
 }
 
 .onboarding-access__plan-price {
-  color: #fff8f0;
+  color: var(--color-ink-strong);
   font-size: 1.6rem;
   font-weight: 700;
 }
@@ -330,22 +331,30 @@ function handleRegister() {
 }
 
 .onboarding-access__field input {
-  min-height: 3.15rem;
+  min-height: 2.75rem;
   padding: 0 1rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.14);
-  background: rgba(255, 255, 255, 0.82);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  background: #fff;
   color: var(--color-ink-strong);
   font: inherit;
 }
 
 .onboarding-access__primary {
-  min-height: 3.1rem;
+  min-height: 2.5rem;
   border: 0;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, #2d241c, #856243);
-  color: #fff8f0;
+  border-radius: var(--radius-md);
+  background: var(--color-accent);
+  color: #ffffff;
+  font: inherit;
   font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.onboarding-access__primary:hover {
+  background: var(--color-accent-hover);
+  color: #ffffff;
 }
 
 .onboarding-access__primary:disabled {

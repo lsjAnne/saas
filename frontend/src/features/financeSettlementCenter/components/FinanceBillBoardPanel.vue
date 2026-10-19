@@ -103,11 +103,30 @@ function submitSettleBill() {
     settlementType: settleForm.settlementType || undefined
   });
 }
+
+const labelMap: Record<string, string> = {
+  idle: '待处理',
+  draft: '草稿',
+  pending: '待结算',
+  reconciled: '已对账',
+  settled: '已结算',
+  closed: '已关账',
+  ORDER_SETTLEMENT: '订单结算',
+  RECEIVABLE_SETTLEMENT: '应收结算',
+  PROFIT_SUMMARY: '利润汇总',
+  BANK_TRANSFER: '银行转账',
+  ALIPAY: '支付宝',
+  WECHAT: '微信支付',
+  OFFLINE: '线下结算'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Bill Board"
     title="账单总览与结算推进"
     description="先把账单生成、详情、对账和结算放到一个面板里，确保财务主链第一跳可看、可追、可执行。"
   >
@@ -142,7 +161,7 @@ function submitSettleBill() {
           >
             <div class="bill-board__bill-card-header">
               <strong>{{ bill.financeBillId }}</strong>
-              <StatusPill :label="bill.billStatus" :tone="billTone(bill.billStatus)" />
+              <StatusPill :label="labelOf(bill.billStatus)" :tone="billTone(bill.billStatus)" />
             </div>
             <p>{{ formatDate(bill.periodStart) }} - {{ formatDate(bill.periodEnd) }}</p>
             <p>收入 {{ formatCurrency(bill.incomeAmount) }}</p>
@@ -165,9 +184,9 @@ function submitSettleBill() {
             <label class="bill-board__field">
               <span>账单类型</span>
               <select v-model="generateForm.billType" class="bill-board__control">
-                <option value="ORDER_SETTLEMENT">ORDER_SETTLEMENT</option>
-                <option value="RECEIVABLE_SETTLEMENT">RECEIVABLE_SETTLEMENT</option>
-                <option value="PROFIT_SUMMARY">PROFIT_SUMMARY</option>
+                <option value="ORDER_SETTLEMENT">订单结算</option>
+                <option value="RECEIVABLE_SETTLEMENT">应收结算</option>
+                <option value="PROFIT_SUMMARY">利润汇总</option>
               </select>
             </label>
             <label class="bill-board__field">
@@ -193,7 +212,7 @@ function submitSettleBill() {
               <h4>{{ selectedBill?.financeBillId || '等待选择账单' }}</h4>
             </div>
             <StatusPill
-              :label="selectedBill?.billStatus || 'idle'"
+              :label="labelOf(selectedBill?.billStatus || 'idle')"
               :tone="billTone(selectedBill?.billStatus || '')"
             />
           </div>
@@ -201,7 +220,7 @@ function submitSettleBill() {
           <dl v-if="selectedBill" class="bill-board__detail-grid">
             <div>
               <dt>账单类型</dt>
-              <dd>{{ selectedBill.billType }}</dd>
+              <dd>{{ labelOf(selectedBill.billType) }}</dd>
             </div>
             <div>
               <dt>生成时间</dt>
@@ -247,10 +266,10 @@ function submitSettleBill() {
             <label class="bill-board__field bill-board__field--inline">
               <span>结算方式</span>
               <select v-model="settleForm.settlementType" class="bill-board__control">
-                <option value="BANK_TRANSFER">BANK_TRANSFER</option>
-                <option value="ALIPAY">ALIPAY</option>
-                <option value="WECHAT">WECHAT</option>
-                <option value="OFFLINE">OFFLINE</option>
+                <option value="BANK_TRANSFER">银行转账</option>
+                <option value="ALIPAY">支付宝</option>
+                <option value="WECHAT">微信支付</option>
+                <option value="OFFLINE">线下结算</option>
               </select>
             </label>
             <button type="button" class="bill-board__primary" :disabled="!selectedBill || isSubmitting" @click="submitSettleBill">
@@ -275,8 +294,8 @@ function submitSettleBill() {
               class="bill-board__settlement-card"
             >
               <div class="bill-board__bill-card-header">
-                <strong>{{ settlement.settlementType }}</strong>
-                <StatusPill :label="settlement.settlementStatus" :tone="billTone(settlement.settlementStatus)" />
+                <strong>{{ labelOf(settlement.settlementType) }}</strong>
+                <StatusPill :label="labelOf(settlement.settlementStatus)" :tone="billTone(settlement.settlementStatus)" />
               </div>
               <p>金额 {{ formatCurrency(settlement.settlementAmount) }}</p>
               <p>创建 {{ formatDateTime(settlement.createdAt) }}</p>
@@ -319,8 +338,8 @@ function submitSettleBill() {
   gap: 0.45rem;
   padding: 0.95rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.1);
-  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
   text-align: left;
 }
 
@@ -329,8 +348,9 @@ function submitSettleBill() {
 }
 
 .bill-board__bill-card--active {
-  border-color: rgba(113, 87, 62, 0.44);
-  box-shadow: inset 0 0 0 1px rgba(113, 87, 62, 0.14);
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+  background: var(--color-accent-soft);
 }
 
 .bill-board__bill-card p,
@@ -347,8 +367,8 @@ function submitSettleBill() {
 .bill-board__settlements {
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 251, 247, 0.78);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .bill-board__detail-header,
@@ -362,10 +382,9 @@ function submitSettleBill() {
 
 .bill-board__detail-eyebrow,
 .bill-board__field span {
-  color: var(--color-ink-faint);
-  font-size: 0.75rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .bill-board__detail-grid {
@@ -379,7 +398,8 @@ function submitSettleBill() {
 .bill-board__insight-strip article {
   padding: 0.8rem;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.76);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
 }
 
 .bill-board__detail-grid dt,
@@ -426,8 +446,8 @@ function submitSettleBill() {
 
 .bill-board__control {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.16);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   padding: 0 0.85rem;
   color: var(--color-ink-strong);
 }
@@ -441,17 +461,30 @@ function submitSettleBill() {
 }
 
 .bill-board__primary {
-  background: linear-gradient(135deg, #3f5f55, #1f2c28);
-  color: #fffaf4;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.bill-board__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .bill-board__secondary {
-  background: rgba(61, 46, 36, 0.08);
+  background: var(--color-panel-strong);
+  border: 1px solid var(--color-line);
   color: var(--color-ink-strong);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.bill-board__secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .bill-board__error {
-  color: #b55d2f;
+  color: var(--color-danger);
   line-height: 1.6;
 }
 

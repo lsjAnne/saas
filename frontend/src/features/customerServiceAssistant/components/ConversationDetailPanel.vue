@@ -37,11 +37,28 @@ function toneFromMessage(message: ConversationMessage) {
 
   return message.aiGeneratedFlag ? 'neutral' : 'success';
 }
+
+const enumLabelMap: Record<string, string> = {
+  risk: '风险',
+  waiting_manual: '待人工接管',
+  closed: '已结束',
+  pending: '待处理',
+  customer: '客户',
+  agent: '客服',
+  ai: '智能助手',
+  system: '系统',
+  text: '文本',
+  image: '图片',
+  video: '视频'
+};
+
+function labelOf(value: string) {
+  return enumLabelMap[value] ?? value;
+}
 </script>
 
 <template>
   <PanelCard
-    eyebrow="Conversation"
     title="消息流与人工接管"
     description="先读会话上下文，再决定直接回复还是升级人工接管，避免在高风险问题上误发。"
   >
@@ -55,7 +72,7 @@ function toneFromMessage(message: ConversationMessage) {
           </p>
         </div>
         <StatusPill
-          :label="conversation.riskFlag ? 'risk' : conversation.conversationStatus"
+          :label="conversation.riskFlag ? '风险' : labelOf(conversation.conversationStatus)"
           :tone="conversation.riskFlag ? 'warn' : 'success'"
         />
       </div>
@@ -78,9 +95,9 @@ function toneFromMessage(message: ConversationMessage) {
           class="conversation-detail__message"
         >
           <div class="conversation-detail__message-head">
-            <p class="conversation-detail__sender">{{ message.senderType }}</p>
+            <p class="conversation-detail__sender">{{ labelOf(message.senderType) }}</p>
             <StatusPill
-              :label="message.messageType"
+              :label="labelOf(message.messageType)"
               :tone="toneFromMessage(message)"
             />
           </div>
@@ -210,8 +227,8 @@ function toneFromMessage(message: ConversationMessage) {
   gap: 0.55rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(91, 72, 54, 0.08);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .conversation-detail__sender {
@@ -243,31 +260,42 @@ function toneFromMessage(message: ConversationMessage) {
   width: 100%;
   padding: 0.9rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.12);
-  background: rgba(255, 253, 250, 0.9);
+  border: 1px solid var(--color-line);
+  background: #ffffff;
   resize: vertical;
 }
 
 .conversation-detail__field textarea:focus {
   outline: none;
-  border-color: rgba(133, 98, 67, 0.32);
-  box-shadow: 0 0 0 4px rgba(133, 98, 67, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 4px var(--color-accent-soft);
 }
 
 .conversation-detail__button {
   min-height: 2.9rem;
   padding: 0 1.1rem;
   border-radius: var(--radius-pill);
-  border: 0;
+  border: 1px solid transparent;
 }
 
 .conversation-detail__button--primary {
-  background: linear-gradient(135deg, #2d241c, #856243);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+  border-color: var(--color-accent);
+}
+
+.conversation-detail__button--primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .conversation-detail__button--secondary {
-  background: rgba(183, 117, 47, 0.14);
-  color: var(--color-warning);
+  background: var(--color-panel-strong);
+  color: var(--color-ink);
+  border-color: var(--color-line);
+}
+
+.conversation-detail__button--secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 </style>

@@ -30,6 +30,17 @@ const emit = defineEmits<{
 
 const localError = shallowRef<string | null>(null);
 
+const labelMap: Record<string, string> = {
+  enabled: '启用',
+  disabled: '停用',
+  amount: '金额减免',
+  percentage: '百分比折扣'
+};
+
+function labelOf(value: string) {
+  return labelMap[value] ?? value;
+}
+
 const form = reactive({
   storeId: '',
   templateName: '',
@@ -137,7 +148,6 @@ function formatTemplateValue(template: CouponTemplate) {
 
 <template>
   <PanelCard
-    eyebrow="Coupon Pool"
     title="优惠券模板池"
     description="活动页直接维护模板池，保证活动创建时可以立刻绑定，不需要再跳去别的模块。"
   >
@@ -149,12 +159,12 @@ function formatTemplateValue(template: CouponTemplate) {
               <p class="coupon-panel__item-store">{{ resolveStoreName(template.storeId) }}</p>
               <h4 class="coupon-panel__item-title">{{ template.templateName }}</h4>
             </div>
-            <StatusPill :label="template.status" :tone="resolveTone(template.status)" />
+            <StatusPill :label="labelOf(template.status)" :tone="resolveTone(template.status)" />
           </div>
           <dl class="coupon-panel__facts">
             <div class="coupon-panel__fact">
               <dt>优惠方式</dt>
-              <dd>{{ template.discountType }}</dd>
+              <dd>{{ labelOf(template.discountType) }}</dd>
             </div>
             <div class="coupon-panel__fact">
               <dt>优惠值</dt>
@@ -222,8 +232,8 @@ function formatTemplateValue(template: CouponTemplate) {
         <label class="coupon-panel__field">
           <span>状态</span>
           <select v-model="form.status">
-            <option value="enabled">enabled</option>
-            <option value="disabled">disabled</option>
+            <option value="enabled">启用</option>
+            <option value="disabled">停用</option>
           </select>
         </label>
 
@@ -255,8 +265,8 @@ function formatTemplateValue(template: CouponTemplate) {
   gap: 0.8rem;
   padding: 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .coupon-panel__item-head,
@@ -282,8 +292,7 @@ function formatTemplateValue(template: CouponTemplate) {
 
 .coupon-panel__item-store {
   font-size: 0.8rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
 }
 
 .coupon-panel__item-title {
@@ -304,7 +313,8 @@ function formatTemplateValue(template: CouponTemplate) {
   gap: 0.35rem;
   padding: 0.8rem 0.9rem;
   border-radius: var(--radius-lg);
-  background: rgba(247, 241, 236, 0.92);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
 }
 
 .coupon-panel__fact dt {
@@ -341,9 +351,9 @@ function formatTemplateValue(template: CouponTemplate) {
 .coupon-panel__field input,
 .coupon-panel__field select {
   width: 100%;
-  border: 1px solid rgba(91, 72, 54, 0.14);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.78);
+  background: #ffffff;
   padding: 0.9rem 1rem;
   color: var(--color-ink-strong);
   font: inherit;
@@ -352,10 +362,14 @@ function formatTemplateValue(template: CouponTemplate) {
 .coupon-panel__primary {
   min-height: 2.9rem;
   padding: 0 1rem;
-  border: 0;
+  border: 1px solid var(--color-accent);
   border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, #5b241d, #a1543d);
-  color: #fff8f0;
+  background: var(--color-accent);
+  color: #ffffff;
+}
+
+.coupon-panel__primary:hover {
+  background: var(--color-accent-hover);
 }
 
 .coupon-panel__primary:disabled {

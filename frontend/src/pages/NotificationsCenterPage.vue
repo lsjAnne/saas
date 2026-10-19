@@ -95,12 +95,10 @@ onMounted(() => {
 <template>
   <section class="notifications-center-page">
     <header class="notifications-center-page__header">
-      <p class="notifications-center-page__eyebrow">Notifications Center</p>
-      <h2 class="notifications-center-page__title">
-        把通知通道路由、模板启停和失败恢复压进同一个配置操作面
-      </h2>
+      <p class="notifications-center-page__eyebrow">消息中心</p>
+      <h2 class="notifications-center-page__title">消息通知</h2>
       <p class="notifications-center-page__subtitle">
-        这个页面不再只看监控数字，而是直接处理通知链路的三类关键动作：调整渠道路由、维护模板可用性、把失败或死信任务拉回投递闭环。
+        通知渠道、模板与失败恢复。
       </p>
     </header>
 
@@ -189,18 +187,17 @@ onMounted(() => {
 }
 
 .notifications-center-page__eyebrow {
-  color: var(--color-ink-faint);
-  font-size: 0.76rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .notifications-center-page__title {
   max-width: 16ch;
   color: var(--color-ink-strong);
-  font-family: var(--font-display);
-  font-size: clamp(2.15rem, 3.8vw, 3.7rem);
-  line-height: 1.05;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .notifications-center-page__subtitle,
@@ -208,26 +205,26 @@ onMounted(() => {
 .notifications-center-page__footer-note {
   max-width: 70rem;
   color: var(--color-ink-soft);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
 .notifications-center-page__feedback {
   padding: 0.9rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(91, 72, 54, 0.08);
-  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .notifications-center-page__feedback--success {
-  color: #2f5b39;
-  background: rgba(228, 242, 232, 0.82);
-  border-color: rgba(76, 124, 85, 0.18);
+  color: var(--color-success);
+  background: var(--color-accent-soft);
+  border-color: var(--color-line);
 }
 
 .notifications-center-page__feedback--error {
-  color: #7a3f2b;
-  background: rgba(251, 237, 230, 0.86);
-  border-color: rgba(150, 92, 67, 0.18);
+  color: var(--color-danger);
+  background: var(--color-surface);
+  border-color: var(--color-line);
 }
 
 .notifications-center-page__grid {

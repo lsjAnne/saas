@@ -6,6 +6,7 @@ type ConsoleRouteMeta = {
   title: string;
   subtitle: string;
   navLabel: string;
+  navGroup: string;
   navDescription: string;
   focusItems: string[];
   requiredPermissions: string[];
@@ -25,6 +26,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'dashboard',
     component: () => import('@/pages/DashboardHomePage.vue'),
     meta: {
+      navGroup: 'overview',
       title: '经营首页',
       subtitle: '追踪经营趋势、活动回报与关键风险信号',
       navLabel: '经营首页',
@@ -39,6 +41,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'business-analytics',
     component: () => import('@/pages/BusinessAnalyticsPage.vue'),
     meta: {
+      navGroup: 'overview',
       title: '经营分析',
       subtitle: '把销售趋势、毛利趋势、商品排行、异常分布、活动效果与会员复购收成统一经营诊断台',
       navLabel: '经营分析',
@@ -53,6 +56,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'business-assistant',
     component: () => import('@/pages/BusinessAssistantPage.vue'),
     meta: {
+      navGroup: 'overview',
       title: '经营助手',
       subtitle: '承接推荐中心、风险解释和执行跳转，让首页之后立即进入可行动的决策视图',
       navLabel: '经营助手',
@@ -67,6 +71,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'product-center',
     component: () => import('@/pages/ProductCenterPage.vue'),
     meta: {
+      navGroup: 'supply',
       title: '\u5546\u54c1\u4e2d\u5fc3',
       subtitle:
         '\u7528\u5019\u9009\u6c60\u3001\u8349\u7a3f\u5de5\u4f4d\u4e0e\u53d1\u5e03\u51fa\u6808\u8282\u594f\u7edf\u4e00\u63a7\u4f4f\u5546\u54c1\u5b75\u5316\u94fe\u8def',
@@ -87,6 +92,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'product-mapping-center',
     component: () => import('@/pages/ProductMappingCenterPage.vue'),
     meta: {
+      navGroup: 'supply',
       title: '商品与货源映射',
       subtitle:
         '把平台商品、主备货源与映射校验统一放进同一张可执行的映射编排页',
@@ -103,6 +109,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'content-asset-center',
     component: () => import('@/pages/ContentAssetCenterPage.vue'),
     meta: {
+      navGroup: 'supply',
       title: '内容素材中心',
       subtitle:
         '统一沉淀商品、直播与客服素材资产，让上传、生成、预览、归档与引用复用在同一页闭环。',
@@ -119,6 +126,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'supplier-center',
     component: () => import('@/pages/SupplierCenterPage.vue'),
     meta: {
+      navGroup: 'supply',
       title: '供应商中心',
       subtitle: '围绕供应商主档、准入评审、评分卡和结算对账统一承接 SRM 主链',
       navLabel: '供应商中心',
@@ -133,6 +141,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'inventory-replenishment-center',
     component: () => import('@/pages/InventoryReplenishmentCenterPage.vue'),
     meta: {
+      navGroup: 'supply',
       title: '库存与补货中心',
       subtitle: '用一页串起库存快照、补货采购、WMS 联动和成本对账的执行主走廊',
       navLabel: '库存与补货',
@@ -147,6 +156,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'store-channel-center',
     component: () => import('@/pages/StoreChannelCenterPage.vue'),
     meta: {
+      navGroup: 'channel',
       title: '\u5e97\u94fa\u4e0e\u6e20\u9053\u4e2d\u5fc3',
       subtitle:
         '\u5728\u540c\u4e00\u9875\u91cc\u7edf\u4e00\u5904\u7406\u5e97\u94fa\u63a5\u5165\u3001\u6e20\u9053\u6388\u6743\u4e0e\u9608\u503c\u7b56\u7565\uff0c\u907f\u514d\u4ea4\u4ed8\u8fb9\u754c\u88ab\u6253\u6563',
@@ -167,6 +177,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'order-fulfillment-center',
     component: () => import('@/pages/OrderFulfillmentCenterPage.vue'),
     meta: {
+      navGroup: 'order',
       title: '订单与履约中心',
       subtitle:
         '把订单同步、OMS 摘要、履约任务、物流记录与逆向动作统一到同一条订单处理主链路',
@@ -183,6 +194,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'exception-center',
     component: () => import('@/pages/ExceptionCenterPage.vue'),
     meta: {
+      navGroup: 'order',
       title: '异常中心',
       subtitle: '集中处理系统识别出的异常、推荐 SOP 和人工升级动作',
       navLabel: '异常中心',
@@ -197,6 +209,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'live-operations',
     component: () => import('@/pages/LiveOperationsPage.vue'),
     meta: {
+      navGroup: 'channel',
       title: '直播运营中心',
       subtitle: '聚合直播计划、运行会话、并发占用与风险恢复动作的统一指挥台',
       navLabel: '直播运营中心',
@@ -207,10 +220,26 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     }
   },
   {
+    path: 'digital-human-live',
+    name: 'digital-human-live',
+    component: () => import('@/pages/DigitalHumanLivePage.vue'),
+    meta: {
+      navGroup: 'channel',
+      title: '数字人无人直播',
+      subtitle: '数字人形象、话术剧本与 7×24 无人排班一屏编排，自动开播并回读成交数据',
+      navLabel: '数字人无人直播',
+      navDescription: '无人值守自动开播，形象话术排班统一管理',
+      focusItems: ['形象库', '话术库', '无人排班', '开播会话'],
+      requiredPermissions: ['digital.human.manage'],
+      permissionMode: 'all'
+    }
+  },
+  {
     path: 'service-assistant',
     name: 'service-assistant',
     component: () => import('@/pages/CustomerServiceAssistantPage.vue'),
     meta: {
+      navGroup: 'service',
       title: '客户服务辅助中心',
       subtitle: '围绕会话消息、AI 建议和人工接管形成闭环处理台',
       navLabel: '客户服务辅助',
@@ -225,6 +254,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'organization-members',
     component: () => import('@/pages/OrganizationMembersPage.vue'),
     meta: {
+      navGroup: 'service',
       title: '组织与成员',
       subtitle: '统一查看组织协作、成员结构与会员经营视角',
       navLabel: '组织与成员',
@@ -239,6 +269,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'customer-service-center',
     component: () => import('@/pages/CustomerServiceCenterPage.vue'),
     meta: {
+      navGroup: 'service',
       title: '客服售后中心',
       subtitle: '明确承接工单与售后单主链，不再让客服域只停留在会话辅助或支持联动层',
       navLabel: '客服售后中心',
@@ -253,6 +284,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'campaign-center',
     component: () => import('@/pages/CampaignCenterPage.vue'),
     meta: {
+      navGroup: 'channel',
       title: '营销活动中心',
       subtitle: '把活动、优惠券、审批和发布轨道收敛到一张营销业务页',
       navLabel: '营销活动中心',
@@ -267,6 +299,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'member-crm-center',
     component: () => import('@/pages/MemberCrmCenterPage.vue'),
     meta: {
+      navGroup: 'channel',
       title: '会员与 CRM 中心',
       subtitle: '围绕会员池、标签、分群、触达和 CRM 分析形成独立的会员经营主页',
       navLabel: '会员与 CRM',
@@ -281,6 +314,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'finance-settlement-center',
     component: () => import('@/pages/FinanceSettlementCenterPage.vue'),
     meta: {
+      navGroup: 'finance',
       title: '财务结算中心',
       subtitle: '先围绕账单、回款、利润和票据形成财务主链，再逐步展开 ERP 与关账治理',
       navLabel: '财务结算中心',
@@ -295,6 +329,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'tenant-center',
     component: () => import('@/pages/TenantCenterPage.vue'),
     meta: {
+      navGroup: 'system',
       title: '租户中心',
       subtitle: '聚合租户上下文、配额、导出与生命周期动作',
       navLabel: '租户中心',
@@ -309,6 +344,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'subscription',
     component: () => import('@/pages/SubscriptionBillingPage.vue'),
     meta: {
+      navGroup: 'finance',
       title: '订阅与计费中心',
       subtitle: '保持套餐边界、软件选择与观测门禁的一致口径',
       navLabel: '订阅与计费中心',
@@ -323,6 +359,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'audit-exports',
     component: () => import('@/pages/AuditExportPage.vue'),
     meta: {
+      navGroup: 'finance',
       title: '审计与导出',
       subtitle: '覆盖审计留痕、导出治理与数据交付责任',
       navLabel: '审计与导出',
@@ -337,6 +374,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'open-platform',
     component: () => import('@/pages/OpenPlatformPage.vue'),
     meta: {
+      navGroup: 'finance',
       title: '开放接口',
       subtitle: '沉淀 apps、webhooks 与集成审计的统一控制台',
       navLabel: '开放接口',
@@ -351,6 +389,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'approval-center',
     component: () => import('@/pages/ApprovalCenterPage.vue'),
     meta: {
+      navGroup: 'service',
       title: '审批与协作中心',
       subtitle: '聚合审批队列、模板治理与协作责任流转的统一工作台',
       navLabel: '审批与协作',
@@ -365,6 +404,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'support-workbench',
     component: () => import('@/pages/SupportWorkbenchPage.vue'),
     meta: {
+      navGroup: 'service',
       title: '支持与工单',
       subtitle: '围绕工单 SLA、服务会话与通知链路联动处理',
       navLabel: '支持与工单',
@@ -379,6 +419,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'notifications-center',
     component: () => import('@/pages/NotificationsCenterPage.vue'),
     meta: {
+      navGroup: 'system',
       title: '消息通知中心',
       subtitle: '聚合通知网关、渠道统计、失败重试与死信压力的统一总控页',
       navLabel: '消息通知中心',
@@ -393,6 +434,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'system-settings',
     component: () => import('@/pages/SystemSettingsPage.vue'),
     meta: {
+      navGroup: 'system',
       title: '系统设置',
       subtitle: '统一维护策略版本、readiness 与高级参数',
       navLabel: '系统设置',
@@ -407,6 +449,7 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     name: 'platform-admin',
     component: () => import('@/pages/PlatformAdminPage.vue'),
     meta: {
+      navGroup: 'system',
       title: '平台管理中心',
       subtitle: '专供平台角色处理租户治理、功能开关、readiness 三联和合规文档工作流',
       navLabel: '平台管理中心',
