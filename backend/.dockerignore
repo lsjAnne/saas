@@ -1,0 +1,15 @@
+target/
+*.class
+*.log
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+node_modules/
+dist/
+docs/
+.mvn/wrapper/
+HELP.md
+Dockerfile
+.dockerignore
