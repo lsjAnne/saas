@@ -345,6 +345,70 @@ public final class JdbcIdCodec {
         return "integration-credential-" + credentialId;
     }
 
+    public static long parseAvatarId(String avatarId) {
+        return parseNumericSuffix(avatarId, "avatar-");
+    }
+
+    public static String formatAvatarId(long avatarId) {
+        return "avatar-" + avatarId;
+    }
+
+    public static long parseDigitalHumanScriptId(String scriptId) {
+        return parseNumericSuffix(scriptId, "dhscript-");
+    }
+
+    public static String formatDigitalHumanScriptId(long scriptId) {
+        return "dhscript-" + scriptId;
+    }
+
+    public static long parseDigitalHumanScheduleId(String scheduleId) {
+        return parseNumericSuffix(scheduleId, "dhschedule-");
+    }
+
+    public static String formatDigitalHumanScheduleId(long scheduleId) {
+        return "dhschedule-" + scheduleId;
+    }
+
+    public static long parseDigitalHumanSessionId(String sessionId) {
+        return parseNumericSuffix(sessionId, "dhsession-");
+    }
+
+    public static String formatDigitalHumanSessionId(long sessionId) {
+        return "dhsession-" + sessionId;
+    }
+
+    public static long parseDigitalHumanFaqId(String faqId) {
+        return parseNumericSuffix(faqId, "dhfaq-");
+    }
+
+    public static String formatDigitalHumanFaqId(long faqId) {
+        return "dhfaq-" + faqId;
+    }
+
+    public static long parseDigitalHumanBarrageId(String barrageId) {
+        return parseNumericSuffix(barrageId, "dhbarrage-");
+    }
+
+    public static String formatDigitalHumanBarrageId(long barrageId) {
+        return "dhbarrage-" + barrageId;
+    }
+
+    public static long parseDigitalHumanInteractionId(String interactionId) {
+        return parseNumericSuffix(interactionId, "dhinteraction-");
+    }
+
+    public static String formatDigitalHumanInteractionId(long interactionId) {
+        return "dhinteraction-" + interactionId;
+    }
+
+    public static long parseDigitalHumanLearningItemId(String itemId) {
+        return parseNumericSuffix(itemId, "dhlearning-");
+    }
+
+    public static String formatDigitalHumanLearningItemId(long itemId) {
+        return "dhlearning-" + itemId;
+    }
+
     private static long parseNumericSuffix(String value, String prefix) {
         if (value == null || !value.startsWith(prefix)) {
             throw new IllegalArgumentException("闈炴硶ID鏍煎紡: " + value);

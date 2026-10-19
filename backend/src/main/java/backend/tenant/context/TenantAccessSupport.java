@@ -24,6 +24,14 @@ public final class TenantAccessSupport {
         return tenantId;
     }
 
+    public static String requiredOrganizationId() {
+        String organizationId = requiredContext().organizationId();
+        if (organizationId == null || organizationId.isBlank()) {
+            throw new BusinessException("1004", "organization context missing", HttpStatus.BAD_REQUEST);
+        }
+        return organizationId;
+    }
+
     public static void assertSameTenant(String tenantId) {
         if (!requiredTenantId().equals(tenantId)) {
             throw new BusinessException("1005", "tenant access denied", HttpStatus.FORBIDDEN);

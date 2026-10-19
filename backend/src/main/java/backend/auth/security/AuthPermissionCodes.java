@@ -13,6 +13,7 @@ public final class AuthPermissionCodes {
     public static final String TENANT_COMPLIANCE_ACCEPT = "tenant.compliance.accept";
     public static final String STORE_MANAGE = "store.manage";
     public static final String CHANNEL_MANAGE = "channel.manage";
+    public static final String CHANNEL_SYNC_MANAGE = "channel.sync.manage";
     public static final String PRODUCT_MANAGE = "product.manage";
     public static final String SUPPLIER_MANAGE = "supplier.manage";
     public static final String INVENTORY_MANAGE = "inventory.manage";
@@ -24,6 +25,7 @@ public final class AuthPermissionCodes {
     public static final String MEMBER_MANAGE = "member.manage";
     public static final String CAMPAIGN_MANAGE = "campaign.manage";
     public static final String LIVE_MANAGE = "live.manage";
+    public static final String DIGITAL_HUMAN_MANAGE = "digital.human.manage";
     public static final String RULE_MANAGE = "rule.manage";
     public static final String APPROVAL_MANAGE = "approval.manage";
     public static final String NOTIFICATION_MANAGE = "notification.manage";

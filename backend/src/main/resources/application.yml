@@ -45,6 +45,10 @@ spring:
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
         - classpath:db/migration/V025__content_asset_center.sql
+        - classpath:db/migration/V026__channel_access.sql
+        - classpath:db/migration/V027__digital_human_live.sql
+        - classpath:db/migration/V028__digital_human_interaction.sql
+        - classpath:db/migration/V029__digital_human_learning.sql
 
 management:
   endpoints:
@@ -65,6 +69,10 @@ management:
 app:
   persistence:
     mode: jdbc
+  ai:
+    vector:
+      # 数字人语义检索向量引擎：memory=内置Java向量（默认，零依赖，H2/达梦通用）；postgres=PostgreSQL pgvector（需执行V029注释中的DDL）
+      store: ${APP_AI_VECTOR_STORE:memory}
   redis:
     verify-on-startup: false
     tenant-key-prefix: dsp
@@ -92,6 +100,38 @@ app:
       callback-endpoint: ${APP_LIVE_RUNTIME_CALLBACK_ENDPOINT:}
       callback-signature-configured: ${APP_LIVE_RUNTIME_CALLBACK_SIGNATURE_CONFIGURED:false}
       allow-mock-room-id: ${APP_LIVE_RUNTIME_ALLOW_MOCK_ROOM_ID:true}
+    barrage:
+      enabled: true
+      connectors:
+        douyin:
+          enabled: true
+          mock-mode: ${APP_LIVE_BARRAGE_DOUYIN_MOCK_MODE:true}
+          app-key: ${APP_LIVE_BARRAGE_DOUYIN_APP_KEY:}
+          app-secret: ${APP_LIVE_BARRAGE_DOUYIN_APP_SECRET:}
+          room-id: ${APP_LIVE_BARRAGE_DOUYIN_ROOM_ID:}
+          ws-endpoint: ${APP_LIVE_BARRAGE_DOUYIN_WS_ENDPOINT:https://open.douyin.com}
+          callback-path: ${APP_LIVE_BARRAGE_DOUYIN_CALLBACK_PATH:/live_room/callback}
+          callback-secret: ${APP_LIVE_BARRAGE_DOUYIN_CALLBACK_SECRET:}
+          gateway-endpoint: ${APP_LIVE_BARRAGE_DOUYIN_GATEWAY_ENDPOINT:}
+          tenant-id: ${APP_LIVE_BARRAGE_DOUYIN_TENANT_ID:}
+          organization-id: ${APP_LIVE_BARRAGE_DOUYIN_ORGANIZATION_ID:}
+          description: 抖音直播互动弹幕（主播授权 + WebSocket 评论订阅 / 内网专线回调）
+        kuaishou:
+          enabled: true
+          mock-mode: ${APP_LIVE_BARRAGE_KUAISHOU_MOCK_MODE:true}
+          app-key: ${APP_LIVE_BARRAGE_KUAISHOU_APP_KEY:}
+          app-secret: ${APP_LIVE_BARRAGE_KUAISHOU_APP_SECRET:}
+          room-id: ${APP_LIVE_BARRAGE_KUAISHOU_ROOM_ID:}
+          ws-endpoint: ${APP_LIVE_BARRAGE_KUAISHOU_WS_ENDPOINT:https://open.kwaixiaodian.com}
+          description: 快手直播弹幕（主播授权 + 评论推送订阅）
+        wechat_channels:
+          enabled: true
+          mock-mode: ${APP_LIVE_BARRAGE_WECHAT_CHANNELS_MOCK_MODE:true}
+          app-key: ${APP_LIVE_BARRAGE_WECHAT_CHANNELS_APP_KEY:}
+          app-secret: ${APP_LIVE_BARRAGE_WECHAT_CHANNELS_APP_SECRET:}
+          room-id: ${APP_LIVE_BARRAGE_WECHAT_CHANNELS_ROOM_ID:}
+          ws-endpoint: ${APP_LIVE_BARRAGE_WECHAT_CHANNELS_WS_ENDPOINT:https://api.weixin.qq.com}
+          description: 视频号直播弹幕（商家主体授权 + 场次评论事件）
   observability:
     log-aggregation-endpoint: ${APP_OBSERVABILITY_LOG_ENDPOINT:}
     trace-endpoint: ${APP_OBSERVABILITY_TRACE_ENDPOINT:}
@@ -215,6 +255,56 @@ app:
           endpoint: ${APP_NOTIFICATION_FEISHU_ENDPOINT:https://open.feishu.cn/open-apis/bot/v2/hook}
           receipt-callback-path: /api/notifications/{id}/delivery-receipts
           description: feishu bot gateway
+  channel:
+    platforms:
+      pdd:
+        enabled: true
+        mock-mode: ${APP_CHANNEL_PDD_MOCK_MODE:true}
+        endpoint: ${APP_CHANNEL_PDD_ENDPOINT:https://openapi.pinduoduo.com}
+        app-key: ${APP_CHANNEL_PDD_APP_KEY:}
+        app-secret: ${APP_CHANNEL_PDD_APP_SECRET:}
+        callback-path: /api/channels/callback/pdd
+        description: 拼多多开放平台
+      taobao:
+        enabled: true
+        mock-mode: ${APP_CHANNEL_TAOBAO_MOCK_MODE:true}
+        endpoint: ${APP_CHANNEL_TAOBAO_ENDPOINT:https://eco.taobao.com/router/rest}
+        app-key: ${APP_CHANNEL_TAOBAO_APP_KEY:}
+        app-secret: ${APP_CHANNEL_TAOBAO_APP_SECRET:}
+        callback-path: /api/channels/callback/taobao
+        description: 淘宝开放平台
+      douyin:
+        enabled: true
+        mock-mode: ${APP_CHANNEL_DOUYIN_MOCK_MODE:true}
+        endpoint: ${APP_CHANNEL_DOUYIN_ENDPOINT:https://open.douyin.com}
+        app-key: ${APP_CHANNEL_DOUYIN_APP_KEY:}
+        app-secret: ${APP_CHANNEL_DOUYIN_APP_SECRET:}
+        callback-path: /api/channels/callback/douyin
+        description: 抖音开放平台
+      wechat_channels:
+        enabled: true
+        mock-mode: ${APP_CHANNEL_WECHAT_CHANNELS_MOCK_MODE:true}
+        endpoint: ${APP_CHANNEL_WECHAT_CHANNELS_ENDPOINT:https://api.weixin.qq.com}
+        app-key: ${APP_CHANNEL_WECHAT_CHANNELS_APP_KEY:}
+        app-secret: ${APP_CHANNEL_WECHAT_CHANNELS_APP_SECRET:}
+        callback-path: /api/channels/callback/wechat_channels
+        description: 视频号小店
+      kuaishou:
+        enabled: true
+        mock-mode: ${APP_CHANNEL_KUAISHOU_MOCK_MODE:true}
+        endpoint: ${APP_CHANNEL_KUAISHOU_ENDPOINT:https://open.kwaixiaodian.com}
+        app-key: ${APP_CHANNEL_KUAISHOU_APP_KEY:}
+        app-secret: ${APP_CHANNEL_KUAISHOU_APP_SECRET:}
+        callback-path: /api/channels/callback/kuaishou
+        description: 快手小店开放平台
+      jd:
+        enabled: true
+        mock-mode: ${APP_CHANNEL_JD_MOCK_MODE:true}
+        endpoint: ${APP_CHANNEL_JD_ENDPOINT:https://api.jd.com/routerjson}
+        app-key: ${APP_CHANNEL_JD_APP_KEY:}
+        app-secret: ${APP_CHANNEL_JD_APP_SECRET:}
+        callback-path: /api/channels/callback/jd
+        description: 京东宙斯开放平台
 
 ---
 spring:
@@ -255,6 +345,10 @@ spring:
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
         - classpath:db/migration/V025__content_asset_center.sql
+        - classpath:db/migration/V026__channel_access.sql
+        - classpath:db/migration/V027__digital_human_live.sql
+        - classpath:db/migration/V028__digital_human_interaction.sql
+        - classpath:db/migration/V029__digital_human_learning.sql
 app:
   persistence:
     mode: jdbc
@@ -311,6 +405,10 @@ spring:
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
         - classpath:db/migration/V025__content_asset_center.sql
+        - classpath:db/migration/V026__channel_access.sql
+        - classpath:db/migration/V027__digital_human_live.sql
+        - classpath:db/migration/V028__digital_human_interaction.sql
+        - classpath:db/migration/V029__digital_human_learning.sql
 app:
   persistence:
     mode: jdbc
@@ -367,6 +465,10 @@ spring:
         - classpath:db/migration/V023__tenant_governance_exports_and_compliance.sql
         - classpath:db/migration/V024__tenant_cleanup_task.sql
         - classpath:db/migration/V025__content_asset_center.sql
+        - classpath:db/migration/V026__channel_access.sql
+        - classpath:db/migration/V027__digital_human_live.sql
+        - classpath:db/migration/V028__digital_human_interaction.sql
+        - classpath:db/migration/V029__digital_human_learning.sql
 app:
   persistence:
     mode: jdbc
