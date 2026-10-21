@@ -27,6 +27,7 @@ public final class AuthPermissionCodes {
     public static final String LIVE_MANAGE = "live.manage";
     public static final String DIGITAL_HUMAN_MANAGE = "digital.human.manage";
     public static final String RULE_MANAGE = "rule.manage";
+    public static final String AUTOMATION_MANAGE = "automation.manage";
     public static final String APPROVAL_MANAGE = "approval.manage";
     public static final String NOTIFICATION_MANAGE = "notification.manage";
     public static final String FINANCE_MANAGE = "finance.manage";

@@ -49,6 +49,7 @@ spring:
         - classpath:db/migration/V027__digital_human_live.sql
         - classpath:db/migration/V028__digital_human_interaction.sql
         - classpath:db/migration/V029__digital_human_learning.sql
+        - classpath:db/migration/V030__automation_engine.sql
 
 management:
   endpoints:
@@ -69,6 +70,11 @@ management:
 app:
   persistence:
     mode: jdbc
+  automation:
+    scheduler:
+      # 定时拉单调度器：默认关闭，开启后对已手动触发过的店铺周期性 mock 拉单 + 规则执行
+      enabled: ${APP_AUTOMATION_SCHEDULER_ENABLED:false}
+      fixed-delay-ms: ${APP_AUTOMATION_SCHEDULER_FIXED_DELAY_MS:1800000}
   ai:
     vector:
       # 数字人语义检索向量引擎：memory=内置Java向量（默认，零依赖，H2/达梦通用）；postgres=PostgreSQL pgvector（需执行V029注释中的DDL）
@@ -349,6 +355,7 @@ spring:
         - classpath:db/migration/V027__digital_human_live.sql
         - classpath:db/migration/V028__digital_human_interaction.sql
         - classpath:db/migration/V029__digital_human_learning.sql
+        - classpath:db/migration/V030__automation_engine.sql
 app:
   persistence:
     mode: jdbc
@@ -409,6 +416,7 @@ spring:
         - classpath:db/migration/V027__digital_human_live.sql
         - classpath:db/migration/V028__digital_human_interaction.sql
         - classpath:db/migration/V029__digital_human_learning.sql
+        - classpath:db/migration/V030__automation_engine.sql
 app:
   persistence:
     mode: jdbc
@@ -469,6 +477,7 @@ spring:
         - classpath:db/migration/V027__digital_human_live.sql
         - classpath:db/migration/V028__digital_human_interaction.sql
         - classpath:db/migration/V029__digital_human_learning.sql
+        - classpath:db/migration/V030__automation_engine.sql
 app:
   persistence:
     mode: jdbc

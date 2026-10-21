@@ -205,6 +205,23 @@ export const consoleRoutes: ConsoleRouteDefinition[] = [
     }
   },
   {
+    path: 'automation-center',
+    name: 'automation-center',
+    component: () => import('@/pages/AutomationCenterPage.vue'),
+    meta: {
+      navGroup: 'order',
+      title: '自动化控制台',
+      subtitle:
+        '把渠道拉单、规则匹配、自动发货对账与人工确认挂起串成可审计的自动化主链',
+      navLabel: '自动化控制台',
+      navDescription:
+        '查看执行统计、配置规则动作、回读执行记录并处理人工确认队列',
+      focusItems: ['执行总览', '规则动作配置', '人工确认队列'],
+      requiredPermissions: ['order.manage'],
+      permissionMode: 'all'
+    }
+  },
+  {
     path: 'live-operations',
     name: 'live-operations',
     component: () => import('@/pages/LiveOperationsPage.vue'),
